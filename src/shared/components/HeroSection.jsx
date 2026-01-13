@@ -63,7 +63,7 @@ const HeroSection = ({
 
   const renderHomepageHero = () => (
     <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 py-20 pt-24">
-      <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center max-w-7xl mx-auto">
+      <div className="grid lg:grid-cols-[1.2fr_1fr] gap-8 lg:gap-12 items-center max-w-7xl mx-auto">
         {/* Left Content */}
         <motion.div
           initial={{ opacity: 0, x: -50 }}
@@ -82,7 +82,7 @@ const HeroSection = ({
               <span>Join 12,000+ Students Coding Together</span>
             </motion.div>
 
-            <motion.h1
+            <motion.h4
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
@@ -93,7 +93,7 @@ const HeroSection = ({
               <span className={theme.primary}>Your Community,</span>
               <br />
               <span className={theme.accent}>Your Career</span>
-            </motion.h1>
+            </motion.h4>
 
             <motion.p
               initial={{ opacity: 0, y: 20 }}
