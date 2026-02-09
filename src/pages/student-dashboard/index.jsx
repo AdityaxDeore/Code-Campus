@@ -4,343 +4,402 @@ import { useNavigate, Link } from 'react-router-dom';
 import Header from '../../components/ui/Header';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
-import ActivityFeed from '../../shared/components/ActivityFeed';
 import { getSession, getCurrentUser, onAuthStateChange } from '../../utils/auth';
+
+const getGreeting = () => {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+};
+
+const StatusBadge = ({ status }) => {
+  const styles = {
+    'not-started': 'bg-slate-100 text-slate-600',
+    'in-progress': 'bg-amber-50 text-amber-700',
+    'submitted': 'bg-emerald-50 text-emerald-700',
+    'graded': 'bg-sky-50 text-sky-700',
+  };
+  const labels = {
+    'not-started': 'Not Started', 'in-progress': 'In Progress',
+    'submitted': 'Submitted', 'graded': 'Graded',
+  };
+  return (
+    <span className={`text-[11px] font-medium px-2 py-0.5 rounded-md ${styles[status] || styles['not-started']}`}>
+      {labels[status] || 'Not Started'}
+    </span>
+  );
+};
+
+const getDeadlineUrgency = (deadline) => {
+  const h = (new Date(deadline) - new Date()) / 36e5;
+  if (h < 0) return { label: 'Overdue', color: 'text-red-600', urgent: true };
+  if (h < 6) return { label: `${Math.ceil(h)}h left`, color: 'text-red-500', urgent: true };
+  if (h < 24) return { label: `${Math.ceil(h)}h left`, color: 'text-amber-600', urgent: true };
+  if (h < 72) return { label: `${Math.ceil(h / 24)}d left`, color: 'text-amber-500', urgent: false };
+  return { label: `${Math.ceil(h / 24)}d left`, color: 'text-slate-500', urgent: false };
+};
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState('');
   const [userName, setUserName] = useState('');
   const [loginMethod, setLoginMethod] = useState('');
+  const [tab, setTab] = useState('active');
 
   useEffect(() => {
-    const checkAuthentication = async () => {
-      // Try Firebase authentication first
+    const checkAuth = async () => {
       const currentUser = getCurrentUser();
       if (currentUser) {
         setUserEmail(currentUser.email || '');
         setUserName(currentUser.displayName || currentUser.email?.split('@')[0] || '');
-        setLoginMethod('firebase');
-        return;
+        setLoginMethod('firebase'); return;
       }
-
-      // Check current session
       const session = await getSession();
       if (session?.user) {
         setUserEmail(session.user.email || '');
         setUserName(session.user.displayName || session.user.email?.split('@')[0] || '');
-        setLoginMethod('firebase');
-        return;
+        setLoginMethod('firebase'); return;
       }
-
-      // Fallback to local storage (legacy)
-      const isAuthenticated = localStorage.getItem('isAuthenticated');
-      if (!isAuthenticated) {
-        navigate('/login');
-        return;
-      }
+      if (!localStorage.getItem('isAuthenticated')) { navigate('/login'); return; }
       setUserEmail(localStorage.getItem('userEmail') || '');
       setUserName(localStorage.getItem('userName') || '');
       setLoginMethod(localStorage.getItem('loginMethod') || 'legacy');
     };
-
-    checkAuthentication();
-
-    // Listen for auth state changes
-    const unsubscribe = onAuthStateChange((user) => {
+    checkAuth();
+    const unsub = onAuthStateChange((user) => {
       if (user) {
         setUserEmail(user.email || '');
         setUserName(user.displayName || user.email?.split('@')[0] || '');
         setLoginMethod('firebase');
-      } else {
-        // User logged out, redirect to login
-        navigate('/login');
-      }
+      } else navigate('/login');
     });
-
-    return () => {
-      if (typeof unsubscribe === 'function') {
-        unsubscribe();
-      }
-    };
+    return () => { if (typeof unsub === 'function') unsub(); };
   }, [navigate]);
 
-  // Mock dashboard data
-  const stats = [
-    { 
-      label: 'Problems Solved', 
-      value: '47', 
-      change: '+12 this week',
-      icon: 'Code',
-      color: 'blue',
-      href: '/problem-history'
-    },
-    { 
-      label: 'Current Streak', 
-      value: '8 days', 
-      change: 'Keep going!',
-      icon: 'Flame',
-      color: 'orange',
-      href: '/achievement-center'
-    },
-    { 
-      label: 'Forum Posts', 
-      value: '23', 
-      change: '+5 this week',
-      icon: 'MessageSquare',
-      color: 'green',
-      href: '/campus-forums'
-    },
-    { 
-      label: 'Total XP', 
-      value: '2,847', 
-      change: '+280 this week',
-      icon: 'Trophy',
-      color: 'purple',
-      href: '/achievement-center'
-    }
+  const stats = {
+    deadlines: 3, active: 5, solved: 47, pending: 1,
+    aiHintsLeft: 7, aiHintsTotal: 10,
+  };
+
+  const assignments = [
+    { id: 'a1', title: 'Binary Search Tree Implementation', course: 'DSA', deadline: new Date(Date.now() + 5*36e5).toISOString(), status: 'in-progress', progress: 60, difficulty: 'Medium', maxMarks: 100, scored: null },
+    { id: 'a2', title: 'Graph Traversal – BFS & DFS', course: 'DSA', deadline: new Date(Date.now() + 26*36e5).toISOString(), status: 'not-started', progress: 0, difficulty: 'Hard', maxMarks: 150, scored: null },
+    { id: 'a3', title: 'Knapsack Problem', course: 'Algorithms', deadline: new Date(Date.now() + 96*36e5).toISOString(), status: 'not-started', progress: 0, difficulty: 'Hard', maxMarks: 120, scored: null },
+    { id: 'a4', title: 'Linked List Operations', course: 'DSA', deadline: new Date(Date.now() - 48*36e5).toISOString(), status: 'submitted', progress: 100, difficulty: 'Easy', maxMarks: 80, scored: 72 },
+    { id: 'a5', title: 'Sorting Analysis', course: 'Algorithms', deadline: new Date(Date.now() - 120*36e5).toISOString(), status: 'graded', progress: 100, difficulty: 'Medium', maxMarks: 100, scored: 88 },
   ];
 
-  const recentActivity = [
-    {
-      id: 1,
-      type: 'problem_solved',
-      user: userName,
-      action: 'solved',
-      target: 'Two Sum problem',
-      difficulty: 'Easy',
-      time: '2 hours ago',
-      points: 50
-    },
-    {
-      id: 2,
-      type: 'forum_post',
-      user: userName,
-      action: 'posted in',
-      target: 'Data Structures Forum',
-      time: '5 hours ago',
-      replies: 3
-    },
-    {
-      id: 3,
-      type: 'achievement',
-      user: userName,
-      action: 'earned',
-      target: 'Problem Solver Badge',
-      time: '1 day ago',
-      streak: 7
-    },
-    {
-      id: 4,
-      type: 'collaboration',
-      user: userName,
-      action: 'joined project',
-      target: 'Campus Events App',
-      time: '2 days ago',
-      collaborators: 4
-    }
+  const lastSession = { title: 'Binary Search Tree Implementation', file: 'bst.py', line: 47, saved: '12 min ago' };
+
+  const notifications = [
+    { id: 1, msg: 'BST Implementation due in 5 hours', time: 'Just now', icon: 'AlertTriangle', accent: 'text-red-500' },
+    { id: 2, msg: 'Feedback released: Linked List Ops', time: '2h ago', icon: 'MessageCircle', accent: 'text-blue-500' },
+    { id: 3, msg: 'New assignment: Graph Traversal', time: '5h ago', icon: 'FileText', accent: 'text-emerald-500' },
   ];
 
-  const upcomingEvents = [
-    {
-      title: 'Weekly Coding Contest',
-      date: 'Tomorrow, 3:00 PM',
-      participants: '234 registered',
-      icon: 'Calendar'
-    },
-    {
-      title: 'AI/ML Workshop',
-      date: 'Friday, 6:00 PM',
-      participants: '89 registered',
-      icon: 'Brain'
-    },
-    {
-      title: 'Career Fair Prep Session',
-      date: 'Next Monday, 4:00 PM',
-      participants: '156 registered',
-      icon: 'Briefcase'
-    }
-  ];
+  const progress = { problems: { done: 12, of: 15 }, assignments: { done: 8, of: 12 }, avg: 84, trend: '+5%' };
 
-  const quickActions = [
-    {
-      title: 'Solve Problems',
-      description: 'Practice coding problems',
-      href: '/problem-workspace',
-      icon: 'Code',
-      color: 'blue'
-    },
-    {
-      title: 'Join Forums',
-      description: 'Discuss with peers',
-      href: '/campus-forums',
-      icon: 'MessageSquare',
-      color: 'green'
-    },
-    {
-      title: 'View Achievements',
-      description: 'Track your progress',
-      href: '/achievement-center',
-      icon: 'Trophy',
-      color: 'yellow'
-    },
-    {
-      title: 'Find Projects',
-      description: 'Collaborate on projects',
-      href: '/projects',
-      icon: 'FolderOpen',
-      color: 'purple'
-    }
-  ];
+  const activeList = assignments.filter(a => a.status === 'in-progress' || a.status === 'not-started');
+  const doneList   = assignments.filter(a => a.status === 'submitted'  || a.status === 'graded');
 
   return (
     <>
       <Helmet>
-        <title>Dashboard - CodeCampus</title>
-        <meta name="description" content="Your personal CodeCampus dashboard" />
+        <title>Dashboard – CodeCampus</title>
+        <meta name="description" content="Your CodeCampus student dashboard" />
       </Helmet>
 
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[#f7f8fa]">
         <Header />
-        
+
         <main className="pt-16">
-          <div className="container mx-auto px-4 lg:px-6 py-8">
-            {/* Welcome Section */}
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Welcome back{userName ? `, ${userName}` : ''}! 👋
-              </h1>
-              <div className="flex items-center space-x-4">
-                <p className="text-gray-600">
-                  {userEmail && `Signed in as ${userEmail}`}
+          <div className="max-w-[1200px] mx-auto px-5 py-7">
+
+            {/* ─── Greeting ─── */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-7">
+              <div>
+                <h1 className="text-[22px] font-semibold text-slate-900 tracking-tight">
+                  {getGreeting()}{userName ? `, ${userName}` : ''}
+                </h1>
+                <p className="text-[13px] text-slate-500 mt-0.5">
+                  {userEmail || 'Welcome to your dashboard'}
                 </p>
-                {loginMethod && (
-                  <div className="flex items-center space-x-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
-                    <Icon name={loginMethod === 'google' ? 'Chrome' : 'Microsoft'} size={12} />
-                    <span>via {loginMethod === 'google' ? 'Google' : 'Microsoft'}</span>
-                  </div>
-                )}
+              </div>
+              <div className="flex gap-2">
+                <Link to="/assignments">
+                  <Button variant="outline" size="sm" iconName="ClipboardList" iconPosition="left">
+                    Assignments
+                  </Button>
+                </Link>
+                <Link to="/problem-workspace">
+                  <Button size="sm" iconName="Code" iconPosition="left">
+                    Code Editor
+                  </Button>
+                </Link>
               </div>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {stats.map((stat, index) => (
-                <Link
-                  key={index}
-                  to={stat.href}
-                  className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md hover:border-gray-300 transition-all cursor-pointer"
+            {/* ─── Stat Cards ─── */}
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-7">
+              {[
+                { label: 'Deadlines',  val: stats.deadlines, icon: 'Clock',     c: '#ef4444' },
+                { label: 'Active',     val: stats.active,    icon: 'FileCode2', c: '#f59e0b' },
+                { label: 'Solved',     val: stats.solved,    icon: 'CheckCircle2', c: '#3b82f6' },
+                { label: 'Pending',    val: stats.pending,   icon: 'Loader',    c: '#f97316' },
+                { label: 'AI Hints',   val: `${stats.aiHintsLeft}/${stats.aiHintsTotal}`, icon: 'Sparkles', c: '#8b5cf6' },
+              ].map((s, i) => (
+                <div key={i}
+                  className="bg-white rounded-lg px-4 py-3.5 border border-slate-200/80 hover:border-slate-300 transition-colors"
+                  style={{ boxShadow: '0 1px 2px rgba(0,0,0,.04)' }}
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center bg-${stat.color}-100`}>
-                      <Icon name={stat.icon} size={24} className={`text-${stat.color}-600`} />
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-md flex items-center justify-center" style={{ background: s.c + '12' }}>
+                      <Icon name={s.icon} size={15} style={{ color: s.c }} />
+                    </div>
+                    <div>
+                      <p className="text-[18px] font-semibold text-slate-900 leading-none">{s.val}</p>
+                      <p className="text-[11px] text-slate-400 mt-0.5 font-medium">{s.label}</p>
                     </div>
                   </div>
-                  <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
-                    <p className="text-sm text-gray-600">{stat.label}</p>
-                    <p className="text-xs text-green-600">{stat.change}</p>
-                  </div>
-                </Link>
+                </div>
               ))}
             </div>
 
-            <div className="grid lg:grid-cols-3 gap-8">
-              {/* Quick Actions */}
-              <div className="lg:col-span-2 space-y-8">
-                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-6">Quick Actions</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {quickActions.map((action, index) => (
-                      <Link
-                        key={index}
-                        to={action.href}
-                        className="flex items-center space-x-4 p-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all"
-                      >
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center bg-${action.color}-100`}>
-                          <Icon name={action.icon} size={20} className={`text-${action.color}-600`} />
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-gray-900">{action.title}</h3>
-                          <p className="text-sm text-gray-600">{action.description}</p>
-                        </div>
-                      </Link>
-                    ))}
+            {/* ─── Main Grid ─── */}
+            <div className="grid lg:grid-cols-[1fr_320px] gap-5">
+
+              {/* Left Column */}
+              <div className="space-y-5">
+
+                {/* Resume Card */}
+                <div
+                  className="relative rounded-lg p-5 text-white overflow-hidden"
+                  style={{
+                    background: 'linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)',
+                    boxShadow: '0 4px 12px rgba(37,99,235,.25)',
+                  }}
+                >
+                  <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full bg-white/[.06]" />
+                  <p className="text-[11px] font-medium text-blue-200 uppercase tracking-widest mb-1.5">Resume</p>
+                  <h3 className="text-base font-semibold mb-1">{lastSession.title}</h3>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-blue-200 mb-4">
+                    <span className="flex items-center gap-1"><Icon name="FileCode" size={12}/>{lastSession.file}</span>
+                    <span className="flex items-center gap-1"><Icon name="MapPin" size={12}/>Line {lastSession.line}</span>
+                    <span className="flex items-center gap-1"><Icon name="Save" size={12}/>{lastSession.saved}</span>
                   </div>
+                  <Link to="/problem-workspace">
+                    <button className="px-4 py-[7px] bg-white text-blue-700 rounded-md text-[13px] font-semibold hover:bg-blue-50 transition-colors flex items-center gap-1.5">
+                      <Icon name="Play" size={14}/> Continue
+                    </button>
+                  </Link>
                 </div>
 
-                {/* Recent Activity */}
-                <div className="space-y-4">
-                  <ActivityFeed 
-                    activities={recentActivity}
-                    variant="dashboard"
-                    maxItems={4}
-                    title="Recent Activity"
-                  />
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <Link to="/status" className="block">
-                      <Button variant="outline" size="sm" className="w-full">
-                        View All Activity
+                {/* Assignments Panel */}
+                <div
+                  className="bg-white rounded-lg border border-slate-200/80 overflow-hidden"
+                  style={{ boxShadow: '0 1px 3px rgba(0,0,0,.04)' }}
+                >
+                  <div className="flex items-center justify-between px-5 pt-4 pb-3">
+                    <h2 className="text-[15px] font-semibold text-slate-900">Assignments</h2>
+                    <div className="flex bg-slate-100 rounded-md p-[3px]">
+                      {['active', 'done'].map(t => (
+                        <button key={t} onClick={() => setTab(t)}
+                          className={`px-3 py-[5px] text-[12px] font-medium rounded-[5px] transition-all ${
+                            tab === t ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                          }`}
+                        >
+                          {t === 'active' ? `Active (${activeList.length})` : `Done (${doneList.length})`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="px-5 pb-4 space-y-2">
+                    {(tab === 'active' ? activeList : doneList).map(a => {
+                      const u = getDeadlineUrgency(a.deadline);
+                      return (
+                        <div key={a.id}
+                          className={`border rounded-lg p-3.5 transition-all hover:border-slate-300 ${
+                            u.urgent && a.status !== 'submitted' && a.status !== 'graded'
+                              ? 'border-red-200 bg-red-50/40' : 'border-slate-200/80'
+                          }`}
+                          style={{ boxShadow: '0 1px 2px rgba(0,0,0,.02)' }}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                                <span className="text-[13px] font-medium text-slate-900">{a.title}</span>
+                                <StatusBadge status={a.status} />
+                              </div>
+                              <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-500">
+                                <span>{a.course}</span>
+                                <span className={`font-medium ${u.color}`}>
+                                  <Icon name="Clock" size={10} className="inline mr-0.5 -mt-px" />{u.label}
+                                </span>
+                                {a.scored !== null && <span>Score: {a.scored}/{a.maxMarks}</span>}
+                              </div>
+                              {a.status === 'in-progress' && (
+                                <div className="w-full bg-slate-100 rounded-full h-1 mt-2.5">
+                                  <div className="bg-blue-500 h-1 rounded-full" style={{ width: `${a.progress}%`, transition: 'width .4s' }} />
+                                </div>
+                              )}
+                            </div>
+                            {(a.status === 'in-progress' || a.status === 'not-started') && (
+                              <Link to={`/assignment-workspace?id=${a.id}`}>
+                                <button className="px-3 py-[6px] bg-blue-600 text-white text-[12px] font-medium rounded-md hover:bg-blue-700 transition-colors flex items-center gap-1">
+                                  <Icon name={a.status === 'in-progress' ? 'Play' : 'ExternalLink'} size={12} />
+                                  {a.status === 'in-progress' ? 'Continue' : 'Open'}
+                                </button>
+                              </Link>
+                            )}
+                            {a.status === 'graded' && (
+                              <Link to="/problem-history">
+                                <button className="px-3 py-[6px] bg-slate-100 text-slate-700 text-[12px] font-medium rounded-md hover:bg-slate-200 transition-colors">Review</button>
+                              </Link>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="px-5 pb-4">
+                    <Link to="/assignments" className="block">
+                      <Button variant="outline" size="sm" className="w-full text-[12px]">
+                        View All Assignments
                       </Button>
                     </Link>
                   </div>
+                </div>
+
+                {/* Quick Nav */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { label: 'Assignments', to: '/assignments', icon: 'ClipboardList', c: '#2563eb' },
+                    { label: 'Tests', to: '/test', icon: 'ShieldCheck', c: '#dc2626' },
+                    { label: 'Forums', to: '/campus-forums', icon: 'MessageSquare', c: '#10b981' },
+                    { label: 'Achievements', to: '/achievement-center', icon: 'Trophy', c: '#f59e0b' },
+                  ].map((n, i) => (
+                    <Link key={i} to={n.to}
+                      className="flex items-center gap-2.5 bg-white border border-slate-200/80 rounded-lg px-3.5 py-3 hover:border-slate-300 transition-colors group"
+                      style={{ boxShadow: '0 1px 2px rgba(0,0,0,.04)' }}
+                    >
+                      <div className="w-8 h-8 rounded-md flex items-center justify-center" style={{ background: n.c + '12' }}>
+                        <Icon name={n.icon} size={15} style={{ color: n.c }} />
+                      </div>
+                      <span className="text-[13px] font-medium text-slate-700 group-hover:text-slate-900 transition-colors">{n.label}</span>
+                    </Link>
+                  ))}
                 </div>
               </div>
 
-              {/* Sidebar */}
-              <div className="space-y-6">
-                {/* Progress Card */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                  <h3 className="font-semibold text-gray-900 mb-4">Weekly Progress</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="text-gray-600">Problems Solved</span>
-                        <span className="font-medium">12/15</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="bg-blue-600 h-2 rounded-full" style={{ width: '80%' }}></div>
-                      </div>
+              {/* Right Sidebar */}
+              <div className="space-y-5">
+
+                {/* AI Assistant */}
+                <div
+                  className="rounded-lg p-4 border border-indigo-200/80"
+                  style={{ background: 'linear-gradient(160deg, #eef2ff 0%, #f5f3ff 100%)', boxShadow: '0 1px 3px rgba(0,0,0,.04)' }}
+                >
+                  <div className="flex items-center justify-between mb-2.5">
+                    <h3 className="text-[14px] font-semibold text-slate-900 flex items-center gap-1.5">
+                      <Icon name="Sparkles" size={15} className="text-indigo-500" />
+                      AI Assistant
+                    </h3>
+                    <span className="text-[10px] font-medium text-indigo-600 bg-indigo-100 px-1.5 py-0.5 rounded">
+                      {stats.aiHintsLeft} left
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mb-3">Logic help, error explanations — no full answers.</p>
+                  <div className="grid grid-cols-3 gap-1.5 mb-3">
+                    {[
+                      { l: 'Hint', icon: 'Lightbulb', c: '#f59e0b' },
+                      { l: 'Debug', icon: 'Bug', c: '#ef4444' },
+                      { l: 'Explain', icon: 'BookOpen', c: '#3b82f6' },
+                    ].map((a, i) => (
+                      <button key={i} className="flex flex-col items-center gap-1 py-2 rounded-md border border-slate-200 bg-white text-[11px] font-medium text-slate-600 hover:border-slate-300 transition-colors">
+                        <Icon name={a.icon} size={14} style={{ color: a.c }} />
+                        {a.l}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="relative">
+                    <input type="text" placeholder="Ask about your code…"
+                      className="w-full pl-3 pr-8 py-2 text-[12px] rounded-md border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-300"
+                    />
+                    <button className="absolute right-2 top-1/2 -translate-y-1/2 text-indigo-500">
+                      <Icon name="SendHorizontal" size={14} />
+                    </button>
+                  </div>
+                  <div className="mt-2.5">
+                    <div className="flex justify-between text-[10px] text-slate-400 mb-0.5">
+                      <span>Usage</span>
+                      <span>{stats.aiHintsTotal - stats.aiHintsLeft}/{stats.aiHintsTotal}</span>
                     </div>
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="text-gray-600">Study Hours</span>
-                        <span className="font-medium">18/25</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="bg-green-600 h-2 rounded-full" style={{ width: '72%' }}></div>
-                      </div>
+                    <div className="w-full bg-slate-200 rounded-full h-1">
+                      <div className="bg-indigo-400 h-1 rounded-full" style={{ width: `${((stats.aiHintsTotal - stats.aiHintsLeft) / stats.aiHintsTotal) * 100}%` }} />
                     </div>
                   </div>
                 </div>
 
-                {/* Upcoming Events */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                  <h3 className="font-semibold text-gray-900 mb-4">Upcoming Events</h3>
-                  <div className="space-y-4">
-                    {upcomingEvents.map((event, index) => (
-                      <div key={index} className="flex items-start space-x-3">
-                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                          <Icon name={event.icon} size={16} className="text-blue-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">{event.title}</p>
-                          <p className="text-xs text-gray-600">{event.date}</p>
-                          <p className="text-xs text-gray-500">{event.participants}</p>
+                {/* Notifications */}
+                <div className="bg-white rounded-lg border border-slate-200/80 p-4" style={{ boxShadow: '0 1px 3px rgba(0,0,0,.04)' }}>
+                  <h3 className="text-[14px] font-semibold text-slate-900 mb-3 flex items-center gap-1.5">
+                    <Icon name="Bell" size={14} className="text-slate-400" />
+                    Notifications
+                    <span className="ml-auto text-[10px] bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center font-bold leading-none">{notifications.length}</span>
+                  </h3>
+                  <div className="space-y-2">
+                    {notifications.map(n => (
+                      <div key={n.id} className="flex items-start gap-2 p-1.5 rounded-md hover:bg-slate-50 transition-colors cursor-pointer">
+                        <Icon name={n.icon} size={14} className={`mt-0.5 ${n.accent}`} />
+                        <div>
+                          <p className="text-[12px] text-slate-700 leading-snug">{n.msg}</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">{n.time}</p>
                         </div>
                       </div>
                     ))}
                   </div>
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <Link to="/events" className="block">
-                      <Button variant="outline" size="sm" className="w-full">
-                        View All Events
-                      </Button>
-                    </Link>
+                </div>
+
+                {/* Progress */}
+                <div className="bg-white rounded-lg border border-slate-200/80 p-4" style={{ boxShadow: '0 1px 3px rgba(0,0,0,.04)' }}>
+                  <h3 className="text-[14px] font-semibold text-slate-900 mb-3 flex items-center gap-1.5">
+                    <Icon name="BarChart3" size={14} className="text-slate-400" />
+                    Progress
+                  </h3>
+                  <div className="space-y-3">
+                    {[
+                      { label: 'Weekly Problems', done: progress.problems.done, of: progress.problems.of, c: '#3b82f6' },
+                      { label: 'Assignments', done: progress.assignments.done, of: progress.assignments.of, c: '#10b981' },
+                    ].map((p, i) => (
+                      <div key={i}>
+                        <div className="flex justify-between text-[12px] mb-1">
+                          <span className="text-slate-600">{p.label}</span>
+                          <span className="font-medium text-slate-800">{p.done}/{p.of}</span>
+                        </div>
+                        <div className="w-full bg-slate-100 rounded-full h-1.5">
+                          <div className="h-1.5 rounded-full" style={{ width: `${(p.done / p.of) * 100}%`, background: p.c, transition: 'width .4s' }} />
+                        </div>
+                      </div>
+                    ))}
                   </div>
+                  <div className="flex items-center justify-between mt-3.5 pt-3 border-t border-slate-100">
+                    <span className="text-[12px] text-slate-500">Average</span>
+                    <span className="text-[14px] font-semibold text-slate-900">{progress.avg}%</span>
+                  </div>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-[12px] text-slate-500">Trend</span>
+                    <span className="text-[12px] font-semibold text-emerald-600 flex items-center gap-0.5">
+                      <Icon name="TrendingUp" size={11} />{progress.trend}
+                    </span>
+                  </div>
+                  <Link to="/problem-history" className="block mt-3">
+                    <Button variant="outline" size="sm" className="w-full text-[12px]">View History</Button>
+                  </Link>
                 </div>
               </div>
             </div>
+
           </div>
         </main>
       </div>

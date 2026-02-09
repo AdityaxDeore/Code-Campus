@@ -14,7 +14,8 @@ const Header = () => {
     { name: 'Dashboard', path: '/student-dashboard', icon: 'LayoutDashboard' },
     { name: 'Problems', path: '/problems', icon: 'Code' },
     { name: 'Learning Paths', path: '/learning-pathways', icon: 'BookOpen' },
-    { name: 'Goals & Homework', path: '/goals-homework', icon: 'Target' },
+    { name: 'Assignments', path: '/assignments', icon: 'ClipboardList' },
+    { name: 'Tests', path: '/test', icon: 'ShieldCheck' },
     { name: 'Forums', path: '/campus-forums', icon: 'MessageSquare' },
   ];
 
