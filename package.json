@@ -2,6 +2,7 @@
   "name": "codecampus",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "rocketCritical": {
     "dependencies": [
       "@dhiwise/component-tagger",
