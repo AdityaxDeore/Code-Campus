@@ -356,15 +356,16 @@ const AssignmentWorkspace = () => {
   const handleSubmit = () => { setSubmitted(true); setShowSubmitConfirm(false); };
   const handleEditorMount = (editor) => {
     editorRef.current = editor;
-    // Intercept Ctrl+V / Cmd+V at the Monaco keybinding level
+    // Intercept Ctrl+V / Cmd+V at the Monaco keybinding level as secondary defense
     editor.onKeyDown((e) => {
-      if ((e.ctrlKey || e.metaKey) && e.keyCode === 52 /* KeyV */) {
+      const isV = e.browserEvent.key === 'v' || e.browserEvent.key === 'V';
+      if ((e.ctrlKey || e.metaKey) && isV) {
         if (navigator.clipboard && navigator.clipboard.readText) {
           navigator.clipboard.readText().then((text) => {
             const wc = text.trim().split(/\s+/).filter(Boolean).length;
             if (wc >= PASTE_WORD_LIMIT) {
-              e.preventDefault();
-              e.stopPropagation();
+              // Undo the pasted content that may have already been inserted
+              editor.trigger('keyboard', 'undo', null);
             }
           }).catch(() => {});
         }
