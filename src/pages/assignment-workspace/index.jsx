@@ -16,7 +16,16 @@ const executeJavaScript = (code) => {
     warn: (...a) => logs.push('Warning: ' + a.map(String).join(' ')),
     info: (...a) => logs.push(a.map(String).join(' ')),
   };
-  try { new Function('console', code)(mc); return { ok: true, out: logs.length ? logs.join('\n') : '(no output)' }; }
+  try {
+    // Restrict access to dangerous globals for sandboxed execution
+    const forbidden = {
+      fetch: undefined, XMLHttpRequest: undefined, WebSocket: undefined,
+      eval: undefined, localStorage: undefined, sessionStorage: undefined,
+      document: undefined, indexedDB: undefined, importScripts: undefined,
+    };
+    new Function('console', ...Object.keys(forbidden), code)(mc, ...Object.values(forbidden));
+    return { ok: true, out: logs.length ? logs.join('\n') : '(no output)' };
+  }
   catch (e) { return { ok: false, out: (logs.length ? logs.join('\n') + '\n' : '') + `Error: ${e.message}` }; }
 };
 

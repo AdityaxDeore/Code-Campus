@@ -161,8 +161,6 @@ const Header = () => {
                       await signOut(); 
                       // Clear local storage
                       localStorage.removeItem('isAuthenticated');
-                      localStorage.removeItem('userEmail');
-                      localStorage.removeItem('userName');
                       localStorage.removeItem('loginMethod');
                     } catch (e) {
                       console.error('Sign out error:', e);
