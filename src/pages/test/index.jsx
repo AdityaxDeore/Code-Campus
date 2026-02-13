@@ -5,7 +5,7 @@ import Editor from '@monaco-editor/react';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 
-const PASTE_WORD_LIMIT = 10;
+const PASTE_WORD_LIMIT = 5;
 const MAX_TAB_WARNINGS = 3;
 
 const mockTests = [
@@ -85,7 +85,7 @@ const TestLobby = ({ onStart }) => {
           <ul className="text-[12px] text-amber-700 space-y-1">
             <li>• Test runs in fullscreen — exiting fullscreen counts as a warning</li>
             <li>• Switching tabs/windows is detected and logged</li>
-            <li>• Pasting more than {PASTE_WORD_LIMIT} words is flagged</li>
+            <li>• Pasting {PASTE_WORD_LIMIT} or more words is blocked and flagged</li>
             <li>• {MAX_TAB_WARNINGS} tab-change warnings will auto-submit your test</li>
           </ul>
         </div>
@@ -102,10 +102,12 @@ const ProctoredTest = ({ test }) => {
   const [answers, setAnswers] = useState(() => questions.map(q => q.starterCode));
   const [tabWarnings, setTabWarnings] = useState(0);
   const [pasteFlags, setPasteFlags] = useState([]);
+  const [pasteToast, setPasteToast] = useState(null);
   const [timeLeft, setTimeLeft] = useState(test.duration * 60); // seconds
   const [submitted, setSubmitted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const containerRef = useRef(null);
+  const editorRef = useRef(null);
 
   const q = questions[currentQ];
 
@@ -153,17 +155,40 @@ const ProctoredTest = ({ test }) => {
     return () => document.removeEventListener('visibilitychange', handler);
   }, []);
 
-  // ── Paste detection ──
+  // ── Paste detection & blocking ──
   useEffect(() => {
     const handler = (e) => {
       const pasted = (e.clipboardData || window.clipboardData).getData('text');
       const wc = pasted.trim().split(/\s+/).filter(Boolean).length;
-      if (wc > PASTE_WORD_LIMIT) {
+      if (wc >= PASTE_WORD_LIMIT) {
+        e.preventDefault();
         setPasteFlags(prev => [...prev, { time: new Date().toLocaleTimeString(), words: wc }]);
+        setPasteToast(`⚠ Paste blocked: ${wc} words detected. External pasting is not allowed.`);
+        setTimeout(() => setPasteToast(null), 4000);
       }
     };
-    window.addEventListener('paste', handler);
-    return () => window.removeEventListener('paste', handler);
+    window.addEventListener('paste', handler, true);
+    return () => window.removeEventListener('paste', handler, true);
+  }, []);
+
+  // ── Monaco editor mount: disable paste keybinding ──
+  const handleEditorMount = useCallback((editor) => {
+    editorRef.current = editor;
+    // Intercept Ctrl+V / Cmd+V at the Monaco keybinding level as secondary defense
+    editor.onKeyDown((e) => {
+      const isV = e.browserEvent.key === 'v' || e.browserEvent.key === 'V';
+      if ((e.ctrlKey || e.metaKey) && isV) {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          navigator.clipboard.readText().then((text) => {
+            const wc = text.trim().split(/\s+/).filter(Boolean).length;
+            if (wc >= PASTE_WORD_LIMIT) {
+              // Undo the pasted content that may have already been inserted
+              editor.trigger('keyboard', 'undo', null);
+            }
+          }).catch(() => {});
+        }
+      }
+    });
   }, []);
 
   // ── Timer ──
@@ -226,6 +251,13 @@ const ProctoredTest = ({ test }) => {
           </div>
         )}
 
+        {/* Paste blocked toast */}
+        {pasteToast && (
+          <div className="bg-amber-600 text-white text-[12px] font-medium text-center py-1.5 flex items-center justify-center gap-2 animate-pulse">
+            <Icon name="Clipboard" size={13} /> {pasteToast}
+          </div>
+        )}
+
         {/* Top Bar */}
         <div className="h-11 bg-[#252526] border-b border-[#3c3c3c] flex items-center justify-between px-4 flex-shrink-0">
           <div className="flex items-center gap-3">
@@ -284,6 +316,7 @@ const ProctoredTest = ({ test }) => {
               language={langMap[q.language] || 'python'}
               value={answers[currentQ]}
               onChange={handleCodeChange}
+              onMount={handleEditorMount}
               theme="vs-dark"
               options={{
                 fontSize: 14,

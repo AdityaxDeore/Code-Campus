@@ -16,7 +16,18 @@ const executeJavaScript = (code) => {
     warn: (...a) => logs.push('Warning: ' + a.map(String).join(' ')),
     info: (...a) => logs.push(a.map(String).join(' ')),
   };
-  try { new Function('console', code)(mc); return { ok: true, out: logs.length ? logs.join('\n') : '(no output)' }; }
+  try {
+    // Restrict access to dangerous globals for sandboxed execution
+    const forbidden = {
+      fetch: undefined, XMLHttpRequest: undefined, WebSocket: undefined,
+      eval: undefined, localStorage: undefined, sessionStorage: undefined,
+      document: undefined, indexedDB: undefined, importScripts: undefined,
+    };
+    // Use strict mode to prevent access to globals via 'this'
+    const strictCode = '"use strict";\n' + code;
+    new Function('console', ...Object.keys(forbidden), strictCode)(mc, ...Object.values(forbidden));
+    return { ok: true, out: logs.length ? logs.join('\n') : '(no output)' };
+  }
   catch (e) { return { ok: false, out: (logs.length ? logs.join('\n') + '\n' : '') + `Error: ${e.message}` }; }
 };
 
@@ -100,7 +111,7 @@ const defaultAssignment = {
 
 const langMap = { python: 'python', java: 'java', javascript: 'javascript', sql: 'sql', cpp: 'cpp', markdown: 'markdown' };
 const langIcon = { python: 'FileCode', java: 'Coffee', javascript: 'FileJson', sql: 'Database', markdown: 'FileText', cpp: 'FileCode' };
-const PASTE_WORD_LIMIT = 10;
+const PASTE_WORD_LIMIT = 5;
 
 /* ════════════════════════════════════════════════════════════
    File Tree Builder
@@ -193,6 +204,7 @@ const AssignmentWorkspace = () => {
   // ── Editor state ──
   const [saved, setSaved] = useState(true);
   const [pasteWarnings, setPasteWarnings] = useState([]);
+  const [pasteToast, setPasteToast] = useState(null);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
@@ -243,18 +255,21 @@ const AssignmentWorkspace = () => {
     saveTimerRef.current = setTimeout(() => setSaved(true), 1500);
   }, [activeFile]);
 
-  // ── Paste detection ──
+  // ── Paste detection & blocking ──
   useEffect(() => {
     const h = (e) => {
       const p = (e.clipboardData || window.clipboardData).getData('text');
       const wc = p.trim().split(/\s+/).filter(Boolean).length;
-      if (wc > PASTE_WORD_LIMIT) {
+      if (wc >= PASTE_WORD_LIMIT) {
+        e.preventDefault();
         setPasteWarnings(prev => [...prev, { time: new Date().toLocaleTimeString(), words: wc, snippet: p.slice(0, 60) }]);
-        setTerminalHistory(prev => [...prev, { type: 'warn', text: `⚠ Paste detected: ${wc} words — flagged for review.` }]);
+        setTerminalHistory(prev => [...prev, { type: 'warn', text: `⚠ Paste blocked: ${wc} words — external pasting is not allowed.` }]);
+        setPasteToast(`⚠ Paste blocked: ${wc} words detected. External pasting is not allowed.`);
+        setTimeout(() => setPasteToast(null), 4000);
       }
     };
-    window.addEventListener('paste', h);
-    return () => window.removeEventListener('paste', h);
+    window.addEventListener('paste', h, true);
+    return () => window.removeEventListener('paste', h, true);
   }, []);
 
   // ── File operations ──
@@ -339,7 +354,24 @@ const AssignmentWorkspace = () => {
   };
 
   const handleSubmit = () => { setSubmitted(true); setShowSubmitConfirm(false); };
-  const handleEditorMount = (editor) => { editorRef.current = editor; };
+  const handleEditorMount = (editor) => {
+    editorRef.current = editor;
+    // Intercept Ctrl+V / Cmd+V at the Monaco keybinding level as secondary defense
+    editor.onKeyDown((e) => {
+      const isV = e.browserEvent.key === 'v' || e.browserEvent.key === 'V';
+      if ((e.ctrlKey || e.metaKey) && isV) {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          navigator.clipboard.readText().then((text) => {
+            const wc = text.trim().split(/\s+/).filter(Boolean).length;
+            if (wc >= PASTE_WORD_LIMIT) {
+              // Undo the pasted content that may have already been inserted
+              editor.trigger('keyboard', 'undo', null);
+            }
+          }).catch(() => {});
+        }
+      }
+    });
+  };
 
   // ── Keyboard shortcuts ──
   useEffect(() => {
@@ -600,6 +632,13 @@ const AssignmentWorkspace = () => {
                 </React.Fragment>
               ))}
             </div>
+
+            {/* Paste blocked toast */}
+            {pasteToast && (
+              <div className="bg-amber-600 text-white text-[11px] font-medium text-center py-1 flex items-center justify-center gap-1.5 flex-shrink-0 animate-pulse">
+                <Icon name="Clipboard" size={12} /> {pasteToast}
+              </div>
+            )}
 
             {/* Monaco Editor */}
             <div className="flex-1 min-h-0">

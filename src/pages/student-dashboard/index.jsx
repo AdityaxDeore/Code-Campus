@@ -62,8 +62,6 @@ const StudentDashboard = () => {
         setLoginMethod('firebase'); return;
       }
       if (!localStorage.getItem('isAuthenticated')) { navigate('/login'); return; }
-      setUserEmail(localStorage.getItem('userEmail') || '');
-      setUserName(localStorage.getItem('userName') || '');
       setLoginMethod(localStorage.getItem('loginMethod') || 'legacy');
     };
     checkAuth();
