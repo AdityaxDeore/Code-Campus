@@ -18,8 +18,11 @@ const firebaseConfig = {
 };
 
 // Warn if required Firebase config is missing
-if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-  console.warn('Firebase configuration is missing. Please set VITE_FIREBASE_* environment variables in your .env file. See .env.example for reference.');
+if (!firebaseConfig.apiKey) {
+  console.warn('Missing VITE_FIREBASE_API_KEY environment variable. See .env.example for reference.');
+}
+if (!firebaseConfig.projectId) {
+  console.warn('Missing VITE_FIREBASE_PROJECT_ID environment variable. See .env.example for reference.');
 }
 
 // Initialize Firebase

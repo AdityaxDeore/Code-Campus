@@ -23,7 +23,9 @@ const executeJavaScript = (code) => {
       eval: undefined, localStorage: undefined, sessionStorage: undefined,
       document: undefined, indexedDB: undefined, importScripts: undefined,
     };
-    new Function('console', ...Object.keys(forbidden), code)(mc, ...Object.values(forbidden));
+    // Use strict mode to prevent access to globals via 'this'
+    const strictCode = '"use strict";\n' + code;
+    new Function('console', ...Object.keys(forbidden), strictCode)(mc, ...Object.values(forbidden));
     return { ok: true, out: logs.length ? logs.join('\n') : '(no output)' };
   }
   catch (e) { return { ok: false, out: (logs.length ? logs.join('\n') + '\n' : '') + `Error: ${e.message}` }; }
