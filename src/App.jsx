@@ -1,6 +1,7 @@
 import React from "react";
 import Routes from "./Routes";
 import { DarkModeProvider } from "./contexts/DarkModeContext";
+import { RoleProvider } from "./contexts/RoleContext";
 import SetupRequired from "./components/SetupRequired";
 
 function App() {
@@ -11,7 +12,9 @@ function App() {
 
   return (
     <DarkModeProvider>
-      <Routes />
+      <RoleProvider>
+        <Routes />
+      </RoleProvider>
     </DarkModeProvider>
   );
 }
