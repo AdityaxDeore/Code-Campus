@@ -16,7 +16,21 @@ const executeJavaScript = (code) => {
     warn: (...a) => logs.push('Warning: ' + a.map(String).join(' ')),
     info: (...a) => logs.push(a.map(String).join(' ')),
   };
-  try { new Function('console', code)(mc); return { ok: true, out: logs.length ? logs.join('\n') : '(no output)' }; }
+  try {
+    // Sandbox: block access to dangerous globals
+    const forbidden = {
+      fetch: undefined, XMLHttpRequest: undefined, WebSocket: undefined,
+      localStorage: undefined, sessionStorage: undefined, document: undefined,
+      window: undefined, globalThis: undefined, eval: undefined,
+      Function: undefined, importScripts: undefined,
+    };
+    const fn = new Function(
+      'console', ...Object.keys(forbidden),
+      `"use strict";\n${code}`
+    );
+    fn(mc, ...Object.values(forbidden));
+    return { ok: true, out: logs.length ? logs.join('\n') : '(no output)' };
+  }
   catch (e) { return { ok: false, out: (logs.length ? logs.join('\n') + '\n' : '') + `Error: ${e.message}` }; }
 };
 

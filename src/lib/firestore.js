@@ -4,6 +4,7 @@ import {
   addDoc, 
   getDoc, 
   getDocs, 
+  setDoc,
   updateDoc, 
   deleteDoc, 
   query, 
@@ -28,7 +29,7 @@ export const COLLECTIONS = {
 // User operations
 export const createUser = async (userId, userData) => {
   try {
-    await updateDoc(doc(db, COLLECTIONS.USERS, userId), {
+    await setDoc(doc(db, COLLECTIONS.USERS, userId), {
       ...userData,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
@@ -207,6 +208,11 @@ export const listenToPosts = (callback, categoryFilter = null) => {
       ...doc.data()
     }));
     callback(posts);
+  }, (error) => {
+    if (import.meta.env.DEV) {
+      console.error('[Firestore] listenToPosts error:', error);
+    }
+    callback([]);
   });
 };
 
@@ -217,5 +223,10 @@ export const listenToUserData = (userId, callback) => {
     } else {
       callback(null);
     }
+  }, (error) => {
+    if (import.meta.env.DEV) {
+      console.error('[Firestore] listenToUserData error:', error);
+    }
+    callback(null);
   });
 };
