@@ -44,6 +44,67 @@ A comprehensive coding education platform for computer science students, featuri
 - **Firestore** - Database and backend services
 - **React Router 6** - Client-side routing with protected routes
 
+## ⚡ Quick Start
+
+### Prerequisites
+- Node.js 16+ and npm
+- A Firebase project (free tier works!)
+
+### Setup Instructions
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/AdityaxDeore/codecampus.git
+   cd codecampus
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Configure Firebase** ⚠️ **IMPORTANT**
+   
+   Without this step, you'll see a white screen!
+   
+   ```bash
+   # Copy the environment template
+   cp .env.example .env  # Mac/Linux
+   copy .env.example .env  # Windows
+   ```
+   
+   Then edit `.env` and add your Firebase credentials:
+   ```env
+   VITE_FIREBASE_API_KEY=your-actual-api-key
+   VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+   VITE_FIREBASE_PROJECT_ID=your-project-id
+   VITE_FIREBASE_APP_ID=your-app-id
+   ```
+   
+   **Where to get these values:**
+   - Go to [Firebase Console](https://console.firebase.google.com)
+   - Create a project (or select existing)
+   - Go to **Project Settings** → **General** → **Your apps**
+   - Click **Web app** → **Config** → Copy the values
+
+4. **Start the development server**
+   ```bash
+   npm start
+   ```
+   
+   The app will open at `http://localhost:4028`
+
+### Troubleshooting
+
+**White screen after cloning?**
+- Make sure you created the `.env` file with valid Firebase credentials
+- Check the browser console for specific error messages
+- Restart the dev server after adding credentials
+
+**Build fails?**
+- Delete `node_modules` and `package-lock.json`, then run `npm install` again
+- Make sure you're using Node.js 16+
+
 ## 🛠️ Development
 
 ```bash

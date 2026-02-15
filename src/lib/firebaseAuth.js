@@ -10,12 +10,23 @@ import {
 } from 'firebase/auth';
 import { auth } from './firebase';
 
+// Check if Firebase is initialized
+const isFirebaseReady = () => {
+  if (!auth) {
+    console.warn('[Auth] Firebase not initialized. Check your .env configuration.');
+    return false;
+  }
+  return true;
+};
+
 // Auth providers
 const googleProvider = new GoogleAuthProvider();
 const githubProvider = new GithubAuthProvider();
 
 // Sign up with email and password
 export const signUpWithEmail = async (email, password, displayName) => {
+  if (!isFirebaseReady()) return { user: null, error: 'Firebase not configured' };
+  
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     
@@ -34,6 +45,8 @@ export const signUpWithEmail = async (email, password, displayName) => {
 
 // Sign in with email and password
 export const signInWithEmail = async (email, password) => {
+  if (!isFirebaseReady()) return { user: null, error: 'Firebase not configured' };
+  
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     return { user: userCredential.user, error: null };
@@ -44,6 +57,8 @@ export const signInWithEmail = async (email, password) => {
 
 // Sign in with Google
 export const signInWithGoogle = async () => {
+  if (!isFirebaseReady()) return { user: null, error: 'Firebase not configured' };
+  
   try {
     const result = await signInWithPopup(auth, googleProvider);
     return { user: result.user, error: null };
@@ -54,6 +69,8 @@ export const signInWithGoogle = async () => {
 
 // Sign in with GitHub
 export const signInWithGitHub = async () => {
+  if (!isFirebaseReady()) return { user: null, error: 'Firebase not configured' };
+  
   try {
     const result = await signInWithPopup(auth, githubProvider);
     return { user: result.user, error: null };
@@ -64,6 +81,8 @@ export const signInWithGitHub = async () => {
 
 // Sign out
 export const logOut = async () => {
+  if (!isFirebaseReady()) return { error: 'Firebase not configured' };
+  
   try {
     await signOut(auth);
     return { error: null };
@@ -74,10 +93,16 @@ export const logOut = async () => {
 
 // Listen to auth state changes
 export const onAuthStateChange = (callback) => {
+  if (!isFirebaseReady()) {
+    callback(null);
+    return () => {};
+  }
+  
   return onAuthStateChanged(auth, callback);
 };
 
 // Get current user
 export const getCurrentUser = () => {
+  if (!isFirebaseReady()) return null;
   return auth.currentUser;
 };
