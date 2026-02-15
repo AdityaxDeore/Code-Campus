@@ -58,44 +58,70 @@ const SecureMonacoEditor = ({
     // ── Disable default context menu in exam mode ──
     if (examMode) {
       editor.updateOptions({ contextmenu: false });
+    }
 
-      // Override paste command in exam mode with block policy
-      if (pastePolicy === 'block') {
-        editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV, () => {
-          integrityLogger.log('paste_blocked', { source: 'keyboard_shortcut' });
-        });
-      }
+    // ── Block paste at the DOM level ──
+    // This intercepts Ctrl+V, context-menu paste, and every other paste vector
+    const editorDom = editor.getDomNode();
+    if (editorDom) {
+      editorDom.addEventListener('paste', (e) => {
+        const clipText = (e.clipboardData || window.clipboardData)?.getData('text') || '';
+        const charCount = clipText.length;
+        const wordCount = clipText.trim().split(/\s+/).filter(Boolean).length;
+
+        if (pastePolicy === 'block') {
+          // Completely prevent the paste
+          e.preventDefault();
+          e.stopPropagation();
+          integrityLogger.logPaste({
+            content: clipText,
+            charCount,
+            cursorPosition: null,
+            blocked: true,
+          });
+          onPasteDetected?.({
+            charCount,
+            wordCount,
+            snippet: clipText.slice(0, 80),
+            position: 'blocked',
+            blocked: true,
+          });
+          return;
+        }
+
+        // 'warn' policy: allow but log if above thresholds
+        if (wordCount > 10 || charCount > 100) {
+          integrityLogger.logPaste({
+            content: clipText,
+            charCount,
+            cursorPosition: null,
+            blocked: false,
+          });
+          onPasteDetected?.({
+            charCount,
+            wordCount,
+            snippet: clipText.slice(0, 80),
+            position: null,
+            blocked: false,
+          });
+        }
+      }, true); // capture phase so we fire before Monaco processes it
+    }
+
+    // ── Also override Ctrl+V command when blocking ──
+    if (pastePolicy === 'block') {
+      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV, () => {
+        integrityLogger.log('paste_blocked', { source: 'keyboard_shortcut' });
+      });
+      // Block Shift+Insert as well
+      editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Insert, () => {
+        integrityLogger.log('paste_blocked', { source: 'shift_insert' });
+      });
     }
 
     // ── Track keystrokes for typing pattern analysis ──
     editor.onKeyDown(() => {
       integrityLogger.recordKeystroke();
-    });
-
-    // ── Intercept paste in editor ──
-    editor.onDidPaste((range) => {
-      const model = editor.getModel();
-      if (!model) return;
-
-      const pastedText = model.getValueInRange(range);
-      const charCount = pastedText.length;
-      const wordCount = pastedText.trim().split(/\s+/).filter(Boolean).length;
-
-      if (wordCount > 10 || charCount > 100) {
-        integrityLogger.logPaste({
-          content: pastedText,
-          charCount,
-          cursorPosition: `${range.startLineNumber}:${range.startColumn}`,
-          blocked: false,
-        });
-
-        onPasteDetected?.({
-          charCount,
-          wordCount,
-          snippet: pastedText.slice(0, 80),
-          position: `Line ${range.startLineNumber}`,
-        });
-      }
     });
 
     onMount?.(editor, monaco);

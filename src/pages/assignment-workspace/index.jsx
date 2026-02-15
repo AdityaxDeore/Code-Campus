@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Helmet } from 'react-helmet';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import Editor from '@monaco-editor/react';
+import SecureMonacoEditor from '../../components/SecureEditor/SecureMonacoEditor';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import integrityLogger, { INTEGRITY_EVENTS } from '../../lib/integrity';
@@ -268,25 +268,20 @@ const AssignmentWorkspace = () => {
     saveTimerRef.current = setTimeout(() => setSaved(true), 1500);
   }, [activeFile]);
 
-  // ── Paste detection ──
-  useEffect(() => {
-    const h = (e) => {
-      const p = (e.clipboardData || window.clipboardData).getData('text');
-      const wc = p.trim().split(/\s+/).filter(Boolean).length;
-      if (wc > PASTE_WORD_LIMIT) {
-        setPasteWarnings(prev => [...prev, { time: new Date().toLocaleTimeString(), words: wc, snippet: p.slice(0, 60) }]);
-        setTerminalHistory(prev => [...prev, { type: 'warn', text: `⚠ Paste detected: ${wc} words — flagged for review.` }]);
-        // Log to integrity system
-        integrityLogger.logPaste({
-          content: p,
-          charCount: p.length,
-          cursorPosition: null,
-          blocked: false,
-        });
-      }
-    };
-    window.addEventListener('paste', h);
-    return () => window.removeEventListener('paste', h);
+  // ── Paste detection (handled by SecureMonacoEditor) ──
+  const handlePasteDetected = useCallback(({ charCount, wordCount, snippet, blocked }) => {
+    setPasteWarnings(prev => [...prev, {
+      time: new Date().toLocaleTimeString(),
+      words: wordCount,
+      snippet: snippet || '',
+      blocked: !!blocked,
+    }]);
+    setTerminalHistory(prev => [...prev, {
+      type: 'warn',
+      text: blocked
+        ? `🚫 Paste BLOCKED: ${wordCount} words — pasting is disabled for this assignment.`
+        : `⚠ Paste detected: ${wordCount} words — flagged for review.`,
+    }]);
   }, []);
 
   // ── File operations ──
@@ -383,6 +378,26 @@ const AssignmentWorkspace = () => {
     setShowSubmitConfirm(false);
   };
   const handleEditorMount = (editor) => { editorRef.current = editor; };
+
+  // ── Block paste at document level as safety net ──
+  useEffect(() => {
+    const blockPaste = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const p = (e.clipboardData || window.clipboardData)?.getData('text') || '';
+      const wc = p.trim().split(/\s+/).filter(Boolean).length;
+      if (wc > 0) {
+        handlePasteDetected({
+          charCount: p.length,
+          wordCount: wc,
+          snippet: p.slice(0, 80),
+          blocked: true,
+        });
+      }
+    };
+    document.addEventListener('paste', blockPaste, true);
+    return () => document.removeEventListener('paste', blockPaste, true);
+  }, [handlePasteDetected]);
 
   // ── Keyboard shortcuts ──
   useEffect(() => {
@@ -644,32 +659,19 @@ const AssignmentWorkspace = () => {
               ))}
             </div>
 
-            {/* Monaco Editor */}
+            {/* Secure Monaco Editor — paste blocked */}
             <div className="flex-1 min-h-0">
-              <Editor
+              <SecureMonacoEditor
                 height="100%"
                 language={langMap[currentLang] || 'python'}
                 value={fileContents[activeFile] || ''}
                 onChange={handleCodeChange}
                 onMount={handleEditorMount}
-                theme="vs-dark"
                 path={activeFile}
-                options={{
-                  fontSize: 14,
-                  fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
-                  minimap: { enabled: true, maxColumn: 80, scale: 1 },
-                  lineNumbers: 'on',
-                  scrollBeyondLastLine: false,
-                  wordWrap: 'on',
-                  tabSize: 4,
-                  automaticLayout: true,
-                  padding: { top: 8, bottom: 8 },
-                  renderLineHighlight: 'all',
-                  cursorBlinking: 'smooth',
-                  smoothScrolling: true,
-                  bracketPairColorization: { enabled: true },
-                  guides: { indentation: true, bracketPairs: true },
-                }}
+                pastePolicy="block"
+                onPasteDetected={handlePasteDetected}
+                fontSize={14}
+                minimap={true}
               />
             </div>
 
