@@ -62,7 +62,7 @@ export { auth, db, storage };
 // Wrapped in try/catch because ad blockers and CSP policies can
 // prevent analytics from loading — this must never break the app.
 let analytics = null;
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && app) {
   try {
     analytics = getAnalytics(app);
   } catch (err) {
@@ -72,5 +72,7 @@ if (typeof window !== 'undefined') {
   }
 }
 export { analytics };
+
+export default app;
 
 export default app;
