@@ -90,6 +90,13 @@ const Assignments = () => {
                 <h1 className="text-[22px] font-semibold text-slate-900 tracking-tight">Assignments</h1>
                 <p className="text-[13px] text-slate-500 mt-0.5">Complete coding assignments from your courses</p>
               </div>
+              <div className="flex items-center gap-3">
+                <Link to="/assignment-creation">
+                  <button className="px-3.5 py-[7px] bg-emerald-600 text-white text-[12px] font-medium rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-1.5 whitespace-nowrap">
+                    <Icon name="Plus" size={13} />
+                    Create Assignment
+                  </button>
+                </Link>
               <div className="flex bg-slate-100 rounded-md p-[3px]">
                 {['active', 'completed'].map(v => (
                   <button key={v} onClick={() => setViewMode(v)}
@@ -100,6 +107,7 @@ const Assignments = () => {
                     {v === 'active' ? `Active (${counts.active})` : `Completed (${counts.completed})`}
                   </button>
                 ))}
+              </div>
               </div>
             </div>
 
@@ -168,7 +176,9 @@ const Assignments = () => {
                           </Link>
                         )}
                         {a.status === 'graded' && (
-                          <button className="px-3 py-[7px] bg-slate-100 text-slate-700 text-[12px] font-medium rounded-md hover:bg-slate-200 transition-colors">Review</button>
+                          <Link to={`/teacher-review?id=${a.id}`}>
+                            <button className="px-3 py-[7px] bg-slate-100 text-slate-700 text-[12px] font-medium rounded-md hover:bg-slate-200 transition-colors">Review</button>
+                          </Link>
                         )}
                       </div>
                     </div>

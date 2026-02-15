@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
+import integrityLogger, { INTEGRITY_EVENTS } from '../../lib/integrity';
 
 /* ════════════════════════════════════════════════════════════
    Execution Engines
@@ -249,6 +250,16 @@ const AssignmentWorkspace = () => {
   useEffect(() => { terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [terminalHistory]);
   useEffect(() => { aiEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [aiMessages]);
 
+  // ── Initialize integrity logger ──
+  useEffect(() => {
+    integrityLogger.init({
+      studentId: 'current_student',
+      assignmentId,
+      examMode: false,
+    });
+    return () => integrityLogger.destroy();
+  }, [assignmentId]);
+
   // ── Code change handler ──
   const handleCodeChange = useCallback((value) => {
     setFileContents(prev => ({ ...prev, [activeFile]: value || '' }));
@@ -265,6 +276,13 @@ const AssignmentWorkspace = () => {
       if (wc > PASTE_WORD_LIMIT) {
         setPasteWarnings(prev => [...prev, { time: new Date().toLocaleTimeString(), words: wc, snippet: p.slice(0, 60) }]);
         setTerminalHistory(prev => [...prev, { type: 'warn', text: `⚠ Paste detected: ${wc} words — flagged for review.` }]);
+        // Log to integrity system
+        integrityLogger.logPaste({
+          content: p,
+          charCount: p.length,
+          cursorPosition: null,
+          blocked: false,
+        });
       }
     };
     window.addEventListener('paste', h);
@@ -352,7 +370,18 @@ const AssignmentWorkspace = () => {
     }, 600 + Math.random() * 800);
   };
 
-  const handleSubmit = () => { setSubmitted(true); setShowSubmitConfirm(false); };
+  const handleSubmit = () => {
+    // Log submission to integrity system
+    integrityLogger.log(INTEGRITY_EVENTS.CODE_SUBMITTED, {
+      assignment_id: assignmentId,
+      file_count: Object.keys(fileContents).length,
+      paste_warnings: pasteWarnings.length,
+    });
+    const report = integrityLogger.generateReport();
+    console.log('Integrity Report:', report);
+    setSubmitted(true);
+    setShowSubmitConfirm(false);
+  };
   const handleEditorMount = (editor) => { editorRef.current = editor; };
 
   // ── Keyboard shortcuts ──

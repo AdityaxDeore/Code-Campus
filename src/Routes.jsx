@@ -24,6 +24,8 @@ const Problems = lazy(() => import('./pages/problems'));
 const LearningPathways = lazy(() => import('./pages/learning-pathways'));
 const Assignments = lazy(() => import('./pages/assignments'));
 const AssignmentWorkspace = lazy(() => import('./pages/assignment-workspace'));
+const AssignmentCreation = lazy(() => import('./pages/assignment-creation'));
+const TeacherReview = lazy(() => import('./pages/teacher-review'));
 const TestPage = lazy(() => import('./pages/test'));
 
 const Routes = () => {
@@ -94,6 +96,20 @@ const Routes = () => {
           <ProtectedRoute>
             <Suspense fallback={<Loading />}>
               <AssignmentWorkspace />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/assignment-creation" element={
+          <ProtectedRoute>
+            <Suspense fallback={<Loading />}>
+              <AssignmentCreation />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/teacher-review" element={
+          <ProtectedRoute>
+            <Suspense fallback={<Loading />}>
+              <TeacherReview />
             </Suspense>
           </ProtectedRoute>
         } />
