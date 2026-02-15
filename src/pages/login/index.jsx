@@ -6,9 +6,11 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { signInWithEmail, signUpWithEmail, onAuthStateChange } from '../../utils/auth';
 import { trackLogin } from '../../lib/analytics';
+import { useRole } from '../../contexts/RoleContext';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { setRole } = useRole();
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [isSignUp, setIsSignUp] = useState(false);
@@ -151,6 +153,20 @@ const Login = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Dev login handler
+  const handleDevLogin = (role) => {
+    // Set fake user in localStorage
+    const fakeUser = role === 'teacher'
+      ? { email: 'teacher@codecampus.dev', displayName: 'Prof. Ada Lovelace', loginMethod: 'dev' }
+      : { email: 'student@codecampus.dev', displayName: 'Student Alan Turing', loginMethod: 'dev' };
+    localStorage.setItem('isAuthenticated', 'true');
+    localStorage.setItem('userEmail', fakeUser.email);
+    localStorage.setItem('userName', fakeUser.displayName);
+    localStorage.setItem('loginMethod', fakeUser.loginMethod);
+    setRole(role);
+    navigate(role === 'teacher' ? '/teacher-dashboard' : '/student-dashboard');
   };
 
   return (
