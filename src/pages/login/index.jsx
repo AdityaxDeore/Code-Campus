@@ -8,6 +8,12 @@ import { signInWithEmail, signUpWithEmail, onAuthStateChange } from '../../utils
 import { trackLogin } from '../../lib/analytics';
 import { useRole } from '../../contexts/RoleContext';
 
+// Dev credentials for testing
+const DEV_CREDENTIALS = {
+  student: { email: 'student@codecampus.dev', password: 'password123', name: 'Alan Turing' },
+  teacher: { email: 'teacher@codecampus.dev', password: 'password123', name: 'Prof. Ada Lovelace' },
+};
+
 const Login = () => {
   const navigate = useNavigate();
   const { setRole } = useRole();
@@ -96,6 +102,28 @@ const Login = () => {
     setErrors({});
 
     try {
+      // Check for dev credentials first
+      const isStudentDev = formData.email === DEV_CREDENTIALS.student.email && formData.password === DEV_CREDENTIALS.student.password;
+      const isTeacherDev = formData.email === DEV_CREDENTIALS.teacher.email && formData.password === DEV_CREDENTIALS.teacher.password;
+
+      if (isStudentDev || isTeacherDev) {
+        // Dev login - bypass Firebase
+        const role = isTeacherDev ? 'teacher' : 'student';
+        const devUser = isTeacherDev ? DEV_CREDENTIALS.teacher : DEV_CREDENTIALS.student;
+        
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('userEmail', devUser.email);
+        localStorage.setItem('userName', devUser.name);
+        localStorage.setItem('loginMethod', 'dev');
+        
+        setRole(role);
+        trackLogin('dev_login');
+        
+        navigate(role === 'teacher' ? '/teacher-dashboard' : '/student-dashboard');
+        return;
+      }
+
+      // Regular Firebase authentication
       let result;
       
       if (isSignUp) {
@@ -157,15 +185,13 @@ const Login = () => {
 
   // Dev login handler
   const handleDevLogin = (role) => {
-    // Set fake user in localStorage
-    const fakeUser = role === 'teacher'
-      ? { email: 'teacher@codecampus.dev', displayName: 'Prof. Ada Lovelace', loginMethod: 'dev' }
-      : { email: 'student@codecampus.dev', displayName: 'Student Alan Turing', loginMethod: 'dev' };
+    const devUser = role === 'teacher' ? DEV_CREDENTIALS.teacher : DEV_CREDENTIALS.student;
     localStorage.setItem('isAuthenticated', 'true');
-    localStorage.setItem('userEmail', fakeUser.email);
-    localStorage.setItem('userName', fakeUser.displayName);
-    localStorage.setItem('loginMethod', fakeUser.loginMethod);
+    localStorage.setItem('userEmail', devUser.email);
+    localStorage.setItem('userName', devUser.name);
+    localStorage.setItem('loginMethod', 'dev');
     setRole(role);
+    trackLogin('dev_login_button');
     navigate(role === 'teacher' ? '/teacher-dashboard' : '/student-dashboard');
   };
 
@@ -248,6 +274,54 @@ const Login = () => {
               >
                 Sign Up
               </button>
+            </div>
+
+            {/* Dev Credentials Display */}
+            <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-emerald-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center gap-1.5 mb-2">
+                <Icon name="Zap" size={14} className="text-amber-500" />
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wide">Development Credentials</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="bg-white/80 rounded-md p-2.5 border border-blue-100">
+                  <div className="flex items-center gap-1 mb-1">
+                    <Icon name="User" size={11} className="text-blue-600" />
+                    <span className="font-semibold text-blue-600">Student</span>
+                  </div>
+                  <div className="space-y-0.5 text-slate-600">
+                    <div className="font-mono text-[10px]">{DEV_CREDENTIALS.student.email}</div>
+                    <div className="font-mono text-[10px]">{DEV_CREDENTIALS.student.password}</div>
+                  </div>
+                </div>
+                <div className="bg-white/80 rounded-md p-2.5 border border-emerald-100">
+                  <div className="flex items-center gap-1 mb-1">
+                    <Icon name="GraduationCap" size={11} className="text-emerald-600" />
+                    <span className="font-semibold text-emerald-600">Teacher</span>
+                  </div>
+                  <div className="space-y-0.5 text-slate-600">
+                    <div className="font-mono text-[10px]">{DEV_CREDENTIALS.teacher.email}</div>
+                    <div className="font-mono text-[10px]">{DEV_CREDENTIALS.teacher.password}</div>
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2 mt-3">
+                <button
+                  type="button"
+                  onClick={() => handleDevLogin('student')}
+                  className="flex-1 py-1.5 px-3 bg-blue-600 text-white text-xs font-semibold rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center gap-1"
+                >
+                  <Icon name="User" size={11} />
+                  Quick Login: Student
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDevLogin('teacher')}
+                  className="flex-1 py-1.5 px-3 bg-emerald-600 text-white text-xs font-semibold rounded-md hover:bg-emerald-700 transition-colors flex items-center justify-center gap-1"
+                >
+                  <Icon name="GraduationCap" size={11} />
+                  Quick Login: Teacher
+                </button>
+              </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
