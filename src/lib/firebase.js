@@ -29,11 +29,7 @@ const firebaseConfig = {
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
-<<<<<<< HEAD
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
-=======
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
->>>>>>> 058c90f09f1bb761386662abc6b07c05b09d0788
 };
 
 // Warn if required Firebase config is missing
