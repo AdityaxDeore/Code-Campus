@@ -17,6 +17,7 @@ const executeJavaScript = (code) => {
     info: (...a) => logs.push(a.map(String).join(' ')),
   };
   try {
+<<<<<<< HEAD
     // Restrict access to dangerous globals for sandboxed execution
     const forbidden = {
       fetch: undefined, XMLHttpRequest: undefined, WebSocket: undefined,
@@ -26,6 +27,20 @@ const executeJavaScript = (code) => {
     // Use strict mode to prevent access to globals via 'this'
     const strictCode = '"use strict";\n' + code;
     new Function('console', ...Object.keys(forbidden), strictCode)(mc, ...Object.values(forbidden));
+=======
+    // Sandbox: block access to dangerous globals
+    const forbidden = {
+      fetch: undefined, XMLHttpRequest: undefined, WebSocket: undefined,
+      localStorage: undefined, sessionStorage: undefined, document: undefined,
+      window: undefined, globalThis: undefined, eval: undefined,
+      Function: undefined, importScripts: undefined,
+    };
+    const fn = new Function(
+      'console', ...Object.keys(forbidden),
+      `"use strict";\n${code}`
+    );
+    fn(mc, ...Object.values(forbidden));
+>>>>>>> 058c90f09f1bb761386662abc6b07c05b09d0788
     return { ok: true, out: logs.length ? logs.join('\n') : '(no output)' };
   }
   catch (e) { return { ok: false, out: (logs.length ? logs.join('\n') + '\n' : '') + `Error: ${e.message}` }; }

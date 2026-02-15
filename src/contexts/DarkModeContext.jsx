@@ -15,11 +15,14 @@ export const DarkModeProvider = ({ children }) => {
 
   // Load dark mode preference from localStorage on mount
   useEffect(() => {
-    const savedDarkMode = localStorage.getItem('darkMode');
-    if (savedDarkMode !== null) {
-      setIsDarkMode(JSON.parse(savedDarkMode));
-    } else {
-      // Default to light mode if no preference is saved
+    try {
+      const savedDarkMode = localStorage.getItem('darkMode');
+      if (savedDarkMode !== null) {
+        const parsed = JSON.parse(savedDarkMode);
+        setIsDarkMode(typeof parsed === 'boolean' ? parsed : false);
+      }
+    } catch {
+      // Corrupted localStorage value — fall back to light mode
       setIsDarkMode(false);
     }
   }, []);

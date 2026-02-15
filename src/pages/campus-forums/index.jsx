@@ -404,7 +404,8 @@ const useApi = (url) => {
   useEffect(() => {
     setPosts(mockPosts);
     setFriendRequests(mockFriendRequests);
-  }, [mockPosts, mockFriendRequests]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Filter and sort posts
   const filteredAndSortedPosts = posts
