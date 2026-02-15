@@ -31,10 +31,20 @@ const Login = () => {
 
   // Check if user is already authenticated
   useEffect(() => {
+    // Check localStorage for existing auth
+    const isAuthenticated = localStorage.getItem('isAuthenticated');
+    if (isAuthenticated === 'true') {
+      const role = localStorage.getItem('codecampus_role') || 'student';
+      navigate(role === 'teacher' ? '/teacher-dashboard' : '/student-dashboard');
+      return;
+    }
+
+    // Also check Firebase auth state
     const unsubscribe = onAuthStateChange((user) => {
       if (user) {
-        // User is already logged in, redirect to dashboard
-        navigate('/student-dashboard');
+        // User is already logged in via Firebase, redirect to dashboard
+        const role = localStorage.getItem('codecampus_role') || 'student';
+        navigate(role === 'teacher' ? '/teacher-dashboard' : '/student-dashboard');
       }
     });
 
@@ -106,6 +116,8 @@ const Login = () => {
       const isStudentDev = formData.email === DEV_CREDENTIALS.student.email && formData.password === DEV_CREDENTIALS.student.password;
       const isTeacherDev = formData.email === DEV_CREDENTIALS.teacher.email && formData.password === DEV_CREDENTIALS.teacher.password;
 
+      console.log('Login attempt:', { email: formData.email, isStudentDev, isTeacherDev });
+
       if (isStudentDev || isTeacherDev) {
         // Dev login - bypass Firebase
         const role = isTeacherDev ? 'teacher' : 'student';
@@ -117,9 +129,20 @@ const Login = () => {
         localStorage.setItem('loginMethod', 'dev');
         
         setRole(role);
-        trackLogin('dev_login');
         
-        navigate(role === 'teacher' ? '/teacher-dashboard' : '/student-dashboard');
+        try {
+          trackLogin('dev_login');
+        } catch (e) {
+          console.log('Analytics tracking failed, continuing anyway');
+        }
+        
+        setIsLoading(false);
+        
+        // Small delay to ensure role is set before navigation
+        setTimeout(() => {
+          navigate(role === 'teacher' ? '/teacher-dashboard' : '/student-dashboard');
+        }, 100);
+        
         return;
       }
 
@@ -191,8 +214,17 @@ const Login = () => {
     localStorage.setItem('userName', devUser.name);
     localStorage.setItem('loginMethod', 'dev');
     setRole(role);
-    trackLogin('dev_login_button');
-    navigate(role === 'teacher' ? '/teacher-dashboard' : '/student-dashboard');
+    
+    try {
+      trackLogin('dev_login_button');
+    } catch (e) {
+      console.log('Analytics tracking failed, continuing anyway');
+    }
+    
+    // Small delay to ensure role is set
+    setTimeout(() => {
+      navigate(role === 'teacher' ? '/teacher-dashboard' : '/student-dashboard');
+    }, 100);
   };
 
   return (
