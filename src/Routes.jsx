@@ -16,7 +16,6 @@ const AchievementCenter = lazy(() => import('./pages/achievement-center'));
 const ProblemWorkspace = lazy(() => import('./pages/problem-workspace'));
 const AboutCodeCampus = lazy(() => import('./pages/about-code-campus'));
 const StudentDashboard = lazy(() => import('./pages/student-dashboard'));
-const TeacherDashboard = lazy(() => import('./pages/teacher-dashboard'));
 const ComingSoon = lazy(() => import('./pages/coming-soon'));
 const Projects = lazy(() => import('./pages/projects'));
 const StatusPage = lazy(() => import('./pages/status'));
@@ -55,13 +54,6 @@ const Routes = () => {
           <ProtectedRoute>
             <Suspense fallback={<Loading />}>
               <StudentDashboard />
-            </Suspense>
-          </ProtectedRoute>
-        } />
-        <Route path="/teacher-dashboard" element={
-          <ProtectedRoute>
-            <Suspense fallback={<Loading />}>
-              <TeacherDashboard />
             </Suspense>
           </ProtectedRoute>
         } />

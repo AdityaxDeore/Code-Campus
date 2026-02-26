@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import Header from '../../components/ui/Header';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
-import { useRole } from '../../contexts/RoleContext';
 
 const subjects = [
   { key: 'all', label: 'All', icon: 'LayoutGrid' },
@@ -57,7 +56,6 @@ const DifficultyBadge = ({ d }) => {
 };
 
 const Assignments = () => {
-  const { isTeacher } = useRole();
   const [activeSubject, setActiveSubject] = useState('all');
   const [viewMode, setViewMode] = useState('active'); // active | completed
 
@@ -93,14 +91,12 @@ const Assignments = () => {
                 <p className="text-[13px] text-slate-500 mt-0.5">Complete coding assignments from your courses</p>
               </div>
               <div className="flex items-center gap-3">
-                {isTeacher && (
-                  <Link to="/assignment-creation">
-                    <button className="px-3.5 py-[7px] bg-emerald-600 text-white text-[12px] font-medium rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-1.5 whitespace-nowrap">
-                      <Icon name="Plus" size={13} />
-                      Create Assignment
-                    </button>
-                  </Link>
-                )}
+                <Link to="/assignment-creation">
+                  <button className="px-3.5 py-[7px] bg-emerald-600 text-white text-[12px] font-medium rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-1.5 whitespace-nowrap">
+                    <Icon name="Plus" size={13} />
+                    Create Assignment
+                  </button>
+                </Link>
               <div className="flex bg-slate-100 rounded-md p-[3px]">
                 {['active', 'completed'].map(v => (
                   <button key={v} onClick={() => setViewMode(v)}

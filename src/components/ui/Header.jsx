@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { useRole } from '../../contexts/RoleContext';
 import { signOut } from '../../utils/auth';
 import Icon from '../AppIcon';
 import DarkModeToggle from './DarkModeToggle';
@@ -10,9 +9,8 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { isTeacher, toggleRole, role } = useRole();
 
-  const studentNavItems = [
+  const navigationItems = [
     { name: 'Dashboard', path: '/student-dashboard', icon: 'LayoutDashboard' },
     { name: 'Problems', path: '/problems', icon: 'Code' },
     { name: 'Learning Paths', path: '/learning-pathways', icon: 'BookOpen' },
@@ -20,16 +18,6 @@ const Header = () => {
     { name: 'Tests', path: '/test', icon: 'ShieldCheck' },
     { name: 'Forums', path: '/campus-forums', icon: 'MessageSquare' },
   ];
-
-  const teacherNavItems = [
-    { name: 'Dashboard', path: '/teacher-dashboard', icon: 'LayoutDashboard' },
-    { name: 'Assignments', path: '/assignments', icon: 'ClipboardList' },
-    { name: 'Create', path: '/assignment-creation', icon: 'PlusCircle' },
-    { name: 'Review', path: '/teacher-review', icon: 'CheckSquare' },
-    { name: 'Forums', path: '/campus-forums', icon: 'MessageSquare' },
-  ];
-
-  const navigationItems = isTeacher ? teacherNavItems : studentNavItems;
 
   const moreItems = [
     { name: 'Achievements', path: '/achievement-center', icon: 'Trophy' },
@@ -134,21 +122,6 @@ const Header = () => {
 
         {/* User Actions */}
         <div className="flex items-center space-x-3">
-          {/* Role Toggle */}
-          <button
-            onClick={toggleRole}
-            className={`relative flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-md border transition-all ${
-              isTeacher
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
-            }`}
-            title={`Switch to ${isTeacher ? 'student' : 'teacher'} view`}
-          >
-            <Icon name={isTeacher ? 'GraduationCap' : 'User'} size={12} />
-            {isTeacher ? 'Teacher' : 'Student'}
-            <Icon name="ArrowLeftRight" size={9} className="opacity-50" />
-          </button>
-
           {/* Dark Mode Toggle */}
           <DarkModeToggle />
 
