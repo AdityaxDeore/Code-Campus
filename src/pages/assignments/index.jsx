@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 import Header from '../../components/ui/Header';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
+import { getAssignments } from '../../lib/assignmentService';
 
 const subjects = [
   { key: 'all', label: 'All', icon: 'LayoutGrid' },
@@ -58,8 +59,46 @@ const DifficultyBadge = ({ d }) => {
 const Assignments = () => {
   const [activeSubject, setActiveSubject] = useState('all');
   const [viewMode, setViewMode] = useState('active'); // active | completed
+  const [dbAssignments, setDbAssignments] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const filtered = mockAssignments.filter(a => {
+  // Fetch assignments from MongoDB on mount
+  useEffect(() => {
+    const fetchAssignments = async () => {
+      setLoading(true);
+      try {
+        const result = await getAssignments();
+        if (result.success && result.assignments.length > 0) {
+          // Map MongoDB assignments to match expected format
+          const mapped = result.assignments.map(a => ({
+            id: a._id,
+            title: a.title,
+            subject: a.subject || 'dsa',
+            teacher: a.teacherName || 'Teacher',
+            deadline: a.deadline,
+            status: 'not-started',
+            progress: 0,
+            difficulty: a.difficulty || 'Medium',
+            maxMarks: a.maxMarks || 100,
+            scored: null,
+            language: (a.allowedLanguages && a.allowedLanguages[0]) || 'python',
+            description: a.instructions || '',
+          }));
+          setDbAssignments(mapped);
+        }
+      } catch (err) {
+        console.log('API not available, using mock data:', err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAssignments();
+  }, []);
+
+  // Combine: DB assignments first, then mock assignments
+  const allAssignments = [...dbAssignments, ...mockAssignments];
+
+  const filtered = allAssignments.filter(a => {
     const subjectMatch = activeSubject === 'all' || a.subject === activeSubject;
     const statusMatch = viewMode === 'active'
       ? (a.status === 'in-progress' || a.status === 'not-started')
@@ -68,8 +107,8 @@ const Assignments = () => {
   });
 
   const counts = {
-    active: mockAssignments.filter(a => a.status === 'in-progress' || a.status === 'not-started').length,
-    completed: mockAssignments.filter(a => a.status === 'submitted' || a.status === 'graded').length,
+    active: allAssignments.filter(a => a.status === 'in-progress' || a.status === 'not-started').length,
+    completed: allAssignments.filter(a => a.status === 'submitted' || a.status === 'graded').length,
   };
 
   return (

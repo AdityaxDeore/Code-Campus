@@ -20,6 +20,8 @@ import { useNavigate } from 'react-router-dom';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import { AI_POLICY } from '../../components/AiSuggestionPanel';
+import { createAssignment } from '../../lib/assignmentService';
+import { useAuth } from '../../hooks/useAuth';
 
 const LANGUAGES = [
   { value: 'python', label: 'Python', icon: 'FileCode' },
@@ -51,6 +53,8 @@ const STARTER_TEMPLATES = {
 
 const AssignmentCreation = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // ── Form State ──
   const [formData, setFormData] = useState({
@@ -148,22 +152,47 @@ const AssignmentCreation = () => {
 
   const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
 
-  // ── Handle submission ──
-  const handleCreate = () => {
+  // ── Handle submission (saves to MongoDB via API) ──
+  const handleCreate = async () => {
     if (!validateStep(step)) return;
+    setIsSubmitting(true);
 
-    // In production, this would POST to Firestore
-    const assignment = {
-      ...formData,
-      id: `asg_${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      createdBy: 'current_teacher_id',
-      status: formData.publishImmediately ? 'published' : 'draft',
-      submissionCount: 0,
-    };
+    try {
+      const assignmentData = {
+        title: formData.title,
+        course: formData.subject,
+        subject: formData.subject.toLowerCase().replace(/[\s\/]/g, '_'),
+        instructions: formData.instructions || formData.description,
+        assignmentType: formData.type,
+        allowedLanguages: formData.allowedLanguages,
+        starterCode: formData.starterCode,
+        deadline: `${formData.deadline}T${formData.deadlineTime}`,
+        aiPolicy: formData.aiPolicy === AI_POLICY.DISABLED ? 'disabled' : formData.aiPolicy === AI_POLICY.LIMITED ? 'limited' : 'enabled',
+        examMode: formData.examMode,
+        rubric: JSON.stringify(formData.rubric),
+        maxMarks: formData.maxMarks,
+        difficulty: 'Medium',
+        status: formData.publishImmediately ? 'active' : 'draft'
+      };
 
-    console.log('Assignment created:', assignment);
-    navigate('/assignments');
+      const result = await createAssignment(
+        assignmentData,
+        user?.uid || 'teacher_local',
+        user?.displayName || 'Teacher'
+      );
+
+      if (result.success) {
+        alert('✅ Assignment created and saved to database!');
+        navigate('/assignments');
+      } else {
+        alert('❌ Failed to create assignment: ' + (result.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error creating assignment:', error);
+      alert('❌ Error: ' + error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // ── Total rubric marks ──
