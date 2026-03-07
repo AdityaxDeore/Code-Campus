@@ -104,6 +104,9 @@ Why it works
 • Timestamp logging
 • Tab-switch tracking
 • Integrity timeline
+• Authenticity check
+• Similarity score
+• Copy/plagiarism risk
 • Risk flags
 • Instructor visibility
 • Audit support
