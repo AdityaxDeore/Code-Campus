@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 import Header from '../../components/ui/Header';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
+import { getAssignments } from '../../lib/assignmentService';
 
 const subjects = [
   { key: 'all', label: 'All', icon: 'LayoutGrid' },
@@ -58,8 +59,46 @@ const DifficultyBadge = ({ d }) => {
 const Assignments = () => {
   const [activeSubject, setActiveSubject] = useState('all');
   const [viewMode, setViewMode] = useState('active'); // active | completed
+  const [dbAssignments, setDbAssignments] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const filtered = mockAssignments.filter(a => {
+  // Fetch assignments from MongoDB on mount
+  useEffect(() => {
+    const fetchAssignments = async () => {
+      setLoading(true);
+      try {
+        const result = await getAssignments();
+        if (result.success && result.assignments.length > 0) {
+          // Map MongoDB assignments to match expected format
+          const mapped = result.assignments.map(a => ({
+            id: a._id,
+            title: a.title,
+            subject: a.subject || 'dsa',
+            teacher: a.teacherName || 'Teacher',
+            deadline: a.deadline,
+            status: 'not-started',
+            progress: 0,
+            difficulty: a.difficulty || 'Medium',
+            maxMarks: a.maxMarks || 100,
+            scored: null,
+            language: (a.allowedLanguages && a.allowedLanguages[0]) || 'python',
+            description: a.instructions || '',
+          }));
+          setDbAssignments(mapped);
+        }
+      } catch (err) {
+        console.log('API not available, using mock data:', err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAssignments();
+  }, []);
+
+  // Combine: DB assignments first, then mock assignments
+  const allAssignments = [...dbAssignments, ...mockAssignments];
+
+  const filtered = allAssignments.filter(a => {
     const subjectMatch = activeSubject === 'all' || a.subject === activeSubject;
     const statusMatch = viewMode === 'active'
       ? (a.status === 'in-progress' || a.status === 'not-started')
@@ -68,8 +107,8 @@ const Assignments = () => {
   });
 
   const counts = {
-    active: mockAssignments.filter(a => a.status === 'in-progress' || a.status === 'not-started').length,
-    completed: mockAssignments.filter(a => a.status === 'submitted' || a.status === 'graded').length,
+    active: allAssignments.filter(a => a.status === 'in-progress' || a.status === 'not-started').length,
+    completed: allAssignments.filter(a => a.status === 'submitted' || a.status === 'graded').length,
   };
 
   return (
@@ -90,6 +129,13 @@ const Assignments = () => {
                 <h1 className="text-[22px] font-semibold text-slate-900 tracking-tight">Assignments</h1>
                 <p className="text-[13px] text-slate-500 mt-0.5">Complete coding assignments from your courses</p>
               </div>
+              <div className="flex items-center gap-3">
+                <Link to="/assignment-creation">
+                  <button className="px-3.5 py-[7px] bg-emerald-600 text-white text-[12px] font-medium rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-1.5 whitespace-nowrap">
+                    <Icon name="Plus" size={13} />
+                    Create Assignment
+                  </button>
+                </Link>
               <div className="flex bg-slate-100 rounded-md p-[3px]">
                 {['active', 'completed'].map(v => (
                   <button key={v} onClick={() => setViewMode(v)}
@@ -100,6 +146,7 @@ const Assignments = () => {
                     {v === 'active' ? `Active (${counts.active})` : `Completed (${counts.completed})`}
                   </button>
                 ))}
+              </div>
               </div>
             </div>
 
@@ -168,7 +215,9 @@ const Assignments = () => {
                           </Link>
                         )}
                         {a.status === 'graded' && (
-                          <button className="px-3 py-[7px] bg-slate-100 text-slate-700 text-[12px] font-medium rounded-md hover:bg-slate-200 transition-colors">Review</button>
+                          <Link to={`/teacher-review?id=${a.id}`}>
+                            <button className="px-3 py-[7px] bg-slate-100 text-slate-700 text-[12px] font-medium rounded-md hover:bg-slate-200 transition-colors">Review</button>
+                          </Link>
                         )}
                       </div>
                     </div>

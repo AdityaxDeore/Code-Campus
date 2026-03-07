@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Helmet } from 'react-helmet';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import Editor from '@monaco-editor/react';
+import SecureMonacoEditor from '../../components/SecureEditor/SecureMonacoEditor';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
+import integrityLogger, { INTEGRITY_EVENTS } from '../../lib/integrity';
 
 /* ════════════════════════════════════════════════════════════
    Execution Engines
@@ -17,17 +18,6 @@ const executeJavaScript = (code) => {
     info: (...a) => logs.push(a.map(String).join(' ')),
   };
   try {
-<<<<<<< HEAD
-    // Restrict access to dangerous globals for sandboxed execution
-    const forbidden = {
-      fetch: undefined, XMLHttpRequest: undefined, WebSocket: undefined,
-      eval: undefined, localStorage: undefined, sessionStorage: undefined,
-      document: undefined, indexedDB: undefined, importScripts: undefined,
-    };
-    // Use strict mode to prevent access to globals via 'this'
-    const strictCode = '"use strict";\n' + code;
-    new Function('console', ...Object.keys(forbidden), strictCode)(mc, ...Object.values(forbidden));
-=======
     // Sandbox: block access to dangerous globals
     const forbidden = {
       fetch: undefined, XMLHttpRequest: undefined, WebSocket: undefined,
@@ -40,7 +30,6 @@ const executeJavaScript = (code) => {
       `"use strict";\n${code}`
     );
     fn(mc, ...Object.values(forbidden));
->>>>>>> 058c90f09f1bb761386662abc6b07c05b09d0788
     return { ok: true, out: logs.length ? logs.join('\n') : '(no output)' };
   }
   catch (e) { return { ok: false, out: (logs.length ? logs.join('\n') + '\n' : '') + `Error: ${e.message}` }; }
@@ -262,6 +251,16 @@ const AssignmentWorkspace = () => {
   useEffect(() => { terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [terminalHistory]);
   useEffect(() => { aiEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [aiMessages]);
 
+  // ── Initialize integrity logger ──
+  useEffect(() => {
+    integrityLogger.init({
+      studentId: 'current_student',
+      assignmentId,
+      examMode: false,
+    });
+    return () => integrityLogger.destroy();
+  }, [assignmentId]);
+
   // ── Code change handler ──
   const handleCodeChange = useCallback((value) => {
     setFileContents(prev => ({ ...prev, [activeFile]: value || '' }));
@@ -270,6 +269,7 @@ const AssignmentWorkspace = () => {
     saveTimerRef.current = setTimeout(() => setSaved(true), 1500);
   }, [activeFile]);
 
+<<<<<<< HEAD
   // ── Paste detection & blocking ──
   useEffect(() => {
     const h = (e) => {
@@ -285,6 +285,22 @@ const AssignmentWorkspace = () => {
     };
     window.addEventListener('paste', h, true);
     return () => window.removeEventListener('paste', h, true);
+=======
+  // ── Paste detection (handled by SecureMonacoEditor) ──
+  const handlePasteDetected = useCallback(({ charCount, wordCount, snippet, blocked }) => {
+    setPasteWarnings(prev => [...prev, {
+      time: new Date().toLocaleTimeString(),
+      words: wordCount,
+      snippet: snippet || '',
+      blocked: !!blocked,
+    }]);
+    setTerminalHistory(prev => [...prev, {
+      type: 'warn',
+      text: blocked
+        ? `🚫 Paste BLOCKED: ${wordCount} words — pasting is disabled for this assignment.`
+        : `⚠ Paste detected: ${wordCount} words — flagged for review.`,
+    }]);
+>>>>>>> 1777288df1987ad8ece75ea77a821fbec993a40e
   }, []);
 
   // ── File operations ──
@@ -368,6 +384,7 @@ const AssignmentWorkspace = () => {
     }, 600 + Math.random() * 800);
   };
 
+<<<<<<< HEAD
   const handleSubmit = () => { setSubmitted(true); setShowSubmitConfirm(false); };
   const handleEditorMount = (editor) => {
     editorRef.current = editor;
@@ -387,6 +404,41 @@ const AssignmentWorkspace = () => {
       }
     });
   };
+=======
+  const handleSubmit = () => {
+    // Log submission to integrity system
+    integrityLogger.log(INTEGRITY_EVENTS.CODE_SUBMITTED, {
+      assignment_id: assignmentId,
+      file_count: Object.keys(fileContents).length,
+      paste_warnings: pasteWarnings.length,
+    });
+    const report = integrityLogger.generateReport();
+    console.log('Integrity Report:', report);
+    setSubmitted(true);
+    setShowSubmitConfirm(false);
+  };
+  const handleEditorMount = (editor) => { editorRef.current = editor; };
+>>>>>>> 1777288df1987ad8ece75ea77a821fbec993a40e
+
+  // ── Block paste at document level as safety net ──
+  useEffect(() => {
+    const blockPaste = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const p = (e.clipboardData || window.clipboardData)?.getData('text') || '';
+      const wc = p.trim().split(/\s+/).filter(Boolean).length;
+      if (wc > 0) {
+        handlePasteDetected({
+          charCount: p.length,
+          wordCount: wc,
+          snippet: p.slice(0, 80),
+          blocked: true,
+        });
+      }
+    };
+    document.addEventListener('paste', blockPaste, true);
+    return () => document.removeEventListener('paste', blockPaste, true);
+  }, [handlePasteDetected]);
 
   // ── Keyboard shortcuts ──
   useEffect(() => {
@@ -648,6 +700,7 @@ const AssignmentWorkspace = () => {
               ))}
             </div>
 
+<<<<<<< HEAD
             {/* Paste blocked toast */}
             {pasteToast && (
               <div className="bg-amber-600 text-white text-[11px] font-medium text-center py-1 flex items-center justify-center gap-1.5 flex-shrink-0 animate-pulse">
@@ -656,31 +709,21 @@ const AssignmentWorkspace = () => {
             )}
 
             {/* Monaco Editor */}
+=======
+            {/* Secure Monaco Editor — paste blocked */}
+>>>>>>> 1777288df1987ad8ece75ea77a821fbec993a40e
             <div className="flex-1 min-h-0">
-              <Editor
+              <SecureMonacoEditor
                 height="100%"
                 language={langMap[currentLang] || 'python'}
                 value={fileContents[activeFile] || ''}
                 onChange={handleCodeChange}
                 onMount={handleEditorMount}
-                theme="vs-dark"
                 path={activeFile}
-                options={{
-                  fontSize: 14,
-                  fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
-                  minimap: { enabled: true, maxColumn: 80, scale: 1 },
-                  lineNumbers: 'on',
-                  scrollBeyondLastLine: false,
-                  wordWrap: 'on',
-                  tabSize: 4,
-                  automaticLayout: true,
-                  padding: { top: 8, bottom: 8 },
-                  renderLineHighlight: 'all',
-                  cursorBlinking: 'smooth',
-                  smoothScrolling: true,
-                  bracketPairColorization: { enabled: true },
-                  guides: { indentation: true, bracketPairs: true },
-                }}
+                pastePolicy="block"
+                onPasteDetected={handlePasteDetected}
+                fontSize={14}
+                minimap={true}
               />
             </div>
 

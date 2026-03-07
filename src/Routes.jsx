@@ -24,11 +24,14 @@ const Problems = lazy(() => import('./pages/problems'));
 const LearningPathways = lazy(() => import('./pages/learning-pathways'));
 const Assignments = lazy(() => import('./pages/assignments'));
 const AssignmentWorkspace = lazy(() => import('./pages/assignment-workspace'));
+const AssignmentCreation = lazy(() => import('./pages/assignment-creation'));
+const CreateAssignment = lazy(() => import('./pages/create-assignment'));
+const TeacherReview = lazy(() => import('./pages/teacher-review'));
 const TestPage = lazy(() => import('./pages/test'));
 
 const Routes = () => {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/codecampus">
       <ErrorBoundary>
       <ScrollToTop />
       <RouterRoutes>
@@ -94,6 +97,27 @@ const Routes = () => {
           <ProtectedRoute>
             <Suspense fallback={<Loading />}>
               <AssignmentWorkspace />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/assignment-creation" element={
+          <ProtectedRoute>
+            <Suspense fallback={<Loading />}>
+              <AssignmentCreation />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/create-assignment" element={
+          <ProtectedRoute>
+            <Suspense fallback={<Loading />}>
+              <CreateAssignment />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/teacher-review" element={
+          <ProtectedRoute>
+            <Suspense fallback={<Loading />}>
+              <TeacherReview />
             </Suspense>
           </ProtectedRoute>
         } />
