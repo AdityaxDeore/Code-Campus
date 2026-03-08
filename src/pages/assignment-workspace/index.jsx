@@ -269,23 +269,6 @@ const AssignmentWorkspace = () => {
     saveTimerRef.current = setTimeout(() => setSaved(true), 1500);
   }, [activeFile]);
 
-<<<<<<< HEAD
-  // ── Paste detection & blocking ──
-  useEffect(() => {
-    const h = (e) => {
-      const p = (e.clipboardData || window.clipboardData).getData('text');
-      const wc = p.trim().split(/\s+/).filter(Boolean).length;
-      if (wc >= PASTE_WORD_LIMIT) {
-        e.preventDefault();
-        setPasteWarnings(prev => [...prev, { time: new Date().toLocaleTimeString(), words: wc, snippet: p.slice(0, 60) }]);
-        setTerminalHistory(prev => [...prev, { type: 'warn', text: `⚠ Paste blocked: ${wc} words — external pasting is not allowed.` }]);
-        setPasteToast(`⚠ Paste blocked: ${wc} words detected. External pasting is not allowed.`);
-        setTimeout(() => setPasteToast(null), 4000);
-      }
-    };
-    window.addEventListener('paste', h, true);
-    return () => window.removeEventListener('paste', h, true);
-=======
   // ── Paste detection (handled by SecureMonacoEditor) ──
   const handlePasteDetected = useCallback(({ charCount, wordCount, snippet, blocked }) => {
     setPasteWarnings(prev => [...prev, {
@@ -300,7 +283,6 @@ const AssignmentWorkspace = () => {
         ? `🚫 Paste BLOCKED: ${wordCount} words — pasting is disabled for this assignment.`
         : `⚠ Paste detected: ${wordCount} words — flagged for review.`,
     }]);
->>>>>>> 1777288df1987ad8ece75ea77a821fbec993a40e
   }, []);
 
   // ── File operations ──
@@ -384,27 +366,6 @@ const AssignmentWorkspace = () => {
     }, 600 + Math.random() * 800);
   };
 
-<<<<<<< HEAD
-  const handleSubmit = () => { setSubmitted(true); setShowSubmitConfirm(false); };
-  const handleEditorMount = (editor) => {
-    editorRef.current = editor;
-    // Intercept Ctrl+V / Cmd+V at the Monaco keybinding level as secondary defense
-    editor.onKeyDown((e) => {
-      const isV = e.browserEvent.key === 'v' || e.browserEvent.key === 'V';
-      if ((e.ctrlKey || e.metaKey) && isV) {
-        if (navigator.clipboard && navigator.clipboard.readText) {
-          navigator.clipboard.readText().then((text) => {
-            const wc = text.trim().split(/\s+/).filter(Boolean).length;
-            if (wc >= PASTE_WORD_LIMIT) {
-              // Undo the pasted content that may have already been inserted
-              editor.trigger('keyboard', 'undo', null);
-            }
-          }).catch(() => {});
-        }
-      }
-    });
-  };
-=======
   const handleSubmit = () => {
     // Log submission to integrity system
     integrityLogger.log(INTEGRITY_EVENTS.CODE_SUBMITTED, {
@@ -418,7 +379,6 @@ const AssignmentWorkspace = () => {
     setShowSubmitConfirm(false);
   };
   const handleEditorMount = (editor) => { editorRef.current = editor; };
->>>>>>> 1777288df1987ad8ece75ea77a821fbec993a40e
 
   // ── Block paste at document level as safety net ──
   useEffect(() => {
@@ -700,18 +660,7 @@ const AssignmentWorkspace = () => {
               ))}
             </div>
 
-<<<<<<< HEAD
-            {/* Paste blocked toast */}
-            {pasteToast && (
-              <div className="bg-amber-600 text-white text-[11px] font-medium text-center py-1 flex items-center justify-center gap-1.5 flex-shrink-0 animate-pulse">
-                <Icon name="Clipboard" size={12} /> {pasteToast}
-              </div>
-            )}
-
-            {/* Monaco Editor */}
-=======
             {/* Secure Monaco Editor — paste blocked */}
->>>>>>> 1777288df1987ad8ece75ea77a821fbec993a40e
             <div className="flex-1 min-h-0">
               <SecureMonacoEditor
                 height="100%"
