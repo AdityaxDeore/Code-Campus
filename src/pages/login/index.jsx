@@ -12,7 +12,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [isSignUp, setIsSignUp] = useState(false);
-  
+
   // Form state for login/signup
   const [formData, setFormData] = useState({
     email: '',
@@ -85,7 +85,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -95,7 +95,7 @@ const Login = () => {
 
     try {
       let result;
-      
+
       if (isSignUp) {
         // Sign up with Firebase
         result = await signUpWithEmail(formData.email, formData.password, {
@@ -105,13 +105,13 @@ const Login = () => {
         // Sign in with Firebase
         result = await signInWithEmail(formData.email, formData.password);
       }
-      
+
       const { user, error } = result;
-      
+
       if (error) {
         // Handle Firebase authentication errors
         let errorMessage = isSignUp ? 'Sign up failed. Please try again.' : 'Sign in failed. Please try again.';
-        
+
         if (error.includes('email-already-in-use')) {
           errorMessage = 'An account with this email already exists.';
         } else if (error.includes('user-not-found')) {
@@ -127,7 +127,7 @@ const Login = () => {
         } else if (error.includes('user-disabled')) {
           errorMessage = 'This account has been disabled. Contact support.';
         }
-        
+
         setErrors({ general: errorMessage });
         return;
       }
@@ -135,13 +135,13 @@ const Login = () => {
       if (user) {
         // Track successful login/signup
         trackLogin(isSignUp ? 'signup_email' : 'signin_email');
-        
+
         // Store user data in localStorage (for backward compatibility)
         localStorage.setItem('isAuthenticated', 'true');
         localStorage.setItem('userEmail', user.email || '');
         localStorage.setItem('userName', user.displayName || formData.fullName || '');
         localStorage.setItem('loginMethod', 'firebase');
-        
+
         // Navigate to dashboard
         navigate('/student-dashboard');
       }
@@ -163,13 +163,13 @@ const Login = () => {
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-blue-900 flex items-center justify-center relative overflow-hidden">
         {/* Grid Background Pattern */}
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-        
+
         {/* Floating Elements */}
         <div className="absolute top-20 left-10 w-20 h-20 bg-blue-500/20 rounded-full animate-pulse"></div>
         <div className="absolute bottom-20 right-10 w-32 h-32 bg-emerald-500/20 rounded-full animate-pulse delay-700"></div>
         <div className="absolute top-1/2 left-1/4 w-16 h-16 bg-purple-500/20 rounded-full animate-pulse delay-1000"></div>
         <div className="absolute top-1/3 right-1/3 w-24 h-24 bg-pink-500/20 rounded-full animate-pulse delay-500"></div>
-        
+
         <div className="relative w-full max-w-md mx-4 z-10">
           <div className="text-center mb-8">
             <a href="/homepage" className="inline-flex items-center space-x-3 mb-6">
@@ -209,11 +209,10 @@ const Login = () => {
                   setErrors({});
                   setFormData({ email: '', password: '', confirmPassword: '', fullName: '' });
                 }}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                  !isSignUp 
-                    ? 'bg-white text-blue-600 shadow-sm' 
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${!isSignUp
+                    ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-gray-600 hover:text-gray-800'
-                }`}
+                  }`}
               >
                 Sign In
               </button>
@@ -224,11 +223,10 @@ const Login = () => {
                   setErrors({});
                   setFormData({ email: '', password: '', confirmPassword: '', fullName: '' });
                 }}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                  isSignUp 
-                    ? 'bg-white text-blue-600 shadow-sm' 
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${isSignUp
+                    ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-gray-600 hover:text-gray-800'
-                }`}
+                  }`}
               >
                 Sign Up
               </button>
@@ -355,7 +353,7 @@ const Login = () => {
                 {isSignUp ? (
                   <>
                     Already have an account?{' '}
-                    <button 
+                    <button
                       onClick={() => {
                         setIsSignUp(false);
                         setErrors({});
