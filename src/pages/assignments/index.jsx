@@ -9,30 +9,14 @@ import { getAssignments } from '../../lib/assignmentService';
 const subjects = [
   { key: 'all', label: 'All', icon: 'LayoutGrid' },
   { key: 'dsa', label: 'DSA', icon: 'Binary' },
-  { key: 'oops', label: 'OOPS', icon: 'Boxes' },
-  { key: 'datascience', label: 'Data Science', icon: 'BarChart3' },
-  { key: 'dbms', label: 'DBMS', icon: 'Database' },
   { key: 'cn', label: 'CN', icon: 'Network' },
-  { key: 'webdev', label: 'Web Dev', icon: 'Globe' },
 ];
 
 const mockAssignments = [
   // DSA
   { id: 'a1', title: 'Binary Search Tree – Insert & Delete', subject: 'dsa', teacher: 'Prof. Sharma', deadline: new Date(Date.now() + 5 * 36e5).toISOString(), status: 'in-progress', progress: 60, difficulty: 'Medium', maxMarks: 100, scored: null, language: 'python', description: 'Implement insert, delete and search operations for a BST.' },
-  { id: 'a2', title: 'Graph Traversal – BFS & DFS', subject: 'dsa', teacher: 'Prof. Sharma', deadline: new Date(Date.now() + 26 * 36e5).toISOString(), status: 'not-started', progress: 0, difficulty: 'Hard', maxMarks: 150, scored: null, language: 'python', description: 'Implement BFS and DFS on an adjacency list graph.' },
-  { id: 'a3', title: 'Linked List Reversal', subject: 'dsa', teacher: 'Prof. Sharma', deadline: new Date(Date.now() - 48 * 36e5).toISOString(), status: 'graded', progress: 100, difficulty: 'Easy', maxMarks: 80, scored: 72, language: 'python', description: 'Reverse a singly linked list iteratively and recursively.' },
-  // OOPS
-  { id: 'a4', title: 'Design a Library System', subject: 'oops', teacher: 'Prof. Mehta', deadline: new Date(Date.now() + 72 * 36e5).toISOString(), status: 'not-started', progress: 0, difficulty: 'Medium', maxMarks: 120, scored: null, language: 'java', description: 'Model a library system using classes, inheritance and polymorphism.' },
-  { id: 'a5', title: 'Abstract Factory Pattern', subject: 'oops', teacher: 'Prof. Mehta', deadline: new Date(Date.now() - 120 * 36e5).toISOString(), status: 'graded', progress: 100, difficulty: 'Hard', maxMarks: 100, scored: 88, language: 'java', description: 'Implement the Abstract Factory creational design pattern.' },
-  // Data Science
-  { id: 'a6', title: 'EDA on Iris Dataset', subject: 'datascience', teacher: 'Dr. Patel', deadline: new Date(Date.now() + 96 * 36e5).toISOString(), status: 'not-started', progress: 0, difficulty: 'Easy', maxMarks: 80, scored: null, language: 'python', description: 'Perform exploratory data analysis with pandas and matplotlib.' },
-  // DBMS
-  { id: 'a7', title: 'Normalize to 3NF', subject: 'dbms', teacher: 'Prof. Kumar', deadline: new Date(Date.now() + 48 * 36e5).toISOString(), status: 'in-progress', progress: 30, difficulty: 'Medium', maxMarks: 100, scored: null, language: 'sql', description: 'Given a denormalized schema, normalize it to Third Normal Form.' },
   // Computer Networks
   { id: 'a9', title: 'Computer Network FA1 Report', subject: 'cn', teacher: 'Prof. Deshmukh', deadline: new Date(Date.now() + 72 * 36e5).toISOString(), status: 'not-started', progress: 0, difficulty: 'Medium', maxMarks: 50, scored: null, language: 'report', type: 'report', description: 'Submit your FA1 report on OSI Model, TCP/IP, and Network Topologies.' },
-  { id: 'a10', title: 'CN Lab – Socket Programming', subject: 'cn', teacher: 'Prof. Deshmukh', deadline: new Date(Date.now() + 120 * 36e5).toISOString(), status: 'not-started', progress: 0, difficulty: 'Hard', maxMarks: 100, scored: null, language: 'python', description: 'Implement a simple client-server chat application using sockets.' },
-  // Web Dev
-  { id: 'a8', title: 'REST API with Express', subject: 'webdev', teacher: 'Prof. Singh', deadline: new Date(Date.now() + 120 * 36e5).toISOString(), status: 'not-started', progress: 0, difficulty: 'Medium', maxMarks: 100, scored: null, language: 'javascript', description: 'Build a CRUD REST API using Express.js and MongoDB.' },
 ];
 
 const getDeadlineInfo = (deadline) => {

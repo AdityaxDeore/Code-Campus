@@ -138,7 +138,7 @@ const Header = () => {
                 <Icon name="User" size={16} color="white" />
               </div>
               <div className="hidden md:block text-left">
-                <p className="text-sm font-medium text-foreground">Alex Chen</p>
+                <p className="text-sm font-medium text-foreground">Aditya Deore</p>
                 <p className="text-xs text-muted-foreground">CS Student</p>
               </div>
               <Icon name="ChevronDown" size={16} className="hidden md:block text-muted-foreground" />

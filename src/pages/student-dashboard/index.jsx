@@ -43,7 +43,7 @@ const getDeadlineUrgency = (deadline) => {
 const StudentDashboard = () => {
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState('');
-  const [userName, setUserName] = useState('');
+  const [userName, setUserName] = useState('Aditya Deore');
   const [loginMethod, setLoginMethod] = useState('');
   const [tab, setTab] = useState('active');
 
@@ -52,13 +52,13 @@ const StudentDashboard = () => {
       const currentUser = getCurrentUser();
       if (currentUser) {
         setUserEmail(currentUser.email || '');
-        setUserName(currentUser.displayName || currentUser.email?.split('@')[0] || '');
+        setUserName(currentUser.displayName || 'Aditya Deore');
         setLoginMethod('firebase'); return;
       }
       const session = await getSession();
       if (session?.user) {
         setUserEmail(session.user.email || '');
-        setUserName(session.user.displayName || session.user.email?.split('@')[0] || '');
+        setUserName(session.user.displayName || 'Aditya Deore');
         setLoginMethod('firebase'); return;
       }
       if (!localStorage.getItem('isAuthenticated')) { navigate('/login'); return; }
@@ -68,7 +68,7 @@ const StudentDashboard = () => {
     const unsub = onAuthStateChange((user) => {
       if (user) {
         setUserEmail(user.email || '');
-        setUserName(user.displayName || user.email?.split('@')[0] || '');
+        setUserName(user.displayName || 'Aditya Deore');
         setLoginMethod('firebase');
       } else navigate('/login');
     });
