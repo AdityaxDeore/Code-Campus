@@ -25,14 +25,14 @@ const CampusForums = () => {
   const mockFriendRequests = [
     {
       id: 1,
-      user: { name: "Emma Wilson", username: "emmaw", avatar: "👩‍💼", year: "2nd Year CS" },
-      mutualFriends: 3,
+      user: { name: "Prathamesh Pawar", username: "prathameshp", avatar: "👨‍💻", year: "3rd Year IT" },
+      mutualFriends: 5,
       timestamp: "2h"
     },
     {
       id: 2,
-      user: { name: "David Kim", username: "davidk", avatar: "👨‍🔬", year: "3rd Year CS" },
-      mutualFriends: 7,
+      user: { name: "Sarang Thakare", username: "sarangt", avatar: "👨‍🎓", year: "3rd Year IT" },
+      mutualFriends: 8,
       timestamp: "1d"
     }
   ];
@@ -42,13 +42,13 @@ const CampusForums = () => {
     {
       id: 1,
       user: {
-        name: "Alex Chen",
-        username: "@alexchen_dev",
+        name: "Aditya Deore",
+        username: "@aditya_dev",
         avatar: "👨‍💻",
         verified: true,
         followers: "2.5K"
       },
-      content: "Just spent 6 hours debugging a simple CSS issue... turns out I had a typo in the class name 🤦‍♂️ Anyone else have those moments where you question everything? #coding #debugging #webdev",
+      content: "Spent the whole night refactoring our CodeCampus project from Express+MongoDB to a fully static React app with Firebase 🔥 Removed the entire server folder, rewired services... and it actually works now! Clean architecture hits different. #React #Firebase #Refactoring",
       timestamp: "2h",
       likes: 847,
       retweets: 234,
@@ -57,21 +57,21 @@ const CampusForums = () => {
       isLiked: false,
       isRetweeted: false,
       type: "text",
-      hashtags: ["coding", "debugging", "webdev"],
+      hashtags: ["React", "Firebase", "Refactoring"],
       mentions: [],
       replies: [
         {
           id: 101,
-          user: { name: "Sarah Kim", username: "@sarahk_code", avatar: "👩‍💻", verified: false },
-          content: "Every developer's worst nightmare! I once spent an entire day looking for a missing semicolon 😅",
+          user: { name: "Prathamesh Pawar", username: "@prathamesh_dev", avatar: "👨‍💻", verified: false },
+          content: "Bro that migration was insane, I saw the commit diff — 40+ files changed 😅 respect!",
           timestamp: "1h",
           likes: 125,
           replies: []
         },
         {
           id: 102,
-          user: { name: "Mike Johnson", username: "@mikej_dev", avatar: "👨‍🔬", verified: true },
-          content: "Been there! That's why I always use a good linter. Saves so much time.",
+          user: { name: "Chinmay Ahire", username: "@chinmay_codes", avatar: "👨‍🎓", verified: true },
+          content: "This is why I always say plan your architecture before writing a single line. Good stuff Aditya 💯",
           timestamp: "45m",
           likes: 89,
           replies: []
@@ -81,13 +81,13 @@ const CampusForums = () => {
     {
       id: 2,
       user: {
-        name: "Emma Rodriguez",
-        username: "@emma_codes",
-        avatar: "👩‍💼",
+        name: "Prathamesh Pawar",
+        username: "@prathamesh_dev",
+        avatar: "👨‍💻",
         verified: false,
         followers: "1.2K"
       },
-      content: "🎉 Finally launched my first React Native app! 📱 It's a simple todo app but I'm so proud of it. Built with:\n\n• React Native\n• Firebase\n• Redux Toolkit\n• React Navigation\n\nAny feedback would be amazing! #ReactNative #MobileApp #FirstProject",
+      content: "Finally cracked Tailwind CSS after struggling with it for weeks 🎨\n\nMy workflow now:\n• Design in Figma\n• Build with Tailwind utility classes\n• Use @apply for reusable components\n• Dark mode with class strategy\n\nProductivity went up 3x honestly. #TailwindCSS #Frontend #WebDev",
       timestamp: "4h",
       likes: 1205,
       retweets: 456,
@@ -96,13 +96,13 @@ const CampusForums = () => {
       isLiked: true,
       isRetweeted: false,
       type: "text",
-      hashtags: ["ReactNative", "MobileApp", "FirstProject"],
+      hashtags: ["TailwindCSS", "Frontend", "WebDev"],
       mentions: [],
       replies: [
         {
           id: 201,
-          user: { name: "David Wilson", username: "@david_dev", avatar: "👨‍💻", verified: true },
-          content: "Congratulations! 🎉 The UI looks clean. Have you considered adding push notifications?",
+          user: { name: "Sarang Thakare", username: "@sarang_tech", avatar: "👨‍🎓", verified: true },
+          content: "Tailwind is a game changer once you get past the initial learning curve. Try the typography plugin too!",
           timestamp: "3h",
           likes: 67,
           replies: []
@@ -112,13 +112,13 @@ const CampusForums = () => {
     {
       id: 3,
       user: {
-        name: "Tech University",
-        username: "@techuni_official",
+        name: "CodeCampus",
+        username: "@codecampus_official",
         avatar: "🏫",
         verified: true,
         followers: "15.2K"
       },
-      content: "📢 ANNOUNCEMENT: Our Computer Science department is hosting a virtual hackathon next weekend! \n\n🏆 Prizes: $10K total\n🗓️ Date: Aug 16-18\n💻 Theme: AI & Sustainability\n\nRegistration opens tomorrow at 9 AM. Who's in? #Hackathon #AI #Sustainability #TechUni",
+      content: "📢 ANNOUNCEMENT: IT Department is hosting a 48-hour hackathon next weekend! \n\n🏆 Prizes: ₹50K total\n🗓️ Date: Mar 14-16\n💻 Theme: AI-Powered Education Tools\n\nRegistration opens tomorrow at 9 AM. Who's in? #Hackathon #AI #EdTech #CodeCampus",
       timestamp: "6h",
       likes: 2341,
       retweets: 1205,
@@ -127,20 +127,20 @@ const CampusForums = () => {
       isLiked: false,
       isRetweeted: true,
       type: "announcement",
-      hashtags: ["Hackathon", "AI", "Sustainability", "TechUni"],
+      hashtags: ["Hackathon", "AI", "EdTech", "CodeCampus"],
       mentions: [],
       replies: []
     },
     {
       id: 4,
       user: {
-        name: "Lisa Wang",
-        username: "@lisa_fullstack",
-        avatar: "👩‍💻",
+        name: "Chinmay Ahire",
+        username: "@chinmay_codes",
+        avatar: "👨‍🎓",
         verified: true,
         followers: "8.9K"
       },
-      content: "Hot take: Learning vanilla JavaScript thoroughly before jumping into frameworks is still the best approach in 2025 🔥\n\nYes, React is amazing. Yes, Vue is great. But understanding the fundamentals will make you a better developer.\n\nThoughts? 🤔 #JavaScript #WebDev",
+      content: "Hot take: You should learn C and pointers before jumping into Python or JavaScript 🔥\n\nUnderstanding memory management, stack vs heap, and how data actually lives in memory makes you 10x better at debugging in ANY language.\n\nThoughts? 🤔 #Programming #DSA #ComputerScience",
       timestamp: "8h",
       likes: 3456,
       retweets: 892,
@@ -149,13 +149,13 @@ const CampusForums = () => {
       isLiked: true,
       isRetweeted: false,
       type: "text",
-      hashtags: ["JavaScript", "WebDev"],
+      hashtags: ["Programming", "DSA", "ComputerScience"],
       mentions: [],
       replies: [
         {
           id: 401,
-          user: { name: "John Doe", username: "@john_codes", avatar: "👨‍💻", verified: false },
-          content: "100% agree! I see too many developers who can use React but struggle with basic JS concepts.",
+          user: { name: "Sarang Thakare", username: "@sarang_tech", avatar: "👨‍🎓", verified: false },
+          content: "Facts. Once you understand how malloc works, everything else is a cakewalk. Pointers changed my perspective.",
           timestamp: "7h",
           likes: 234,
           replies: []
@@ -165,13 +165,13 @@ const CampusForums = () => {
     {
       id: 5,
       user: {
-        name: "Kevin Park",
-        username: "@kevin_aiml",
-        avatar: "🧠",
+        name: "Sarang Thakare",
+        username: "@sarang_tech",
+        avatar: "👨‍🎓",
         verified: false,
         followers: "892"
       },
-      content: "Just finished implementing a neural network from scratch in Python! 🧠\n\nNo TensorFlow, no PyTorch, just pure NumPy and math. It's incredible how much you learn when you build things from the ground up.\n\nThread below with my key learnings 👇 #MachineLearning #AI #Python",
+      content: "Implemented a BST visualizer in React using Canvas API today! 🌳\n\nYou can insert, delete, and watch in-order traversal animate step by step. Built it for our DSA assignment but might open source it.\n\nWho wants the GitHub link? 👇 #DSA #React #OpenSource #BinarySearchTree",
       timestamp: "12h",
       likes: 567,
       retweets: 123,
@@ -180,7 +180,7 @@ const CampusForums = () => {
       isLiked: false,
       isRetweeted: false,
       type: "thread",
-      hashtags: ["MachineLearning", "AI", "Python"],
+      hashtags: ["DSA", "React", "OpenSource", "BinarySearchTree"],
       mentions: [],
       replies: []
     }
@@ -191,11 +191,11 @@ const CampusForums = () => {
     {
       id: 1,
       title: "How to optimize React component rendering?",
-      content: "I'm working on a large React application and noticing some performance issues. What are the best practices for optimizing component rendering? Any specific patterns or libraries you'd recommend?",
+      content: "I'm building CodeCampus and some pages with lots of state are laggy. Already using React.memo on child components but the parent still re-renders everything. What else should I try?",
       author: {
-        name: "Alex Chen",
+        name: "Aditya Deore",
         level: "Intermediate",
-        branch: "Computer Science",
+        branch: "Information Technology",
         verified: true
       },
       category: "Technical Help",
@@ -207,8 +207,8 @@ const CampusForums = () => {
       replies: [
         {
           id: 101,
-          content: "React.memo() and useMemo() are your best friends for optimization. Also consider using React DevTools Profiler to identify performance bottlenecks.",
-          author: { name: "Sarah Kim", level: "Expert" },
+          content: "Try useCallback for your event handlers and useMemo for expensive computed values. Also check if you're passing new object/array literals as props — those break memoization every render.",
+          author: { name: "Prathamesh Pawar", level: "Expert" },
           timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000),
           upvotes: 12,
           downvotes: 0
@@ -218,16 +218,16 @@ const CampusForums = () => {
     },
     {
       id: 2,
-      title: "JavaScript Async/Await vs Promises",
-      content: "Can someone explain the difference between using async/await and traditional promises? When should I use one over the other?",
+      title: "Firebase Auth vs Custom JWT — which one for college projects?",
+      content: "Starting a new project and confused between Firebase Authentication and building my own JWT-based auth. Firebase seems easier but I want to understand the concepts too. What do you guys prefer?",
       author: {
-        name: "Mike Johnson",
+        name: "Chinmay Ahire",
         level: "Beginner",
-        branch: "Computer Science",
+        branch: "Information Technology",
         verified: false
       },
       category: "Technical Help", 
-      tags: ["JavaScript", "Async", "Promises"],
+      tags: ["Firebase", "Authentication", "JWT"],
       timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
       upvotes: 18,
       downvotes: 1,
@@ -235,8 +235,8 @@ const CampusForums = () => {
       replies: [
         {
           id: 201,
-          content: "Async/await is syntactic sugar over promises. It makes asynchronous code look more like synchronous code and is easier to read.",
-          author: { name: "Emma Davis", level: "Advanced" },
+          content: "For college projects Firebase Auth is perfect — it handles email/password, Google sign-in, and session management out of the box. Learn JWT concepts separately, don't complicate your project with it.",
+          author: { name: "Sarang Thakare", level: "Advanced" },
           timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
           upvotes: 8,
           downvotes: 0
@@ -246,16 +246,16 @@ const CampusForums = () => {
     },
     {
       id: 3,
-      title: "My First Full-Stack Web Application",
-      content: "Just finished building my first full-stack app using MERN stack! It's a simple task management application. Would love to get some feedback from the community.",
+      title: "Built a complete academic integrity system for our college IDE",
+      content: "Just finished building an integrity monitoring system that detects copy-paste events, tracks typing patterns, and even uses Gemini AI to flag AI-generated code. Open to feedback from anyone working on similar EdTech projects!",
       author: {
-        name: "David Lee",
+        name: "Prathamesh Pawar",
         level: "Intermediate", 
-        branch: "Computer Science",
+        branch: "Information Technology",
         verified: false
       },
       category: "Project Showcase",
-      tags: ["MERN", "Full-Stack", "Project"],
+      tags: ["EdTech", "Integrity", "AI Detection"],
       timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
       upvotes: 35,
       downvotes: 3,
@@ -263,8 +263,8 @@ const CampusForums = () => {
       replies: [
         {
           id: 301,
-          content: "Looks great! Have you considered adding user authentication and real-time updates?",
-          author: { name: "Lisa Wang", level: "Expert" },
+          content: "This is solid! How are you handling false positives with the AI detection? Sometimes students use common patterns that look AI-generated.",
+          author: { name: "Chinmay Ahire", level: "Expert" },
           timestamp: new Date(Date.now() - 20 * 60 * 60 * 1000),
           upvotes: 5,
           downvotes: 0
@@ -275,11 +275,11 @@ const CampusForums = () => {
     {
       id: 4,
       title: "Best resources for learning Data Structures and Algorithms?",
-      content: "I'm preparing for technical interviews and need good resources for DSA. What books, courses, or websites would you recommend?",
+      content: "DSA exam is coming up and I need to grind. Currently doing Striver's A2Z sheet but it's overwhelming. What resources helped you guys the most? Any specific YT channels or websites?",
       author: {
-        name: "Jennifer Martinez",
+        name: "Sarang Thakare",
         level: "Beginner",
-        branch: "Computer Science", 
+        branch: "Information Technology", 
         verified: false
       },
       category: "Academic Discussion",
@@ -298,21 +298,21 @@ const CampusForums = () => {
     {
       id: 1,
       user: {
-        name: "Sarah Chen",
-        username: "sarahc",
-        avatar: "👩‍💻",
+        name: "Aditya Deore",
+        username: "aditya_dev",
+        avatar: "👨‍💻",
         verified: true,
-        year: "3rd Year CS"
+        year: "3rd Year IT"
       },
       content: {
         type: "image",
-        text: "Just finished my React portfolio website! 🎉 What do you think of the design?",
+        text: "CodeCampus v2 is live! 🚀 Rebuilt the entire frontend with React + Vite + Tailwind. Check out the new dark mode and Monaco editor integration.",
         images: [
-          { id: 1, url: "https://picsum.photos/600/400?random=1", alt: "Portfolio homepage" },
-          { id: 2, url: "https://picsum.photos/600/400?random=2", alt: "Projects page" },
-          { id: 3, url: "https://picsum.photos/600/400?random=3", alt: "About page" }
+          { id: 1, url: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=600&h=400&fit=crop", alt: "Code editor screenshot" },
+          { id: 2, url: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&h=400&fit=crop", alt: "Dashboard view" },
+          { id: 3, url: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&h=400&fit=crop", alt: "Dark mode UI" }
         ],
-        tags: ["#ReactJS", "#Portfolio", "#WebDev", "#UI/UX"]
+        tags: ["#ReactJS", "#Vite", "#TailwindCSS", "#MonacoEditor"]
       },
       timestamp: "2h",
       likes: 234,
@@ -329,21 +329,21 @@ const CampusForums = () => {
     {
       id: 2,
       user: {
-        name: "Alex Rodriguez",
-        username: "alexr",
+        name: "Prathamesh Pawar",
+        username: "prathameshp",
         avatar: "👨‍💻",
         verified: false,
-        year: "2nd Year CS"
+        year: "3rd Year IT"
       },
       content: {
         type: "video",
-        text: "Quick tutorial: Setting up a Node.js REST API in 5 minutes! 🚀",
+        text: "Quick tutorial: Setting up Firebase Authentication with React in under 5 minutes! 🔐🚀",
         video: {
           url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-          thumbnail: "https://picsum.photos/600/400?random=4",
-          duration: "5:23"
+          thumbnail: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=600&h=400&fit=crop",
+          duration: "4:52"
         },
-        tags: ["#NodeJS", "#API", "#Tutorial", "#Backend"]
+        tags: ["#Firebase", "#React", "#Tutorial", "#Authentication"]
       },
       timestamp: "4h",
       likes: 189,
@@ -360,30 +360,28 @@ const CampusForums = () => {
     {
       id: 3,
       user: {
-        name: "Mike Johnson",
-        username: "mikej",
+        name: "Chinmay Ahire",
+        username: "chinmaya",
         avatar: "👨‍🎓",
         verified: false,
-        year: "Graduate"
+        year: "3rd Year IT"
       },
       content: {
         type: "code",
-        text: "Clean React component pattern I've been using lately 💡",
-        code: `// Custom hook for API calls
-const useApi = (url) => {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+        text: "Wrote a clean debounce hook for our search feature — no lodash needed 💡",
+        code: `// useDebounce hook
+const useDebounce = (value, delay = 300) => {
+  const [debounced, setDebounced] = useState(value);
 
   useEffect(() => {
-    fetch(url)
-      .then(res => res.json())
-      .then(setData)
-      .catch(setError)
-      .finally(() => setLoading(false));
-  }, [url]);
+    const timer = setTimeout(() => {
+      setDebounced(value);
+    }, delay);
 
-  return { data, loading, error };
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return debounced;
 };`,
         tags: ["#ReactJS", "#CustomHooks", "#CleanCode"]
       },
@@ -502,7 +500,7 @@ const useApi = (url) => {
 
     const newReply = {
       id: Date.now(),
-      user: { name: "Alex Chen", username: "alexc", avatar: "👤", verified: false },
+      user: { name: "Aditya Deore", username: "aditya_dev", avatar: "👨‍💻", verified: true },
       content: commentText,
       timestamp: "now",
       upvotes: 0,
@@ -1556,7 +1554,7 @@ const useApi = (url) => {
                         onClick={() => setShowCreateModal(true)}
                         className="flex-1 text-left px-4 py-2 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200 transition-colors"
                       >
-                        What's on your mind, Alex?
+                        What's on your mind, Aditya?
                       </button>
                       {/* Friend Request Button */}
                       <button 

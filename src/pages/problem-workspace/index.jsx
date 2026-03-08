@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Header from '../../components/ui/Header';
 import ProblemPanel from './components/ProblemPanel';
@@ -7,6 +7,8 @@ import TestResults from './components/TestResults';
 import SubmissionHistory from './components/SubmissionHistory';
 import CollaborativeMode from './components/CollaborativeMode';
 import SuccessAnimation from './components/SuccessAnimation';
+import integrityLogger, { INTEGRITY_EVENTS } from '../../lib/integrity';
+import Icon from '../../components/AppIcon';
 
 import Button from '../../components/ui/Button';
 
@@ -25,6 +27,7 @@ const ProblemWorkspace = () => {
   const [testResults, setTestResults] = useState(null);
   const [submissions, setSubmissions] = useState([]);
   const [currentProblem, setCurrentProblem] = useState(null);
+  const [pasteWarnings, setPasteWarnings] = useState([]);
 
   // Mock problems database
   const problemsDatabase = {
@@ -193,6 +196,55 @@ const ProblemWorkspace = () => {
     setSubmissions(mockSubmissions);
   }, []);
 
+  // ── Initialize integrity logger ──
+  useEffect(() => {
+    integrityLogger.init({
+      studentId: 'current_student',
+      assignmentId: problemId || 'practice',
+      examMode: false,
+    });
+    return () => integrityLogger.destroy();
+  }, [problemId]);
+
+  // ── Paste detection (handled by SecureMonacoEditor) ──
+  const handlePasteDetected = useCallback(({ charCount, wordCount, snippet, blocked }) => {
+    setPasteWarnings(prev => [...prev, {
+      time: new Date().toLocaleTimeString(),
+      words: wordCount,
+      snippet: snippet || '',
+      blocked: !!blocked,
+    }]);
+  }, []);
+
+  // ── Block paste at document level as safety net ──
+  useEffect(() => {
+    const blockPaste = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const p = (e.clipboardData || window.clipboardData)?.getData('text') || '';
+      const wc = p.trim().split(/\s+/).filter(Boolean).length;
+      if (wc > 0) {
+        handlePasteDetected({
+          charCount: p.length,
+          wordCount: wc,
+          snippet: p.slice(0, 80),
+          blocked: true,
+        });
+      }
+    };
+    document.addEventListener('paste', blockPaste, true);
+    return () => document.removeEventListener('paste', blockPaste, true);
+  }, [handlePasteDetected]);
+
+  // ── Keyboard shortcut interception ──
+  useEffect(() => {
+    const h = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); }
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, []);
+
   const handleRunCode = async (code, language) => {
     setIsRunning(true);
     setShowTestResults(true);
@@ -250,6 +302,14 @@ const ProblemWorkspace = () => {
   const handleSubmitCode = async (code, language) => {
     setIsSubmitting(true);
     
+    // Log submission to integrity system
+    integrityLogger.log(INTEGRITY_EVENTS.CODE_SUBMITTED, {
+      assignment_id: problemId || 'practice',
+      paste_warnings: pasteWarnings.length,
+    });
+    const report = integrityLogger.generateReport();
+    console.log('Integrity Report:', report);
+
     // Simulate API call
     setTimeout(() => {
       const newSubmission = {
@@ -320,12 +380,22 @@ const ProblemWorkspace = () => {
 
             {/* Code Editor */}
             <div className="flex-1 flex flex-col">
+              {/* Paste Warnings Bar */}
+              {pasteWarnings.length > 0 && (
+                <div className="flex-shrink-0 bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center gap-2 text-amber-700 text-sm">
+                  <Icon name="AlertTriangle" size={14} />
+                  <span className="font-medium">{pasteWarnings.length} paste event(s) blocked</span>
+                  <span className="text-xs text-amber-500">— flagged for instructor review</span>
+                </div>
+              )}
               <div className="flex-1">
                 <CodeEditor
                   onRunCode={handleRunCode}
                   onSubmitCode={handleSubmitCode}
                   isRunning={isRunning}
                   isSubmitting={isSubmitting}
+                  pastePolicy="block"
+                  onPasteDetected={handlePasteDetected}
                 />
               </div>
 

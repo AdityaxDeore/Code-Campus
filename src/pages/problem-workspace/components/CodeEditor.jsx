@@ -2,8 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import Select from '../../../components/ui/Select';
+import SecureMonacoEditor from '../../../components/SecureEditor/SecureMonacoEditor';
 
-const CodeEditor = ({ onRunCode, onSubmitCode, isRunning, isSubmitting }) => {
+const CodeEditor = ({ onRunCode, onSubmitCode, isRunning, isSubmitting, pastePolicy, onPasteDetected }) => {
   const [selectedLanguage, setSelectedLanguage] = useState('javascript');
   const [code, setCode] = useState('');
   const [fontSize, setFontSize] = useState(14);
@@ -218,33 +219,16 @@ int main() {
       </div>
       {/* Code Editor Area */}
       <div className="flex-1 relative">
-        <textarea
-          ref={textareaRef}
+        <SecureMonacoEditor
+          height="100%"
+          language={selectedLanguage === 'cpp' ? 'cpp' : selectedLanguage === 'csharp' ? 'csharp' : selectedLanguage}
           value={code}
-          onChange={(e) => setCode(e?.target?.value)}
-          onKeyDown={handleKeyDown}
-          className="w-full h-full p-4 bg-background text-foreground font-mono resize-none border-none outline-none"
-          style={{ fontSize: `${fontSize}px`, lineHeight: 1.5 }}
-          placeholder="Write your code here..."
-          spellCheck={false}
+          onChange={(val) => setCode(val || '')}
+          pastePolicy={pastePolicy || "allow"}
+          onPasteDetected={onPasteDetected}
+          fontSize={fontSize}
+          minimap={false}
         />
-        
-        {/* Line Numbers */}
-        <div className="absolute left-0 top-0 bottom-0 w-12 bg-muted border-r border-border pointer-events-none">
-          <div className="p-4 font-mono text-xs text-muted-foreground" style={{ fontSize: `${fontSize}px`, lineHeight: 1.5 }}>
-            {code?.split('\n')?.map((_, index) => (
-              <div key={index} className="text-right pr-2">
-                {index + 1}
-              </div>
-            ))}
-          </div>
-        </div>
-        
-        <style jsx>{`
-          textarea {
-            padding-left: 3.5rem !important;
-          }
-        `}</style>
       </div>
       {/* Editor Footer */}
       <div className="flex-shrink-0 border-t border-border px-4 py-2">

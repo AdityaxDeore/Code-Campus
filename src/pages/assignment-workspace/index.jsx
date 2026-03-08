@@ -445,47 +445,141 @@ const FileTreeNode = ({ node, depth = 0, activeFile, onSelect, expanded, onToggl
 };
 
 /* ════════════════════════════════════════════════════════════
-   AI Message Renderer — formats markdown-like AI responses
+   AI Message Renderer — rich markdown with cards + copy btns
    ════════════════════════════════════════════════════════════ */
-const AiMessageRenderer = ({ text }) => {
-  if (!text) return null;
 
-  // Split into blocks: code blocks vs regular text
-  const blocks = [];
-  const codeBlockRegex = /```(\w*)\n?([\s\S]*?)```/g;
-  let lastIndex = 0;
-  let match;
+/** Copy-to-clipboard button shown in code block headers */
+const CopyButton = ({ code }) => {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+  return (
+    <button
+      onClick={handleCopy}
+      title="Copy code"
+      className="flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded
+                 text-[#888] hover:text-[#ccc] hover:bg-[#ffffff10] transition-colors"
+    >
+      {copied ? (
+        <><span className="text-[#4ec994]">✓</span> Copied</>
+      ) : (
+        <><span>⎘</span> Copy</>
+      )}
+    </button>
+  );
+};
 
-  while ((match = codeBlockRegex.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      blocks.push({ type: 'text', content: text.slice(lastIndex, match.index) });
-    }
-    blocks.push({ type: 'code', lang: match[1] || '', content: match[2].trim() });
-    lastIndex = match.index + match[0].length;
-  }
-  if (lastIndex < text.length) {
-    blocks.push({ type: 'text', content: text.slice(lastIndex) });
+/** Code block with language label + copy button */
+const AiCodeBlock = ({ lang, code }) => (
+  <div className="rounded-lg overflow-hidden border border-[#333] my-2 text-left">
+    <div className="flex justify-between items-center bg-[#252535] px-3 py-1 border-b border-[#333]">
+      <span className="text-[10px] text-[#888] uppercase tracking-wider font-mono select-none">
+        {lang || 'code'}
+      </span>
+      <CopyButton code={code} />
+    </div>
+    <pre className="bg-[#0d1117] px-4 py-3 overflow-x-auto text-[12px] leading-[1.7] font-mono text-[#d4d4d4] m-0">
+      <code>{code}</code>
+    </pre>
+  </div>
+);
+
+/** Section card — wraps a heading + its body content.
+ *  If isCollapsible, renders a <details> element that starts closed. */
+const SectionCard = ({ heading, level, isCollapsible, children }) => {
+  const titleClass = level === 2
+    ? 'text-[14px] font-bold text-[#c0a8ff]'
+    : 'text-[13px] font-semibold text-[#a0c4ff]';
+
+  if (isCollapsible) {
+    return (
+      <details className="bg-[#1a1a2e] border border-[#2e2e4e] rounded-xl overflow-hidden my-2 group">
+        <summary className={`list-none select-none cursor-pointer px-4 py-2.5 flex items-center gap-2
+                             hover:bg-[#ffffff08] transition-colors ${titleClass}`}>
+          <span className="text-[#666] text-[10px] group-open:rotate-90 transition-transform inline-block">▶</span>
+          {heading}
+        </summary>
+        <div className="px-4 pb-3 pt-1 border-t border-[#2e2e4e] space-y-2">
+          {children}
+        </div>
+      </details>
+    );
   }
 
   return (
-    <div className="space-y-3">
-      {blocks.map((block, i) => {
+    <div className="bg-[#1a1a2e] border border-[#2e2e4e] rounded-xl px-4 py-3 my-2 space-y-2">
+      {level === 2
+        ? <h2 className={titleClass}>{heading}</h2>
+        : <h3 className={titleClass}>{heading}</h3>
+      }
+      {children}
+    </div>
+  );
+};
+
+/** Top-level renderer: handles code fences then splits text on ## / ### headings */
+const AiMessageRenderer = ({ text }) => {
+  if (!text) return null;
+
+  // Step 1: split on fenced code blocks
+  const rawBlocks = [];
+  const codeRx = /```(\w*)\n?([\s\S]*?)```/g;
+  let pos = 0, cm;
+  while ((cm = codeRx.exec(text)) !== null) {
+    if (cm.index > pos) rawBlocks.push({ type: 'text', content: text.slice(pos, cm.index) });
+    rawBlocks.push({ type: 'code', lang: cm[1] || '', content: cm[2].trim() });
+    pos = cm.index + cm[0].length;
+  }
+  if (pos < text.length) rawBlocks.push({ type: 'text', content: text.slice(pos) });
+
+  // Step 2: within each text block detect ## / ### section headings
+  const finalBlocks = [];
+  rawBlocks.forEach(block => {
+    if (block.type === 'code') { finalBlocks.push(block); return; }
+
+    const lines = block.content.split('\n');
+    let sectionHeading = null;
+    let sectionLevel = 3;
+    let bodyLines = [];
+
+    const flush = () => {
+      const body = bodyLines.join('\n').trim();
+      if (sectionHeading) {
+        finalBlocks.push({ type: 'section', heading: sectionHeading, level: sectionLevel, body });
+      } else if (body) {
+        finalBlocks.push({ type: 'text', content: body });
+      }
+      bodyLines = [];
+    };
+
+    lines.forEach(line => {
+      const h2m = /^##(?!#)\s+(.+)/.exec(line);
+      const h3m = /^###\s+(.+)/.exec(line);
+      if (h3m) { flush(); sectionHeading = h3m[1].trim(); sectionLevel = 3; }
+      else if (h2m) { flush(); sectionHeading = h2m[1].trim(); sectionLevel = 2; }
+      else { bodyLines.push(line); }
+    });
+    flush();
+  });
+
+  return (
+    <div className="space-y-2">
+      {finalBlocks.map((block, i) => {
         if (block.type === 'code') {
+          return <AiCodeBlock key={i} lang={block.lang} code={block.content} />;
+        }
+        if (block.type === 'section') {
+          const isCollapsible = block.body.length > 300;
           return (
-            <div key={i} className="rounded-lg overflow-hidden border border-[#333]">
-              {block.lang && (
-                <div className="bg-[#2d2d2d] px-3 py-1 text-[10px] text-[#888] uppercase tracking-wider font-mono border-b border-[#333]">
-                  {block.lang}
-                </div>
-              )}
-              <pre className="bg-[#1a1a2e] px-3.5 py-3 overflow-x-auto text-[12px] leading-[1.6] font-mono text-[#d4d4d4]">
-                <code>{block.content}</code>
-              </pre>
-            </div>
+            <SectionCard key={i} heading={block.heading} level={block.level} isCollapsible={isCollapsible}>
+              <TextBlock content={block.body} />
+            </SectionCard>
           );
         }
-
-        // Render text with inline formatting
         return <TextBlock key={i} content={block.content} />;
       })}
     </div>
@@ -493,19 +587,21 @@ const AiMessageRenderer = ({ text }) => {
 };
 
 const TextBlock = ({ content }) => {
-  // Split by double newlines for paragraphs
   const paragraphs = content.split(/\n\n+/).filter(p => p.trim());
-
   return (
     <>
       {paragraphs.map((para, i) => {
         const trimmed = para.trim();
 
-        // Numbered list (1. item)
+        // Standalone h1 (# heading not ## or ###)
+        const h1m = /^#(?!#)\s+(.+)/.exec(trimmed);
+        if (h1m) return <p key={i} className="text-[14px] font-bold text-[#c0a8ff] mt-1">{h1m[1]}</p>;
+
+        // Numbered list
         if (/^\d+\.\s/.test(trimmed)) {
-          const items = trimmed.split(/\n/).filter(l => l.trim());
+          const items = trimmed.split('\n').filter(l => l.trim());
           return (
-            <ol key={i} className="list-decimal list-outside ml-5 space-y-1.5">
+            <ol key={i} className="list-decimal list-outside ml-5 space-y-1.5 my-1">
               {items.map((item, j) => (
                 <li key={j} className="text-[13px] leading-[1.7] text-[#d4d4d4] pl-1">
                   <InlineFormat text={item.replace(/^\d+\.\s*/, '')} />
@@ -515,11 +611,11 @@ const TextBlock = ({ content }) => {
           );
         }
 
-        // Bullet list (- item or * item)
+        // Bullet list
         if (/^[-*]\s/.test(trimmed)) {
-          const items = trimmed.split(/\n/).filter(l => l.trim());
+          const items = trimmed.split('\n').filter(l => l.trim());
           return (
-            <ul key={i} className="list-disc list-outside ml-5 space-y-1.5">
+            <ul key={i} className="list-disc list-outside ml-5 space-y-1.5 my-1">
               {items.map((item, j) => (
                 <li key={j} className="text-[13px] leading-[1.7] text-[#d4d4d4] pl-1">
                   <InlineFormat text={item.replace(/^[-*]\s*/, '')} />
@@ -529,7 +625,31 @@ const TextBlock = ({ content }) => {
           );
         }
 
-        // Regular paragraph
+        // Mixed single-newline block
+        if (trimmed.includes('\n')) {
+          return (
+            <div key={i} className="space-y-1">
+              {trimmed.split('\n').map((line, j) => {
+                const l = line.trim();
+                if (!l) return null;
+                if (/^[-*]\s/.test(l))
+                  return <div key={j} className="flex gap-2 text-[13px] text-[#d4d4d4] leading-[1.7]">
+                    <span className="text-[#666] shrink-0 select-none">•</span>
+                    <span><InlineFormat text={l.replace(/^[-*]\s*/, '')} /></span>
+                  </div>;
+                if (/^\d+\.\s/.test(l)) {
+                  const num = l.match(/^(\d+)\./)[1];
+                  return <div key={j} className="flex gap-2 text-[13px] text-[#d4d4d4] leading-[1.7]">
+                    <span className="text-[#888] shrink-0 w-4 select-none">{num}.</span>
+                    <span><InlineFormat text={l.replace(/^\d+\.\s*/, '')} /></span>
+                  </div>;
+                }
+                return <p key={j} className="text-[13px] leading-[1.7] text-[#d4d4d4]"><InlineFormat text={l} /></p>;
+              })}
+            </div>
+          );
+        }
+
         return (
           <p key={i} className="text-[13px] leading-[1.7] text-[#d4d4d4]">
             <InlineFormat text={trimmed} />
@@ -541,34 +661,21 @@ const TextBlock = ({ content }) => {
 };
 
 const InlineFormat = ({ text }) => {
-  // Handle inline code (`code`), bold (**bold**), and italic (*italic*)
   const parts = [];
   const regex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/g;
-  let lastIdx = 0;
-  let m;
-
+  let lastIdx = 0, m;
   while ((m = regex.exec(text)) !== null) {
-    if (m.index > lastIdx) {
-      parts.push(<span key={lastIdx}>{text.slice(lastIdx, m.index)}</span>);
-    }
-    const token = m[0];
-    if (token.startsWith('`')) {
-      parts.push(
-        <code key={m.index} className="bg-[#2a2a3a] text-[#9cdcfe] px-1.5 py-0.5 rounded text-[12px] font-mono">
-          {token.slice(1, -1)}
-        </code>
-      );
-    } else if (token.startsWith('**')) {
-      parts.push(<strong key={m.index} className="text-[#e0e0e0] font-semibold">{token.slice(2, -2)}</strong>);
-    } else if (token.startsWith('*')) {
-      parts.push(<em key={m.index} className="text-[#ccc] italic">{token.slice(1, -1)}</em>);
-    }
-    lastIdx = m.index + token.length;
+    if (m.index > lastIdx) parts.push(<span key={lastIdx}>{text.slice(lastIdx, m.index)}</span>);
+    const tok = m[0];
+    if (tok.startsWith('`'))
+      parts.push(<code key={m.index} className="bg-[#2a2a3a] text-[#9cdcfe] px-1.5 py-0.5 rounded text-[12px] font-mono">{tok.slice(1,-1)}</code>);
+    else if (tok.startsWith('**'))
+      parts.push(<strong key={m.index} className="text-[#e0e0e0] font-semibold">{tok.slice(2,-2)}</strong>);
+    else
+      parts.push(<em key={m.index} className="text-[#ccc] italic">{tok.slice(1,-1)}</em>);
+    lastIdx = m.index + tok.length;
   }
-  if (lastIdx < text.length) {
-    parts.push(<span key={lastIdx}>{text.slice(lastIdx)}</span>);
-  }
-
+  if (lastIdx < text.length) parts.push(<span key={lastIdx}>{text.slice(lastIdx)}</span>);
   return <>{parts}</>;
 };
 

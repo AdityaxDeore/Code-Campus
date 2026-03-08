@@ -53,11 +53,9 @@ const Routes = () => {
         
         {/* Protected routes */}
         <Route path="/student-dashboard" element={
-          <ProtectedRoute>
-            <Suspense fallback={<Loading />}>
-              <StudentDashboard />
-            </Suspense>
-          </ProtectedRoute>
+          <Suspense fallback={<Loading />}>
+            <StudentDashboard />
+          </Suspense>
         } />
         <Route path="/campus-forums" element={
           <ProtectedRoute>
@@ -116,11 +114,9 @@ const Routes = () => {
           </ProtectedRoute>
         } />
         <Route path="/teacher-review" element={
-          <ProtectedRoute>
-            <Suspense fallback={<Loading />}>
-              <TeacherReview />
-            </Suspense>
-          </ProtectedRoute>
+          <Suspense fallback={<Loading />}>
+            <TeacherReview />
+          </Suspense>
         } />
         <Route path="/report-submission" element={
           <ProtectedRoute>

@@ -21,6 +21,7 @@ const Header = () => {
 
   const moreItems = [
     { name: 'Achievements', path: '/achievement-center', icon: 'Trophy' },
+    { name: 'Teacher', path: '/teacher-review', icon: 'GraduationCap' },
     { name: 'About', path: '/about-code-campus', icon: 'Info' },
     { name: 'Settings', path: '/settings', icon: 'Settings' },
     { name: 'Help', path: '/help', icon: 'HelpCircle' },
@@ -139,7 +140,7 @@ const Header = () => {
               </div>
               <div className="hidden md:block text-left">
                 <p className="text-sm font-medium text-foreground">Aditya Deore</p>
-                <p className="text-xs text-muted-foreground">CS Student</p>
+                <p className="text-xs text-muted-foreground">IT Student</p>
               </div>
               <Icon name="ChevronDown" size={16} className="hidden md:block text-muted-foreground" />
             </button>

@@ -13,6 +13,7 @@ const Problems = () => {
   const [selectedCompany, setSelectedCompany] = useState('all');
   const [sortBy, setSortBy] = useState('default');
   const [sortOrder, setSortOrder] = useState('desc');
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
 
   // Problem categories like LeetCode
   const categories = [
@@ -407,222 +408,165 @@ const Problems = () => {
             </div>
           </div>
 
-          {/* Enhanced Filters */}
-          <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 mb-8 sticky top-20 z-30">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Filter & Search</h3>
-              <button 
-                onClick={() => {
-                  setSearchTerm('');
-                  setSelectedDifficulty('all');
-                  setSelectedTag('all');
-                  setSelectedCompany('all');
-                  setSortBy('default');
-                  setSortOrder('desc');
-                }}
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline"
+          {/* Compact Sticky Filter Bar */}
+          <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200 mb-6 sticky top-16 z-30">
+            {/* Collapsed Bar — always visible */}
+            <div className="flex items-center gap-3 px-4 py-2.5">
+              {/* Search */}
+              <div className="relative flex-1 max-w-xs">
+                <Icon name="Search" size={15} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Search problems..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white"
+                />
+                {searchTerm && (
+                  <button onClick={() => setSearchTerm('')} className="absolute right-2 top-1/2 -translate-y-1/2">
+                    <Icon name="X" size={13} className="text-gray-400 hover:text-gray-600" />
+                  </button>
+                )}
+              </div>
+
+              {/* Quick difficulty pills */}
+              <div className="hidden md:flex items-center gap-1.5">
+                {['all', 'Easy', 'Medium', 'Hard'].map(d => (
+                  <button
+                    key={d}
+                    onClick={() => setSelectedDifficulty(d)}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                      selectedDifficulty === d
+                        ? d === 'Easy' ? 'bg-green-100 text-green-700' :
+                          d === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
+                          d === 'Hard' ? 'bg-red-100 text-red-700' :
+                          'bg-blue-100 text-blue-700'
+                        : 'text-gray-500 hover:bg-gray-100'
+                    }`}
+                  >
+                    {d === 'all' ? 'All' : d}
+                  </button>
+                ))}
+              </div>
+
+              {/* Active filter count badge + expand toggle */}
+              <button
+                onClick={() => setFiltersExpanded(prev => !prev)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
               >
-                Clear all filters
+                <Icon name="SlidersHorizontal" size={14} className="text-gray-500" />
+                <span className="text-gray-600">Filters</span>
+                {(selectedTag !== 'all' || selectedCompany !== 'all' || sortBy !== 'default') && (
+                  <span className="bg-blue-600 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                    {[selectedTag !== 'all', selectedCompany !== 'all', sortBy !== 'default'].filter(Boolean).length}
+                  </span>
+                )}
+                <Icon name={filtersExpanded ? "ChevronUp" : "ChevronDown"} size={13} className="text-gray-400" />
               </button>
+
+              {/* Clear all */}
+              {(searchTerm || selectedDifficulty !== 'all' || selectedTag !== 'all' || selectedCompany !== 'all' || sortBy !== 'default') && (
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setSelectedDifficulty('all');
+                    setSelectedTag('all');
+                    setSelectedCompany('all');
+                    setSortBy('default');
+                    setSortOrder('desc');
+                  }}
+                  className="text-xs text-red-500 hover:text-red-700 font-medium whitespace-nowrap"
+                >
+                  Clear all
+                </button>
+              )}
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-              {/* Enhanced Search */}
-              <div className="lg:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Search Problems</label>
-                <div className="relative z-30">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Icon name="Search" size={18} className="text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Search by title, tags, companies..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white relative z-30"
-                  />
-                  {searchTerm && (
-                    <button
-                      onClick={() => setSearchTerm('')}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center z-40"
+
+            {/* Expanded filter row */}
+            {filtersExpanded && (
+              <div className="px-4 pb-3 pt-1 border-t border-gray-100">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {/* Topics */}
+                  <div>
+                    <label className="block text-[11px] font-medium text-gray-500 mb-1">Topic</label>
+                    <select
+                      value={selectedTag}
+                      onChange={(e) => setSelectedTag(e.target.value)}
+                      className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
                     >
-                      <Icon name="X" size={16} className="text-gray-400 hover:text-gray-600" />
-                    </button>
-                  )}
-                </div>
-              </div>
+                      <option value="all">All Topics</option>
+                      {allTags.map(tag => <option key={tag} value={tag}>{tag}</option>)}
+                    </select>
+                  </div>
 
-              {/* Enhanced Difficulty Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Difficulty</label>
-                <div className="relative z-30">
-                  <select
-                    value={selectedDifficulty}
-                    onChange={(e) => setSelectedDifficulty(e.target.value)}
-                    className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white appearance-none relative z-30"
-                  >
-                    <option value="all">All Levels</option>
-                    <option value="Easy">🟢 Easy</option>
-                    <option value="Medium">🟡 Medium</option>
-                    <option value="Hard">🔴 Hard</option>
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none z-40">
-                    <Icon name="ChevronDown" size={16} className="text-gray-400" />
+                  {/* Companies */}
+                  <div>
+                    <label className="block text-[11px] font-medium text-gray-500 mb-1">Company</label>
+                    <select
+                      value={selectedCompany}
+                      onChange={(e) => setSelectedCompany(e.target.value)}
+                      className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+                    >
+                      <option value="all">All Companies</option>
+                      {allCompanies.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+
+                  {/* Sort */}
+                  <div>
+                    <label className="block text-[11px] font-medium text-gray-500 mb-1">Sort By</label>
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+                    >
+                      <option value="default">Default</option>
+                      <option value="title">Title</option>
+                      <option value="difficulty">Difficulty</option>
+                      <option value="acceptance">Acceptance</option>
+                      <option value="likes">Popularity</option>
+                      <option value="frequency">Frequency</option>
+                      <option value="id">Problem ID</option>
+                    </select>
+                  </div>
+
+                  {/* Order */}
+                  <div>
+                    <label className="block text-[11px] font-medium text-gray-500 mb-1">Order</label>
+                    <select
+                      value={sortOrder}
+                      onChange={(e) => setSortOrder(e.target.value)}
+                      className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+                    >
+                      <option value="desc">Descending</option>
+                      <option value="asc">Ascending</option>
+                    </select>
                   </div>
                 </div>
-              </div>
 
-              {/* Topic Tags Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Topics</label>
-                <div className="relative z-30">
-                  <select
-                    value={selectedTag}
-                    onChange={(e) => setSelectedTag(e.target.value)}
-                    className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white appearance-none relative z-30"
-                  >
-                    <option value="all">All Topics</option>
-                    {allTags.map((tag) => (
-                      <option key={tag} value={tag}>{tag}</option>
-                    ))}
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none z-40">
-                    <Icon name="ChevronDown" size={16} className="text-gray-400" />
+                {/* Active filter chips */}
+                {(selectedTag !== 'all' || selectedCompany !== 'all' || sortBy !== 'default') && (
+                  <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                    {selectedTag !== 'all' && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-green-50 text-green-700">
+                        {selectedTag}
+                        <button onClick={() => setSelectedTag('all')}><Icon name="X" size={10} /></button>
+                      </span>
+                    )}
+                    {selectedCompany !== 'all' && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-orange-50 text-orange-700">
+                        {selectedCompany}
+                        <button onClick={() => setSelectedCompany('all')}><Icon name="X" size={10} /></button>
+                      </span>
+                    )}
+                    {sortBy !== 'default' && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-indigo-50 text-indigo-700">
+                        Sort: {sortBy}
+                        <button onClick={() => { setSortBy('default'); setSortOrder('desc'); }}><Icon name="X" size={10} /></button>
+                      </span>
+                    )}
                   </div>
-                </div>
-              </div>
-
-              {/* Companies Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Companies</label>
-                <div className="relative z-30">
-                  <select
-                    value={selectedCompany}
-                    onChange={(e) => setSelectedCompany(e.target.value)}
-                    className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white appearance-none relative z-30"
-                  >
-                    <option value="all">All Companies</option>
-                    {allCompanies.map((company) => (
-                      <option key={company} value={company}>{company}</option>
-                    ))}
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none z-40">
-                    <Icon name="ChevronDown" size={16} className="text-gray-400" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Sort By */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
-                <div className="relative z-30">
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white appearance-none relative z-30"
-                  >
-                    <option value="default">Default</option>
-                    <option value="title">📝 Title</option>
-                    <option value="difficulty">⚡ Difficulty</option>
-                    <option value="acceptance">📊 Acceptance</option>
-                    <option value="likes">👍 Popularity</option>
-                    <option value="frequency">🏢 Frequency</option>
-                    <option value="id">🔢 Problem ID</option>
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none z-40">
-                    <Icon name="ChevronDown" size={16} className="text-gray-400" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Sort Order */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Order</label>
-                <div className="relative z-30">
-                  <select
-                    value={sortOrder}
-                    onChange={(e) => setSortOrder(e.target.value)}
-                    className="block w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white appearance-none relative z-30"
-                  >
-                    <option value="desc">⬇️ Descending</option>
-                    <option value="asc">⬆️ Ascending</option>
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none z-40">
-                    <Icon name="ChevronDown" size={16} className="text-gray-400" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Active Filters Display */}
-            {(searchTerm || selectedDifficulty !== 'all' || selectedTag !== 'all' || selectedCompany !== 'all' || sortBy !== 'default') && (
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <div className="flex items-center space-x-2 flex-wrap">
-                  <span className="text-sm font-medium text-gray-600">Active filters:</span>
-                  
-                  {searchTerm && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      Search: "{searchTerm}"
-                      <button
-                        onClick={() => setSearchTerm('')}
-                        className="ml-2 text-blue-600 hover:text-blue-800"
-                      >
-                        <Icon name="X" size={12} />
-                      </button>
-                    </span>
-                  )}
-                  
-                  {selectedDifficulty !== 'all' && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                      Difficulty: {selectedDifficulty}
-                      <button
-                        onClick={() => setSelectedDifficulty('all')}
-                        className="ml-2 text-purple-600 hover:text-purple-800"
-                      >
-                        <Icon name="X" size={12} />
-                      </button>
-                    </span>
-                  )}
-                  
-                  {selectedTag !== 'all' && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      Topic: {selectedTag}
-                      <button
-                        onClick={() => setSelectedTag('all')}
-                        className="ml-2 text-green-600 hover:text-green-800"
-                      >
-                        <Icon name="X" size={12} />
-                      </button>
-                    </span>
-                  )}
-
-                  {selectedCompany !== 'all' && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                      Company: {selectedCompany}
-                      <button
-                        onClick={() => setSelectedCompany('all')}
-                        className="ml-2 text-orange-600 hover:text-orange-800"
-                      >
-                        <Icon name="X" size={12} />
-                      </button>
-                    </span>
-                  )}
-
-                  {sortBy !== 'default' && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                      Sort: {sortBy} ({sortOrder})
-                      <button
-                        onClick={() => {
-                          setSortBy('default');
-                          setSortOrder('desc');
-                        }}
-                        className="ml-2 text-indigo-600 hover:text-indigo-800"
-                      >
-                        <Icon name="X" size={12} />
-                      </button>
-                    </span>
-                  )}
-                </div>
+                )}
               </div>
             )}
           </div>

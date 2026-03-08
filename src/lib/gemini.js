@@ -1,7 +1,37 @@
 import axios from "axios";
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
+const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
+
+let lastRequestTime = 0;
+
+async function callGemini(contents) {
+  const now = Date.now();
+  if (now - lastRequestTime < 2000) {
+    await new Promise(r => setTimeout(r, 2000));
+  }
+  lastRequestTime = Date.now();
+
+  const response = await axios({
+    url: GEMINI_URL,
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-goog-api-key": GEMINI_API_KEY
+    },
+    data: {
+      contents,
+      generationConfig: {
+        temperature: 0.7,
+        topP: 0.9,
+        maxOutputTokens: 800,
+      }
+    },
+    timeout: 15000
+  });
+
+  return response.data;
+}
 
 const SYSTEM_PROMPT = `You are an AI coding tutor for CodeCampus, an academic coding education platform for university CS students.
 
@@ -51,29 +81,12 @@ export async function askGemini(userMessage, context = {}, history = []) {
   contents.push({ parts: [{ text: userMessage }], role: 'user' });
 
   try {
-    const response = await axios({
-      url: GEMINI_URL,
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-goog-api-key": GEMINI_API_KEY
-      },
-      data: {
-        contents,
-        generationConfig: {
-          temperature: 0.7,
-          topP: 0.9,
-          maxOutputTokens: 2048,
-        }
-      }
-    });
-
-    const text = response.data.candidates[0].content.parts[0].text;
+    const data = await callGemini(contents);
+    const text = data.candidates[0].content.parts[0].text;
     return text ? text.trim() : 'AI returned an empty response. Please try again.';
   } catch (error) {
-    const errMsg = error.response?.data?.error?.message || error.message;
-    console.error("Gemini API error:", error.response?.data || error);
-    return `AI request failed: ${errMsg}`;
+    console.error("Gemini API error:", error);
+    return `AI request failed: ${error.message}`;
   }
 }
 

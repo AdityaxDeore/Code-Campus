@@ -61,8 +61,7 @@ const StudentDashboard = () => {
         setUserName(session.user.displayName || 'Aditya Deore');
         setLoginMethod('firebase'); return;
       }
-      if (!localStorage.getItem('isAuthenticated')) { navigate('/login'); return; }
-      setLoginMethod(localStorage.getItem('loginMethod') || 'legacy');
+      setLoginMethod(localStorage.getItem('loginMethod') || 'guest');
     };
     checkAuth();
     const unsub = onAuthStateChange((user) => {
@@ -70,7 +69,7 @@ const StudentDashboard = () => {
         setUserEmail(user.email || '');
         setUserName(user.displayName || 'Aditya Deore');
         setLoginMethod('firebase');
-      } else navigate('/login');
+      }
     });
     return () => { if (typeof unsub === 'function') unsub(); };
   }, [navigate]);
