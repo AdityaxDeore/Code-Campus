@@ -15,6 +15,11 @@ import Header from '../../components/ui/Header';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import detectAiGenerated from '../../lib/aiDetection';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Configure PDF.js worker - use worker from public folder
+// Vite serves public folder at root, so we can access it directly
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/codecampus/pdf.worker.min.mjs';
 
 /* ────────────────────────────────────────────────────────────
    Assignment Data
@@ -58,7 +63,7 @@ function extractTextFromTxt(file) {
 
 // For PDF/DOCX, we extract what we can client-side
 // Real production would use a server-side parser
-function extractTextFromFile(file) {
+async function extractTextFromFile(file) {
   const ext = file.name.split('.').pop().toLowerCase();
 
   if (ext === 'txt') {
@@ -66,18 +71,19 @@ function extractTextFromFile(file) {
   }
 
   if (ext === 'pdf') {
-    // Read as ArrayBuffer and try to extract raw text strings from PDF
-    return new Promise((resolve, reject) => {
+    // Read as ArrayBuffer and extract text using PDF.js
+    return new Promise((resolve) => {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         try {
-          const text = extractTextFromPDFBuffer(e.target.result);
-          resolve(text || '[PDF content could not be fully extracted client-side. AI detection will use available text.]');
-        } catch {
-          resolve('[PDF uploaded — server-side extraction needed for full analysis]');
+          const text = await extractTextFromPDFBuffer(e.target.result);
+          resolve(text);
+        } catch (err) {
+          console.error('PDF extraction failed:', err);
+          resolve('[PDF extraction failed. Please check the console for details or try converting to .txt format.]');
         }
       };
-      reader.onerror = () => reject(new Error('Failed to read PDF'));
+      reader.onerror = () => resolve('[Failed to read PDF file]');
       reader.readAsArrayBuffer(file);
     });
   }
@@ -102,27 +108,55 @@ function extractTextFromFile(file) {
   return Promise.resolve('[Unsupported file type for text extraction]');
 }
 
-// Basic PDF text extraction from raw buffer
-function extractTextFromPDFBuffer(buffer) {
-  const bytes = new Uint8Array(buffer);
-  const str = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
-
-  // Extract text between BT...ET blocks (PDF text objects)
-  const textBlocks = [];
-  const btPattern = /\(([^)]{2,})\)/g;
-  let match;
-  while ((match = btPattern.exec(str)) !== null) {
-    const cleaned = match[1]
-      .replace(/\\n/g, '\n')
-      .replace(/\\r/g, '')
-      .replace(/\\\\/g, '\\')
-      .replace(/\\[()]/g, m => m[1]);
-    if (cleaned.trim().length > 3 && !/^[^a-zA-Z]*$/.test(cleaned)) {
-      textBlocks.push(cleaned.trim());
+// Proper PDF text extraction using PDF.js
+async function extractTextFromPDFBuffer(buffer) {
+  try {
+    console.log('Starting PDF extraction...');
+    const loadingTask = pdfjsLib.getDocument({ data: buffer });
+    const pdf = await loadingTask.promise;
+    console.log(`PDF loaded successfully. Pages: ${pdf.numPages}`);
+    
+    const textBlocks = [];
+    const numPages = Math.min(pdf.numPages, 50); // Limit to first 50 pages for performance
+    
+    for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+      try {
+        const page = await pdf.getPage(pageNum);
+        const textContent = await page.getTextContent();
+        
+        // Extract text items and join them
+        const pageText = textContent.items
+          .map(item => item.str)
+          .join(' ');
+        
+        if (pageText.trim()) {
+          textBlocks.push(pageText.trim());
+        }
+      } catch (pageError) {
+        console.warn(`Error extracting page ${pageNum}:`, pageError);
+        // Continue with other pages
+      }
+    }
+    
+    const fullText = textBlocks.join('\n\n');
+    console.log(`Extracted ${fullText.length} characters from PDF`);
+    
+    if (fullText.length < 10) {
+      return '[PDF appears to be empty or contains only images. Try a text-based PDF or convert to .txt]';
+    }
+    
+    return fullText.slice(0, 15000); // Cap at 15K chars
+  } catch (error) {
+    console.error('PDF extraction error details:', error);
+    // Provide specific error messages based on error type
+    if (error.message.includes('Invalid PDF')) {
+      return '[Invalid or corrupted PDF file. Please try another file.]';
+    } else if (error.message.includes('password')) {
+      return '[PDF is password-protected. Please remove password protection first.]';
+    } else {
+      return `[PDF extraction failed: ${error.message}. Try converting to .txt format.]`;
     }
   }
-
-  return textBlocks.join(' ').slice(0, 15000); // Cap at 15K chars
 }
 
 // Basic DOCX text extraction
