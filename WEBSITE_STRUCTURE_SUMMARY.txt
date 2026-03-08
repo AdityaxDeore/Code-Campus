@@ -1,0 +1,1062 @@
+================================================================================
+CODECAMPUS — COMPLETE WEBSITE STRUCTURE, UI, AND WORKING REFERENCE
+================================================================================
+
+Any AI reading this file should understand the complete idea, tech stack,
+framework, UI layout, visual design, user flows, every page, every button,
+every interaction, every animation, and how the website works end-to-end.
+
+================================================================================
+1. PROJECT IDEA & PURPOSE
+================================================================================
+CodeCampus is a comprehensive academic coding education platform designed for
+computer science university students. Its mission is to help students:
+  - Solve coding problems (LeetCode-style)
+  - Complete assignments in a VS Code-style browser IDE
+  - Take proctored tests with anti-cheating measures
+  - Collaborate on forums (Twitter/Reddit-style)
+  - Track achievements, badges, streaks, and leaderboards
+  - Follow guided learning pathways
+  - Showcase projects and build portfolios
+  - Prepare for tech interviews
+
+Target audience: CS university students from colleges worldwide.
+Tagline: "Your Code, Your Community, Your Career"
+
+================================================================================
+2. TECH STACK & FRAMEWORKS
+================================================================================
+Frontend:
+  - React 18 (hooks, Suspense, lazy loading, code splitting)
+  - Vite 5 (fast dev server, optimized production builds)
+  - React Router 6 (client-side routing, protected routes, basename="/codecampus")
+  - TailwindCSS (utility-first CSS, custom theme, dark mode, responsive)
+  - Monaco Editor (@monaco-editor/react) — the VS Code editor engine
+  - Framer Motion (animations, transitions, scroll-triggered effects)
+  - React Helmet (SEO meta tags per page)
+  - Radix UI (accessible primitives, e.g. Slot for Button)
+  - class-variance-authority (cva) for button variant management
+  - styled-components (used for DarkModeToggle animation)
+  - Lucide React icons via AppIcon wrapper
+
+Backend:
+  - Firebase Authentication (email/password sign-in/sign-up)
+  - Firebase Firestore (database, real-time features)
+  - Express.js server (in /server/) for assignment/submission CRUD via MongoDB
+  - MongoDB (Assignment and Submission models)
+
+Build & Deploy:
+  - Vite for builds, output in /build/
+  - Docker + docker-compose + nginx for production
+  - PostCSS + TailwindCSS plugins (forms, typography, aspect-ratio, container queries)
+
+================================================================================
+3. VISUAL DESIGN SYSTEM
+================================================================================
+Color Palette:
+  - Primary: Blue (#3B82F6, --color-primary)
+  - Accent/Secondary: Emerald/Green
+  - Background (light): White / #f7f8fa
+  - Background (dark): Gray-900 / #1e1e1e (OLED dark)
+  - Foreground: Slate-900 (light), #e0e0e0 (dark)
+  - Muted: Slate-400/500
+  - Error: Red-500/600
+  - Warning: Amber-500/600
+  - Success: Emerald-500/600
+
+Dark Mode:
+  - Toggle via DarkModeContext (React Context)
+  - Stored in localStorage under "darkMode"
+  - Applies "dark" + "oled-dark" classes to <html>
+  - All components use dark: TailwindCSS variants
+  - Toggle UI: Animated slider with Sun/Moon emoji icons
+
+Typography:
+  - Font: System font stack via Tailwind defaults
+  - Code: JetBrains Mono, Fira Code, monospace
+  - Sizes: text-[10px] to text-5xl, fluid responsive
+
+Shadows & Borders:
+  - Subtle shadows: box-shadow: 0 1px 2px rgba(0,0,0,.04)
+  - Card borders: border-slate-200/80
+  - VS Code panels: border-[#3c3c3c] on dark backgrounds
+
+Animations:
+  - Framer Motion: fade-in, slide-in, scale on scroll (whileInView)
+  - Typing animation on homepage hero (code typewriter effect)
+  - Pulse animations on login page floating elements
+  - Hover scale-105 on achievement cards
+  - Smooth transitions on all buttons and links (transition-colors duration-200)
+  - Progress bar animations (transition: width .4s)
+
+Responsive:
+  - Mobile-first with sm:, md:, lg: Tailwind breakpoints
+  - Hamburger mobile menu in Header
+  - Grid layouts collapse to single column on mobile
+  - Container max-widths: max-w-[1200px], max-w-[1100px], max-w-[900px]
+
+================================================================================
+4. GLOBAL UI COMPONENTS
+================================================================================
+
+4.1 HEADER (Fixed Top Navigation Bar)
+  - Position: fixed top-0, z-50, h-16
+  - Background: bg-background with border-b
+  - Logo: SVG icon + "CodeCampus" text + "Academic Excellence" subtitle
+    - Clicking logo navigates to /homepage
+  - Desktop Navigation Links (lg: screens):
+    - Dashboard → /student-dashboard (icon: LayoutDashboard)
+    - Problems → /problems (icon: Code)
+    - Learning Paths → /learning-pathways (icon: BookOpen)
+    - Assignments → /assignments (icon: ClipboardList)
+    - Tests → /test (icon: ShieldCheck)
+    - Forums → /campus-forums (icon: MessageSquare)
+    - Active link: bg-primary text-white, inactive: hover:bg-muted
+  - "More" Dropdown (desktop, hover to show):
+    - Achievements → /achievement-center (icon: Trophy)
+    - About → /about-code-campus (icon: Info)
+    - Settings → /settings (icon: Settings)
+    - Help → /help (icon: HelpCircle)
+  - Right-side Actions:
+    - Dark Mode Toggle: animated sun/moon slider
+    - Notification Bell: icon button, red dot badge, navigates to /status
+    - User Profile Dropdown (hover):
+      - Avatar circle (User icon), name "Alex Chen", role "CS Student"
+      - Profile link → /profile
+      - Settings link → /settings
+      - Sign Out button: clears localStorage, calls Firebase signOut, navigates to /login
+  - Mobile: Hamburger menu button, slides open mobile nav
+
+4.2 BUTTON COMPONENT (Global, Reusable)
+  - Built with Radix Slot + cva (class-variance-authority)
+  - Variants:
+    - default: bg-primary, white text
+    - destructive: bg-red, white text
+    - outline: border only, hover fills
+    - secondary: bg-secondary
+    - ghost: transparent, hover fills
+    - link: underline on hover
+    - success: bg-green
+    - warning: bg-amber
+    - danger: bg-red
+  - Sizes: xs (h-8), sm (h-9), default (h-10), lg (h-11), xl (h-12), icon (h-10 w-10)
+  - Features:
+    - Icon support (left or right position, auto-sized per button size)
+    - Loading state: animated spinner, disables button
+    - Disabled state: opacity-50, no pointer events
+    - Full width mode
+    - Keyboard accessible with focus ring
+
+4.3 INPUT COMPONENT
+  - Standard text input with label, error states
+  - Focus ring, border color changes on error
+
+4.4 SELECT COMPONENT
+  - Dropdown select for language, font size, etc.
+
+4.5 CHECKBOX COMPONENT
+  - Styled checkbox for form use
+
+4.6 STYLED CARD COMPONENT
+  - Reusable card with shadow, border, padding
+
+4.7 DARK MODE TOGGLE
+  - Animated toggle slider: sun emoji ↔ moon emoji
+  - Gold gradient (light) ↔ dark slate gradient (dark)
+  - White circle slides left/right
+  - Uses styled-components for CSS animation
+
+4.8 APP ICON COMPONENT
+  - Wrapper around Lucide React icons
+  - Accepts name, size, color, className
+  - Used everywhere for consistent iconography
+
+4.9 APP IMAGE COMPONENT
+  - Image component with fallback/loading support
+
+4.10 ERROR BOUNDARY
+  - Catches React errors, shows fallback UI
+
+4.11 PROTECTED ROUTE
+  - Wraps routes that require authentication
+  - Redirects to /login if not authenticated
+
+4.12 SCROLL TO TOP
+  - Automatically scrolls to top on route change
+
+4.13 LOADING COMPONENT
+  - Spinner/skeleton shown during lazy load Suspense
+
+================================================================================
+5. PAGE-BY-PAGE UI & WORKING DETAILS
+================================================================================
+
+─────────────────────────────────────────────────
+5.1 LOGIN PAGE (/login)
+─────────────────────────────────────────────────
+Layout:
+  - Full-screen dark gradient background (gray-900 → gray-800 → blue-900)
+  - Grid pattern overlay at 5% opacity
+  - Floating animated pulse circles (blue, emerald, purple, pink)
+  - Centered white card (max-w-md), backdrop-blur
+
+UI Elements:
+  - CodeCampus logo (SVG, 48px) + title
+  - Heading: "Welcome Back" (sign in) or "Join CodeCampus" (sign up)
+  - Tab toggle: Sign In | Sign Up (pill buttons, active=white+shadow)
+  - Form fields:
+    - Full Name (sign-up only): text input with validation
+    - Email Address: email input with validation
+    - Password: password input, min 6 chars
+    - Confirm Password (sign-up only): must match
+  - Error display: red banner with AlertCircle icon
+  - Submit button: full-width, blue bg, loading spinner when submitting
+    - Text: "Sign In" or "Create Account"
+  - Footer text: "By continuing, you agree to our Terms of Service..."
+
+User Flow:
+  1. User visits /login
+  2. If already authenticated (Firebase), auto-redirects to /student-dashboard
+  3. User fills form → validates client-side → calls Firebase auth
+  4. On success: stores in localStorage + navigates to /student-dashboard
+  5. On error: shows specific error message (email exists, wrong password, etc.)
+
+Buttons:
+  - Sign In tab toggle
+  - Sign Up tab toggle
+  - Submit (Sign In / Create Account) — primary, full-width, loading state
+  - CodeCampus logo link → /homepage
+
+─────────────────────────────────────────────────
+5.2 HOMEPAGE (/ or /homepage)
+─────────────────────────────────────────────────
+Layout:
+  - Full-width sections stacked vertically
+  - Header at top, Footer at bottom
+  - Light/dark mode support
+
+Sections (in order):
+  1. HERO SECTION
+     - Gradient background: blue-50 → white → emerald-50 (dark: gray-900)
+     - Left column: Badge ("Trusted by 12,000+ Students"), heading, subtitle,
+       two CTA buttons, stat counters
+     - Right column: Animated code typing effect (cycles through code examples)
+     - Buttons:
+       - "Start Coding Now" — primary, navigates to /problem-workspace
+       - "Explore Problems" — outline, navigates to /problems
+     - Stats row: Students, Universities, Problems, Career Rate
+
+  2. VALUE PROPOSITION
+     - 3-column grid of value cards:
+       - "Solve Together": peer collaboration features
+       - "Build Your Portfolio": project showcase features
+       - "Launch Your Career": career preparation features
+     - Each card: icon, title, description, feature bullets
+     - Bottom: "Learn more about our mission" → /about-code-campus
+
+  3. STATS SECTION
+     - Animated counters (count up on scroll)
+     - 4 stats: Active Students (12,847), Partner Universities (150),
+       Coding Problems (2,500+), Career Success Rate (98%)
+
+  4. ACTIVITY FEED
+     - Live activity feed showing recent community actions
+
+  5. FEATURED PROJECTS CAROUSEL
+     - Large project card with image, author, university, description
+     - Technology badges, difficulty badge, completion time
+     - Buttons:
+       - "View on GitHub" — dark button, Github icon, opens in new tab
+       - "Live Demo" — outline button, ExternalLink icon
+       - Prev/Next arrows (ChevronLeft/ChevronRight, round white buttons)
+       - Dot indicators (select project directly)
+       - "Browse All Projects" — blue button, FolderOpen + ArrowRight icons → /projects
+
+  6. UNIVERSITY PARTNERSHIPS
+     - Partner university logos and info
+
+  7. TESTIMONIAL SECTION
+     - Student testimonial cards
+
+  8. FOOTER
+     - Dark background (gray-900)
+     - Brand section: logo, tagline, community description
+     - 4-column link grid:
+       - Platform: Dashboard, Problems, Forums, Achievements, Projects
+       - Community: Student Stories, Campus Events, Study Groups, Mentorship, Blog
+       - Resources: Getting Started, Documentation, API Reference, Tutorials, Help
+       - Company: About Us, Careers, Press, Partners, Contact
+     - Social links: Twitter, LinkedIn, GitHub, Discord, YouTube
+     - Copyright notice
+
+─────────────────────────────────────────────────
+5.3 STUDENT DASHBOARD (/student-dashboard) [PROTECTED]
+─────────────────────────────────────────────────
+Layout:
+  - Light gray background (#f7f8fa)
+  - Header at top
+  - max-w-[1200px] centered content
+  - Two-column grid: main content (left) + sidebar (right, 320px)
+
+Sections:
+  1. GREETING ROW
+     - Dynamic greeting: "Good morning/afternoon/evening, {userName}"
+     - User email below
+     - Buttons:
+       - "Assignments" — outline, ClipboardList icon → /assignments
+       - "Code Editor" — primary, Code icon → /problem-workspace
+
+  2. STAT CARDS (5-column grid)
+     - Deadlines (red, Clock icon): count of upcoming deadlines
+     - Active (amber, FileCode2 icon): active assignments
+     - Solved (blue, CheckCircle2 icon): problems solved
+     - Pending (orange, Loader icon): pending submissions
+     - AI Hints (purple, Sparkles icon): remaining/total hints
+     - Each card: white bg, colored icon, large number, label
+
+  3. RESUME CARD (gradient blue → indigo)
+     - Shows last coding session: file name, line number, last saved time
+     - "Continue" button (white bg, Play icon) → /problem-workspace
+
+  4. ASSIGNMENTS PANEL
+     - Toggle tabs: Active ({count}) | Done ({count})
+     - Active tab shows:
+       - Assignment cards with title, StatusBadge, course, deadline urgency
+       - Progress bar for in-progress items
+       - "Continue" button (Play icon) or "Open" button (ExternalLink icon)
+         → /assignment-workspace?id={id}
+     - Done tab shows:
+       - Graded assignments with score
+       - "Review" button → /problem-history
+     - "View All Assignments" button (outline, full-width) → /assignments
+     - Urgent assignments: red border + red bg tint
+
+  5. QUICK NAVIGATION (4-column grid)
+     - Assignments → /assignments (ClipboardList, blue)
+     - Tests → /test (ShieldCheck, red)
+     - Forums → /campus-forums (MessageSquare, green)
+     - Achievements → /achievement-center (Trophy, amber)
+
+  6. RIGHT SIDEBAR:
+     a. AI ASSISTANT CARD
+        - Gradient indigo background
+        - 3 quick action buttons: Hint (Lightbulb), Debug (Bug), Explain (BookOpen)
+        - Text input: "Ask about your code…" with SendHorizontal icon
+        - Usage progress bar (hints used / total)
+     b. NOTIFICATIONS CARD
+        - Red badge count
+        - List of notifications with icon, message, time
+     c. PROGRESS CARD
+        - Weekly Problems progress bar
+        - Assignments progress bar
+        - Average score percentage
+        - Trend indicator (+5% with TrendingUp icon)
+        - "View History" button → /problem-history
+
+StatusBadge colors:
+  - Not Started: bg-slate-100 text-slate-600
+  - In Progress: bg-amber-50 text-amber-700
+  - Submitted: bg-emerald-50 text-emerald-700
+  - Graded: bg-sky-50 text-sky-700
+
+Deadline urgency colors:
+  - Overdue: text-red-600
+  - <6h: text-red-500
+  - <24h: text-amber-600
+  - <72h: text-amber-500
+  - >72h: text-slate-500
+
+─────────────────────────────────────────────────
+5.4 ASSIGNMENTS LIST (/assignments) [PROTECTED]
+─────────────────────────────────────────────────
+Layout:
+  - Light gray bg, max-w-[1100px]
+  - Header at top
+
+UI Elements:
+  1. Header row:
+     - Title: "Assignments"
+     - Subtitle: "Complete coding assignments from your courses"
+     - "Create Assignment" button (emerald, Plus icon) → /assignment-creation
+     - Toggle: Active ({count}) | Completed ({count})
+
+  2. Subject Filter Tabs (horizontal pills):
+     - All (LayoutGrid), DSA (Binary), OOPS (Boxes), Data Science (BarChart3),
+       DBMS (Database), Web Dev (Globe)
+     - Active tab: blue bg + white text
+     - Inactive: white bg, slate border
+
+  3. Assignment Cards (vertical list):
+     - Each card shows:
+       - Title, StatusBadge, DifficultyBadge (Easy/Medium/Hard)
+       - Description (1-line truncated)
+       - Teacher name, Subject tag, Deadline (color-coded), Language badge
+       - Score (if graded)
+       - Progress bar (if in-progress)
+     - Urgent cards: red border + pink tint
+     - Buttons:
+       - "Continue" (Play icon, blue) — for in-progress → /assignment-workspace?id={id}
+       - "Start" (ExternalLink icon, blue) — for not-started → /assignment-workspace?id={id}
+       - "Review" (slate bg) — for graded → /teacher-review?id={id}
+
+  4. Empty state: Inbox icon, "No assignments here", "Try a different subject or tab"
+
+Data sources: Fetches from MongoDB API first, falls back to mock data.
+
+─────────────────────────────────────────────────
+5.5 ASSIGNMENT WORKSPACE (/assignment-workspace) [PROTECTED]
+─────────────────────────────────────────────────
+THIS IS THE VS CODE-STYLE IDE — the core feature of CodeCampus.
+
+Layout:
+  - Full-screen (h-screen), dark theme (#1e1e1e)
+  - Mimics VS Code layout exactly
+
+Sections (top to bottom, left to right):
+
+  1. TITLE BAR (h-[30px], bg-[#323233])
+     - Back arrow (← to /assignments)
+     - Assignment title + subject badge
+     - Right side: deadline countdown (color-coded), paste warning count,
+       save status (Saved ✓ / Saving…)
+
+  2. ACTIVITY BAR (left, w-[48px], bg-[#333333])
+     - Three icon buttons (vertical):
+       - Files (Explorer, Ctrl+B): toggles file tree sidebar
+       - Search (Ctrl+Shift+F): toggles search sidebar
+       - AI Assistant (Sparkles): toggles AI chat sidebar
+     - Active indicator: white 2px left border
+     - Bottom: Submit button (Send icon, blue hover)
+
+  3. SIDEBAR PANEL (260px wide, bg-[#252526])
+     a. EXPLORER (files mode):
+        - File tree with folder/file icons (collapsible directories)
+        - Folder icons: FolderOpen/Folder (amber), ChevronDown/Right
+        - File icons: language-specific (FileCode, Coffee, FileJson, Database, FileText)
+        - Active file: highlighted bg-[#37373d]
+        - Assignment info panel at bottom: subject, marks, language, deadline
+
+     b. SEARCH (search mode):
+        - Search input with clear (X) button
+        - Live search across all assignment files
+        - Results: matching line text + file path + line number
+        - Click result → opens that file
+
+     c. AI ASSISTANT (ai mode):
+        - Chat interface with message bubbles
+        - AI messages: bg-[#333], Sparkles icon prefix
+        - User messages: bg-[#264f78], right-aligned
+        - Input field + SendHorizontal icon button
+        - AI gives hints, debugging help, concept explanations — never full solutions
+
+  4. EDITOR AREA (center, flex-1)
+     - Tab bar: open file tabs with close (X) buttons
+       - Active tab: lighter bg, white text
+       - Inactive: darker, gray text
+     - Breadcrumb: file path segments
+     - Monaco Editor (SecureMonacoEditor):
+       - Syntax highlighting per language
+       - Line numbers, word wrap, minimap disabled
+       - Font: JetBrains Mono, 14px
+       - Dark theme (vs-dark)
+       - Paste detection: blocks pasting, flags events
+       - Auto-save: 1.5s after last edit
+
+  5. TERMINAL PANEL (bottom, resizable, default 200px)
+     - Resize handle (drag to resize)
+     - Tab bar: Terminal | Problems
+     - Terminal:
+       - Shows system messages, command output, errors
+       - Input line with $ prompt
+       - Commands: run, clear, ls, cat <file>, help
+       - Color-coded output: system=gray, cmd=white, output=green, error=red, warn=amber
+     - Run button (Play icon): executes current file
+
+  6. SUBMIT CONFIRMATION MODAL
+     - "Submit Assignment?" title
+     - Shows file count, paste warning count
+     - "Yes, Submit" button (primary)
+     - "Cancel" button (ghost)
+
+  7. SUBMITTED SCREEN
+     - Dark bg, centered
+     - Green checkmark animation
+     - "Submitted Successfully" text
+     - Paste warning count if any
+     - "Back to Assignments" button → /assignments
+
+Code Execution:
+  - JavaScript: sandboxed eval with mock console, blocks dangerous globals
+  - Python: simulated (parses print statements, detects TODO/pass)
+  - SQL: simulated (parses SELECT/CREATE/INSERT statements)
+
+Keyboard Shortcuts:
+  - Ctrl+S: Save current file
+  - Ctrl+`: Toggle terminal
+  - Ctrl+B: Toggle sidebar
+
+Integrity Features:
+  - Paste detection: blocks paste at document level, counts word threshold (10+)
+  - Paste warnings logged with timestamp, word count, snippet
+  - Integrity logger tracks all events for academic integrity report
+
+─────────────────────────────────────────────────
+5.6 PROCTORED TEST PAGE (/test) [PROTECTED]
+─────────────────────────────────────────────────
+Two sub-views: TEST LOBBY and PROCTORED TEST.
+
+A. TEST LOBBY
+  Layout: light gray bg (#f7f8fa), max-w-[900px]
+
+  UI Elements:
+  - "Back to Dashboard" link (ArrowLeft icon) → /student-dashboard
+  - Title: "Tests & Exams"
+  - Subtitle: "Proctored coding exams — tab changes and pasting are monitored"
+  - Filter tabs:
+    - "All Tests" (slate-900 when active)
+    - "MCQ Only" (blue-600 when active)
+    - "Coding Only" (purple-600 when active)
+  - Test cards (vertical list):
+    - Title, subject badge, type badge (MCQ=blue, Coding=purple)
+    - Duration (Clock icon), question count (FileText icon), total marks (Award icon)
+    - Status-specific:
+      - Available: "Start Test" button (red-600, ShieldCheck icon)
+      - Upcoming: "Upcoming" text + start date
+      - Completed: "Done" text (green, CheckCircle2 icon) + score
+  - Proctoring Rules info box (amber bg):
+    - Fullscreen enforcement
+    - Tab switching detection
+    - Paste word limit (10 words)
+    - Max 3 tab-change warnings → auto-submit
+
+B. PROCTORED TEST ENVIRONMENT (full-screen, dark theme)
+  Layout: h-screen, bg-[#1e1e1e], VS Code-like dark theme
+
+  Sections:
+  1. FULLSCREEN WARNING BANNER (red, shown when not fullscreen)
+     - AlertTriangle icon + warning message + violation count
+     - "Re-enter" button (underline)
+
+  2. TOP BAR (h-11, bg-[#252526])
+     - ShieldCheck icon (red) + test title + subject badge
+     - Right side: paste flag count, tab warning count, countdown timer
+     - Timer turns red when <5 minutes
+
+  3. MAIN AREA (split view for coding, full for MCQ):
+     For CODING questions:
+     - Left panel (350px): Question tabs, question title, language badge,
+       marks, description text
+     - Right panel: Monaco Editor (same as assignment workspace)
+
+     For MCQ questions:
+     - Question navigation bar (tabs: Q1 (10m), Q2 (10m), ...)
+     - Question content: title, MCQ badge, marks, description
+     - Radio button options:
+       - Selected: blue border + blue bg tint
+       - Unselected: dark border, hover highlight
+     - "Answer selected" confirmation (green, CheckCircle2 icon)
+
+  4. BOTTOM BAR (h-11):
+     - Prev button (ChevronLeft, disabled at first question)
+     - Next button (ChevronRight, disabled at last question)
+     - Question counter: "Q{n}/{total}"
+     - "End Test" button (red-600, Send icon)
+
+  5. SUBMISSION SCREEN
+     - Green checkmark
+     - "Test Submitted" text
+     - Test title
+     - Violation warnings if any
+     - "Back to Tests" button
+
+  Security Features:
+  - Fullscreen enforcement (auto-enters on start, warns on exit)
+  - Tab/visibility change detection (auto-increments warnings)
+  - 3 warnings = auto-submit
+  - Paste detection (10+ word threshold)
+  - Countdown timer with auto-submit on expiry
+
+─────────────────────────────────────────────────
+5.7 PROBLEMS CATALOG (/problems) [PROTECTED]
+─────────────────────────────────────────────────
+Layout: LeetCode-style problem catalog
+
+UI Elements:
+  - Header at top
+  - 6 category cards (grid):
+    - Data Structures & Algorithms (🧮, cyan accent)
+    - Debugging Challenges (🐛, red accent)
+    - NPTEL Courses (🎓, green accent)
+    - Competitive Programming (🏆, purple accent)
+    - System Design (🏗️, orange accent)
+    - Interview Preparation (💼, blue accent)
+  - Each card: emoji icon, title, description, chapter/item counts, tag pills
+  - Search bar, difficulty filter (all/easy/medium/hard), tag filter, company filter
+  - Sort options: default, difficulty, acceptance rate
+  - Problem list when category selected:
+    - Problem title, difficulty badge, acceptance rate, tags, company badges
+    - Click → navigates to /problem-workspace?id={id}
+
+Difficulty badge colors:
+  - Easy: text-green-600 bg-green-100
+  - Medium: text-yellow-600 bg-yellow-100
+  - Hard: text-red-600 bg-red-100
+
+─────────────────────────────────────────────────
+5.8 PROBLEM WORKSPACE (/problem-workspace) [PROTECTED]
+─────────────────────────────────────────────────
+Layout: Two-panel split view (like LeetCode)
+
+Left Panel (ProblemPanel):
+  - 3 tabs: Problem | Examples | Discussion
+  - Problem tab:
+    - Title, difficulty badge, success rate
+    - Description text
+    - Constraints list (dot icon per item)
+    - Tag pills (Array, Hash Table, etc.)
+    - "Show Hints" / "Hide Hints" button (Eye/EyeOff icon)
+      - Hints panel: amber bg, Lightbulb icons, progressive hints
+  - Examples tab:
+    - Input/output/explanation per example in code blocks
+  - Discussion tab:
+    - Community comments with author, timestamp, likes
+
+Right Panel (CodeEditor):
+  - Language selector dropdown (15 languages: JS, Python, Java, C++, etc.)
+  - Font size selector (12-20px)
+  - Code textarea with line numbers and default template per language
+  - Bottom action bar:
+    - "Run Code" button (Play icon, primary) — runs against test cases
+    - "Submit" button (Send icon, success) — submits solution
+    - Both have loading states
+
+Additional Panels (toggleable):
+  - TestResults: Shows pass/fail per test case
+  - SubmissionHistory: Past submissions with status
+  - CollaborativeMode: Real-time collaboration
+  - SuccessAnimation: Celebration animation on correct solution
+
+─────────────────────────────────────────────────
+5.9 CAMPUS FORUMS (/campus-forums) [PROTECTED]
+─────────────────────────────────────────────────
+Layout: Twitter/Reddit-style social feed
+
+UI Elements:
+  - Two view modes: Social (Twitter-style) | Forum (traditional)
+  - Sort options: Hot, New, Top
+  - Category filter: All, General, CodeHelp, etc.
+  - Create post button → opens create modal
+  - Post types: text, announcement, with images
+
+Each Post Card:
+  - User avatar (emoji), name, username, verified badge, follower count
+  - Post content text with hashtags
+  - Engagement row: likes, retweets/shares, comments, views
+  - Action buttons: Like (Heart), Retweet, Comment, Share, Save
+  - Expandable comment thread with replies
+  - Reply input field
+
+Create Post Modal:
+  - Text input area
+  - Post type selector (text, code, poll, etc.)
+  - Submit button
+
+Friend Requests Panel:
+  - User card with avatar, name, mutual friends
+  - Accept/Decline buttons
+
+─────────────────────────────────────────────────
+5.10 ACHIEVEMENT CENTER (/achievement-center) [PROTECTED]
+─────────────────────────────────────────────────
+Layout: Gamification dashboard with colorful gradient cards
+
+Sections:
+  1. Section Navigation (vertical tabs):
+     - Quick Stats, Detailed Profile, Hall of Fame, Leaderboards, Gamification
+
+  2. QUICK STATS (default view):
+     - Featured College Rank card: gradient blue→purple, large rank number,
+       progress bar to next milestone
+     - Total Points card: gradient purple→pink
+     - Badges Earned card: gradient green→emerald
+     - Current Streak card: gradient orange→red
+     - Average Rating card: gradient yellow→amber, star emojis
+     - All cards: hover:scale-105, backdrop-blur, shadow-xl
+
+  3. LEADERBOARD TABS:
+     - Problem Solvers (Terminal), Collaborators (Users), Contributors (Heart), Overall (Trophy)
+
+  4. LEADERBOARD TABLE:
+     - Rank, user, score, problems solved, streaks
+
+  5. HALL OF FAME:
+     - Top achievers showcase
+
+  6. GAMIFICATION:
+     - Badges collection, challenges, rewards
+
+─────────────────────────────────────────────────
+5.11 LEARNING PATHWAYS (/learning-pathways) [PROTECTED]
+─────────────────────────────────────────────────
+Layout: Guided learning path selection
+
+UI Elements:
+  - 6 learning path cards:
+    - Algorithm Fundamentals (blue, 6 weeks, 45 problems)
+    - Data Structures Mastery (emerald, 8 weeks, 38 problems)
+    - Dynamic Programming Journey (purple, 10 weeks, 52 problems)
+    - System Design Prep (red, 12 weeks, 28 problems)
+    - Interview Preparation Track (amber, 4 weeks, 25 problems)
+    - Competitive Programming (indigo, 16 weeks, 67 problems)
+  - Each card: gradient bg, title, description, difficulty, duration,
+    progress bar, total/completed problems, tag pills
+  - Click card → expands to show problems in path:
+    - Problem title, difficulty badge, completed checkmark
+    - Concept tags per problem
+  - Personalized recommendations section:
+    - "Based on your recent performance" suggestions with confidence scores
+
+─────────────────────────────────────────────────
+5.12 PROJECTS (/projects)
+─────────────────────────────────────────────────
+Layout: Project gallery grid
+
+UI:
+  - "Projects" heading
+  - "New Project" button (Plus icon, outline)
+  - 3-column grid of project cards:
+    - FolderOpen icon, project title, ArrowRight icon
+    - Technology pills
+  - Click card → project detail page
+
+─────────────────────────────────────────────────
+5.13 ABOUT PAGE (/about-code-campus)
+─────────────────────────────────────────────────
+Layout: Marketing/info page
+
+Sections:
+  - Hero Section (about variant)
+  - Mission Section
+  - Timeline Section
+  - Value Proposition (about variant)
+  - Team Section
+  - University Partnerships
+  - Stats Section
+  - Testimonial Section
+
+─────────────────────────────────────────────────
+5.14 COMING SOON PAGE (/settings, /help, etc.)
+─────────────────────────────────────────────────
+Layout: Placeholder for unbuilt pages
+
+UI:
+  - Centered card with Rocket icon
+  - "{Page Name} — Coming Soon" heading
+  - Message: "We're building this page right now..."
+  - 3 buttons:
+    - "Go to Dashboard" (primary, LayoutDashboard icon) → /student-dashboard
+    - "Explore Problems" (outline, Code icon) → /problem-workspace
+    - "Open Forums" (ghost, MessageSquare icon) → /campus-forums
+
+─────────────────────────────────────────────────
+5.15 404 NOT FOUND
+─────────────────────────────────────────────────
+Layout: Centered error page
+
+UI:
+  - Large "404" text (opacity-20)
+  - "Page Not Found" heading
+  - "Let's get you back!" message
+  - "Go Home" button (primary, ArrowLeft icon) → /
+  - "Browse" button (outline) → /problems
+
+─────────────────────────────────────────────────
+5.16 STATUS PAGE (/status)
+─────────────────────────────────────────────────
+  - System status information page
+
+─────────────────────────────────────────────────
+5.17 PROBLEM HISTORY (/problem-history) [PROTECTED]
+─────────────────────────────────────────────────
+  - Track all attempted problems and past submissions
+
+─────────────────────────────────────────────────
+5.18 ASSIGNMENT CREATION (/assignment-creation) [PROTECTED]
+─────────────────────────────────────────────────
+  - Form for teachers to create assignments
+  - Fields: title, subject, language, instructions, deadline, etc.
+  - Language templates (Python, Java, JS, C++, SQL, HTML)
+
+─────────────────────────────────────────────────
+5.19 TEACHER REVIEW (/teacher-review) [PROTECTED]
+─────────────────────────────────────────────────
+  - Teacher view for reviewing student submissions
+
+─────────────────────────────────────────────────
+5.20 TEACHER DASHBOARD (/teacher-dashboard)
+─────────────────────────────────────────────────
+  - Teacher-specific dashboard view
+
+================================================================================
+6. ROUTING & NAVIGATION
+================================================================================
+Base path: /codecampus
+
+Public Routes:
+  / → Homepage
+  /homepage → Homepage
+  /login → Login
+  /about-code-campus → About
+  /status → Status Page
+
+Protected Routes (require authentication):
+  /student-dashboard → Student Dashboard
+  /campus-forums → Campus Forums
+  /achievement-center → Achievement Center
+  /problems → Problem Catalog
+  /problem-workspace → Problem Solving IDE
+  /assignments → Assignment List
+  /assignment-workspace → VS Code IDE
+  /assignment-creation → Create Assignment
+  /create-assignment → Create Assignment (alt)
+  /teacher-review → Teacher Review
+  /test → Proctored Tests
+  /projects → Project Showcase
+  /problem-history → Submission History
+  /learning-pathways → Learning Paths
+
+Catch-all: * → Coming Soon page (dynamic title from URL)
+Explicit 404: NotFound component
+
+Navigation flow:
+  Homepage → Login → Dashboard → (any feature page)
+  Dashboard is the central hub after login.
+
+================================================================================
+7. AUTHENTICATION & SECURITY
+================================================================================
+- Firebase Authentication (email/password)
+- ProtectedRoute component guards all authenticated pages
+- onAuthStateChange listener for real-time auth state
+- localStorage stores: isAuthenticated, userEmail, userName, loginMethod
+- Sign out: Firebase signOut + clear localStorage + redirect to /login
+- Academic integrity system:
+  - Paste detection hook (usePasteDetection): word/char threshold, policy (allow/warn/block)
+  - Exam mode hook (useExamMode): fullscreen, tab switch, devtools, right-click blocking
+  - Integrity logger: logs all events, generates report on submission
+
+================================================================================
+8. CONTEXTS & STATE MANAGEMENT
+================================================================================
+- DarkModeContext: isDarkMode state, toggleDarkMode function, localStorage persistence
+- RoleContext: user role management (student/teacher)
+- Component-level state via useState/useEffect hooks
+- No Redux or global state library — state is per-page with React hooks
+
+================================================================================
+9. HOOKS (Custom)
+================================================================================
+- useAuth: Firebase auth state management
+- useExamMode: Fullscreen, tab detection, devtools detection, auto-submit
+- usePasteDetection: Paste event interception, word counting, content hashing
+
+================================================================================
+10. BACKEND (Express.js + MongoDB)
+================================================================================
+Server runs separately (/server/):
+- GET /api/assignments → list all assignments
+- POST /api/assignments → create assignment
+- GET /api/submissions → list submissions
+- POST /api/submissions → create submission
+Models: Assignment.js, Submission.js (Mongoose schemas)
+
+================================================================================
+11. COMPLETE BUTTON INVENTORY (Every Button in the App)
+================================================================================
+
+HEADER:
+  [1] CodeCampus Logo → /homepage
+  [2] Dashboard nav link → /student-dashboard
+  [3] Problems nav link → /problems
+  [4] Learning Paths nav link → /learning-pathways
+  [5] Assignments nav link → /assignments
+  [6] Tests nav link → /test
+  [7] Forums nav link → /campus-forums
+  [8] More dropdown trigger
+  [9] Achievements → /achievement-center
+  [10] About → /about-code-campus
+  [11] Settings → /settings
+  [12] Help → /help
+  [13] Dark Mode Toggle (sun/moon slider)
+  [14] Notification Bell → /status
+  [15] User Profile dropdown trigger
+  [16] Profile → /profile
+  [17] Settings → /settings
+  [18] Sign Out → clears auth, /login
+  [19] Mobile hamburger menu toggle
+
+LOGIN:
+  [20] Sign In tab toggle
+  [21] Sign Up tab toggle
+  [22] Submit form (Sign In / Create Account) — loading state
+  [23] CodeCampus logo → /homepage
+
+HOMEPAGE:
+  [24] "Start Coding Now" → /problem-workspace
+  [25] "Explore Problems" → /problems
+  [26] "Learn more about our mission" → /about-code-campus
+  [27] "View on GitHub" → external GitHub URL
+  [28] "Live Demo" → /projects
+  [29] Project Prev arrow (ChevronLeft)
+  [30] Project Next arrow (ChevronRight)
+  [31-34] Project dot indicators (one per project)
+  [35] "Browse All Projects" → /projects
+  [36+] Footer section links (Dashboard, Problems, Forums, etc.)
+  [37+] Social media links (Twitter, LinkedIn, GitHub, Discord, YouTube)
+
+STUDENT DASHBOARD:
+  [40] "Assignments" button → /assignments
+  [41] "Code Editor" button → /problem-workspace
+  [42] "Continue" (resume card) → /problem-workspace
+  [43] Active/Done tab toggles
+  [44] Assignment "Continue" → /assignment-workspace?id=
+  [45] Assignment "Open" → /assignment-workspace?id=
+  [46] Assignment "Review" → /problem-history
+  [47] "View All Assignments" → /assignments
+  [48] Quick Nav: Assignments → /assignments
+  [49] Quick Nav: Tests → /test
+  [50] Quick Nav: Forums → /campus-forums
+  [51] Quick Nav: Achievements → /achievement-center
+  [52] AI Hint button
+  [53] AI Debug button
+  [54] AI Explain button
+  [55] AI text input send button
+  [56] "View History" → /problem-history
+
+ASSIGNMENTS LIST:
+  [57] "Create Assignment" → /assignment-creation
+  [58] Active/Completed tab toggles
+  [59-64] Subject filter tabs (All, DSA, OOPS, DataScience, DBMS, WebDev)
+  [65] Assignment "Continue" → /assignment-workspace?id=
+  [66] Assignment "Start" → /assignment-workspace?id=
+  [67] Assignment "Review" → /teacher-review?id=
+
+ASSIGNMENT WORKSPACE (VS Code IDE):
+  [68] Back arrow → /assignments
+  [69] Activity Bar: Files (Explorer)
+  [70] Activity Bar: Search
+  [71] Activity Bar: AI Assistant
+  [72] Activity Bar: Submit
+  [73] File tree folder expand/collapse
+  [74] File tree file select
+  [75] Tab close (X)
+  [76] Tab select
+  [77] Explorer "More" button
+  [78] Search input clear (X)
+  [79] Search result click (open file)
+  [80] AI chat send button
+  [81] Terminal tab: Terminal/Problems
+  [82] Terminal input submit
+  [83] Run button (Play icon)
+  [84] Submit confirmation: "Yes, Submit"
+  [85] Submit confirmation: "Cancel"
+  [86] Post-submit: "Back to Assignments"
+
+TEST LOBBY:
+  [87] "Back to Dashboard" → /student-dashboard
+  [88] Filter: All Tests
+  [89] Filter: MCQ Only
+  [90] Filter: Coding Only
+  [91] "Start Test" (per available test)
+
+PROCTORED TEST:
+  [92] "Re-enter" fullscreen button
+  [93] Question tabs (Q1, Q2, ...)
+  [94] MCQ radio options
+  [95] Prev question button (ChevronLeft)
+  [96] Next question button (ChevronRight)
+  [97] "End Test" button (Send icon)
+  [98] Post-submit: "Back to Tests"
+
+PROBLEMS CATALOG:
+  [99] Category cards (6 categories)
+  [100] Search input
+  [101] Difficulty filter buttons
+  [102] Tag filter
+  [103] Company filter
+  [104] Sort toggle
+  [105] Problem row click → /problem-workspace?id=
+
+PROBLEM WORKSPACE:
+  [106] Problem/Examples/Discussion tabs
+  [107] "Show Hints" / "Hide Hints" toggle
+  [108] Language selector dropdown
+  [109] Font size selector
+  [110] "Run Code" button (Play icon)
+  [111] "Submit" button (Send icon)
+
+CAMPUS FORUMS:
+  [112] Social/Forum view mode toggle
+  [113] Sort tabs: Hot, New, Top
+  [114] Category filter buttons
+  [115] Create post button
+  [116] Like button (per post)
+  [117] Retweet/Share button (per post)
+  [118] Comment button (per post)
+  [119] Save button (per post)
+  [120] Reply input submit
+  [121] Friend request Accept/Decline buttons
+
+ACHIEVEMENT CENTER:
+  [122] Section navigation tabs (Quick Stats, Profile, Hall of Fame, Leaderboards, Gamification)
+  [123] Leaderboard category tabs (Problem Solvers, Collaborators, Contributors, Overall)
+
+LEARNING PATHWAYS:
+  [124] Path cards (6 paths)
+  [125] Problem checkboxes within expanded path
+  [126] "Start Path" / "Continue" buttons
+
+PROJECTS:
+  [127] "New Project" button
+  [128] Project cards → detail pages
+
+COMING SOON:
+  [129] "Go to Dashboard" → /student-dashboard
+  [130] "Explore Problems" → /problem-workspace
+  [131] "Open Forums" → /campus-forums
+
+404 PAGE:
+  [132] "Go Home" → /
+  [133] "Browse" → /problems
+
+================================================================================
+12. USER FLOWS (End-to-End)
+================================================================================
+
+FLOW 1: New Student Registration
+  /homepage → click "Start Coding Now" → /login (redirected, not authenticated)
+  → click "Sign Up" tab → fill name, email, password → Submit
+  → Firebase creates account → redirect to /student-dashboard
+
+FLOW 2: Solve a Problem
+  /student-dashboard → click "Code Editor" → /problem-workspace
+  → select problem → read description → write code → click "Run Code"
+  → see test results → fix code → click "Submit" → success animation
+
+FLOW 3: Complete an Assignment
+  /student-dashboard → click assignment "Continue" → /assignment-workspace?id=a1
+  → browse files in explorer → edit code in Monaco Editor → run in terminal
+  → use AI assistant for hints → click Submit → confirmation → submitted
+
+FLOW 4: Take a Proctored Test
+  /student-dashboard → click "Tests" quick nav → /test
+  → click "Start Test" → enters fullscreen → solve questions
+  → navigate between questions → click "End Test" → submitted
+
+FLOW 5: Browse Forums
+  /student-dashboard → click "Forums" → /campus-forums
+  → browse posts → like/comment/share → create new post
+
+================================================================================
+END OF DOCUMENT
+================================================================================

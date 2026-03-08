@@ -135,11 +135,9 @@ const Login = () => {
       if (user) {
         // Track successful login/signup
         trackLogin(isSignUp ? 'signup_email' : 'signin_email');
-
-        // Store user data in localStorage (for backward compatibility)
+        
+        // Store minimal auth state in localStorage (for backward compatibility)
         localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('userEmail', user.email || '');
-        localStorage.setItem('userName', user.displayName || formData.fullName || '');
         localStorage.setItem('loginMethod', 'firebase');
 
         // Navigate to dashboard

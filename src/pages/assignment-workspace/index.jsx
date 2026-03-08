@@ -115,7 +115,7 @@ const defaultAssignment = {
 
 const langMap = { python: 'python', java: 'java', javascript: 'javascript', sql: 'sql', cpp: 'cpp', markdown: 'markdown' };
 const langIcon = { python: 'FileCode', java: 'Coffee', javascript: 'FileJson', sql: 'Database', markdown: 'FileText', cpp: 'FileCode' };
-const PASTE_WORD_LIMIT = 10;
+const PASTE_WORD_LIMIT = 5;
 
 /* ════════════════════════════════════════════════════════════
    File Tree Builder
@@ -208,6 +208,7 @@ const AssignmentWorkspace = () => {
   // ── Editor state ──
   const [saved, setSaved] = useState(true);
   const [pasteWarnings, setPasteWarnings] = useState([]);
+  const [pasteToast, setPasteToast] = useState(null);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isRunning, setIsRunning] = useState(false);

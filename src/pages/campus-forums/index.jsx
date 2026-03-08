@@ -404,6 +404,7 @@ const useApi = (url) => {
   useEffect(() => {
     setPosts(mockPosts);
     setFriendRequests(mockFriendRequests);
+    // Dependencies intentionally left empty: including mockPosts/mockFriendRequests (mock data recreated per render) would cause an infinite loop.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
