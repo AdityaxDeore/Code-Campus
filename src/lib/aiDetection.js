@@ -23,118 +23,191 @@ const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemi
 //  1. Heuristic Analysis (local, instant)
 // ───────────────────────────────────────────────────────────────
 
-function heuristicAnalysis(code, language) {
+function heuristicAnalysis(content, language) {
+  const isText = language === 'text' || language === 'report';
   const signals = [];
   let score = 0;
-  const lines = code.split('\n');
+  const lines = content.split('\n');
   const nonEmptyLines = lines.filter(l => l.trim().length > 0);
+  const text = content.toLowerCase();
 
-  // ── Comment patterns ──
-  const commentLines = lines.filter(l => {
-    const t = l.trim();
-    return t.startsWith('//') || t.startsWith('#') || t.startsWith('/*') || t.startsWith('*');
-  });
-  const commentRatio = nonEmptyLines.length > 0 ? commentLines.length / nonEmptyLines.length : 0;
+  if (isText) {
+    // ═══════════════════════════════════════════════════════
+    //  Text / Report heuristics
+    // ═══════════════════════════════════════════════════════
 
-  // AI tends to over-comment (30%+ comment ratio is suspicious)
-  if (commentRatio > 0.35) {
-    score += 15;
-    signals.push({ type: 'high_comment_ratio', detail: `${(commentRatio * 100).toFixed(0)}% of lines are comments`, weight: 15 });
-  }
+    // ── Baseline: any submitted text gets a small base score ──
+    score += 8;
+    signals.push({ type: 'baseline_analysis', detail: 'Baseline text analysis score', weight: 8 });
 
-  // AI often writes "Step X:" or "Case X:" style comments
-  const stepComments = commentLines.filter(l => /step\s*\d|case\s*\d|approach|explanation|note:/i.test(l));
-  if (stepComments.length >= 3) {
-    score += 10;
-    signals.push({ type: 'structured_comments', detail: `${stepComments.length} structured/tutorial-style comments`, weight: 10 });
-  }
-
-  // ── Consistent formatting ──
-  // AI code tends to have perfectly uniform indentation
-  const indents = nonEmptyLines.map(l => l.match(/^(\s*)/)[1].length).filter(n => n > 0);
-  if (indents.length > 5) {
-    const indentSet = new Set(indents);
-    const allMultiplesOf4 = [...indentSet].every(n => n % 4 === 0);
-    const allMultiplesOf2 = [...indentSet].every(n => n % 2 === 0);
-    if (allMultiplesOf4 && indentSet.size <= 4) {
-      score += 5;
-      signals.push({ type: 'perfect_indentation', detail: 'Perfectly uniform 4-space indentation throughout', weight: 5 });
-    } else if (allMultiplesOf2 && indentSet.size <= 5) {
-      score += 3;
-      signals.push({ type: 'uniform_indentation', detail: 'Very consistent 2-space indentation', weight: 3 });
+    // ── AI-typical transition phrases ──
+    const aiTransitions = [
+      'in conclusion', 'furthermore', 'moreover', 'additionally',
+      'it is important to note', 'it is worth noting', 'it should be noted',
+      'in summary', 'to summarize', 'in this context',
+      'plays a crucial role', 'plays a vital role', 'it is essential',
+      'delve into', 'delve deeper', 'comprehensive overview',
+      'in today\'s world', 'in the modern era', 'in recent years',
+      'leveraging', 'utilizing', 'facilitating', 'encompassing',
+      'multifaceted', 'noteworthy', 'pivotal', 'paramount',
+    ];
+    const foundTransitions = aiTransitions.filter(p => text.includes(p));
+    if (foundTransitions.length >= 2) {
+      const w = Math.min(foundTransitions.length * 4, 18);
+      score += w;
+      signals.push({ type: 'ai_phrases', detail: `AI-typical phrases: "${foundTransitions.slice(0, 4).join('", "')}"`, weight: w });
     }
-  }
 
-  // ── Verbose variable names ──
-  // AI tends to use descriptive names like "currentElement", "leftSubtree"
-  const identifiers = code.match(/\b[a-z][a-zA-Z]{8,}\b/g) || [];
-  const camelCaseVerbose = identifiers.filter(id => /[a-z][A-Z]/.test(id) && id.length > 12);
-  if (camelCaseVerbose.length >= 5) {
-    score += 8;
-    signals.push({ type: 'verbose_naming', detail: `${camelCaseVerbose.length} overly descriptive variable names`, weight: 8 });
-  }
+    // ── Sentence uniformity (AI writes very even sentence lengths) ──
+    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 10);
+    if (sentences.length >= 5) {
+      const lengths = sentences.map(s => s.trim().split(/\s+/).length);
+      const avg = lengths.reduce((a, b) => a + b, 0) / lengths.length;
+      const variance = lengths.reduce((sum, l) => sum + Math.pow(l - avg, 2), 0) / lengths.length;
+      const stdDev = Math.sqrt(variance);
+      // AI text: std dev typically < 5 words; human text varies more
+      if (stdDev < 4 && avg > 8) {
+        score += 10;
+        signals.push({ type: 'uniform_sentences', detail: `Very uniform sentence lengths (avg ${avg.toFixed(0)} words, σ=${stdDev.toFixed(1)})`, weight: 10 });
+      } else if (stdDev < 6 && avg > 10) {
+        score += 5;
+        signals.push({ type: 'somewhat_uniform', detail: `Fairly uniform sentence structure (σ=${stdDev.toFixed(1)})`, weight: 5 });
+      }
+    }
 
-  // ── Error handling patterns ──
-  // AI almost always adds try-catch / error handling even for simple code
-  const tryCatchCount = (code.match(/try\s*{|try:|except|catch\s*\(/g) || []).length;
-  if (tryCatchCount >= 3 && nonEmptyLines.length < 80) {
-    score += 10;
-    signals.push({ type: 'excessive_error_handling', detail: `${tryCatchCount} try-catch blocks in ${nonEmptyLines.length} lines`, weight: 10 });
-  }
+    // ── Overly structured (numbered lists, headers) ──
+    const numberedLines = nonEmptyLines.filter(l => /^\s*\d+[\.\)]\s/.test(l));
+    const headerLines = nonEmptyLines.filter(l => /^#{1,3}\s|^[A-Z][A-Za-z\s]{3,}:$/.test(l.trim()));
+    if (numberedLines.length >= 4 || headerLines.length >= 3) {
+      score += 7;
+      signals.push({ type: 'overly_structured', detail: `Highly structured formatting (${numberedLines.length} numbered, ${headerLines.length} headers)`, weight: 7 });
+    }
 
-  // ── Boilerplate/template patterns ──
-  const boilerplatePatterns = [
-    /def main\(\):/,
-    /if __name__\s*==\s*['"]__main__['"]/,
-    /public static void main/,
-    /int main\(\)/,
-  ];
-  const boilerplateCount = boilerplatePatterns.filter(p => p.test(code)).length;
+    // ── Perfect grammar indicators (no typos, contractions, informal language) ──
+    const informalMarkers = (text.match(/\b(gonna|wanna|kinda|sorta|u\b|ur\b|tbh|imo|idk|lol|btw|tho|ngl)\b/g) || []).length;
+    const contractions = (text.match(/\b(don't|won't|can't|isn't|aren't|doesn't|didn't|wouldn't|shouldn't|couldn't)\b/gi) || []).length;
+    if (informalMarkers === 0 && contractions === 0 && nonEmptyLines.length > 10) {
+      score += 6;
+      signals.push({ type: 'formal_tone', detail: 'No contractions or informal language — unusually formal', weight: 6 });
+    }
 
-  // ── Docstring/JSDoc patterns ──
-  const docstringCount = (code.match(/"""/g) || []).length / 2 +
-    (code.match(/\/\*\*/g) || []).length;
-  if (docstringCount >= 3 && nonEmptyLines.length < 60) {
-    score += 8;
-    signals.push({ type: 'excessive_docs', detail: `${Math.floor(docstringCount)} docstrings in a short file`, weight: 8 });
-  }
+    // ── Repetitive structure ("X is Y. X provides Z. X enables W.") ──
+    if (sentences.length >= 6) {
+      const starters = sentences.map(s => s.trim().split(/\s+/).slice(0, 2).join(' ').toLowerCase());
+      const starterCounts = {};
+      starters.forEach(s => { starterCounts[s] = (starterCounts[s] || 0) + 1; });
+      const maxRepeat = Math.max(...Object.values(starterCounts));
+      if (maxRepeat >= 3) {
+        score += 6;
+        signals.push({ type: 'repetitive_structure', detail: `Same sentence opener repeated ${maxRepeat} times`, weight: 6 });
+      }
+    }
 
-  // ── Function-heavy structure ──
-  // AI tends to break things into many small functions even when not needed
-  const funcDefs = (code.match(/\bdef\s+\w+|function\s+\w+|void\s+\w+\s*\(|int\s+\w+\s*\(|bool\s+\w+\s*\(/g) || []).length;
-  if (funcDefs >= 6 && nonEmptyLines.length < 80) {
-    score += 8;
-    signals.push({ type: 'over_modularized', detail: `${funcDefs} functions in ${nonEmptyLines.length} lines`, weight: 8 });
-  }
+    // ── Length check (very long = more likely AI-padded) ──
+    const wordCount = content.split(/\s+/).length;
+    if (wordCount > 800) {
+      score += 4;
+      signals.push({ type: 'long_content', detail: `${wordCount} words — longer reports have higher AI correlation`, weight: 4 });
+    }
 
-  // ── "AI signature" phrases ──
-  const aiPhrases = [
-    'here is', 'as follows', 'implementation', 'the following',
-    'time complexity', 'space complexity', 'edge case',
-    'helper function', 'utility function', 'driver code',
-  ];
-  const foundPhrases = aiPhrases.filter(p =>
-    code.toLowerCase().includes(p)
-  );
-  if (foundPhrases.length >= 3) {
-    score += 12;
-    signals.push({ type: 'ai_vocabulary', detail: `Found AI-typical phrases: ${foundPhrases.join(', ')}`, weight: 12 });
-  }
+  } else {
+    // ═══════════════════════════════════════════════════════
+    //  Code heuristics (original logic)
+    // ═══════════════════════════════════════════════════════
 
-  // ── Completeness for assignment ──
-  // If code is suspiciously complete with zero TODOs and perfectly structured
-  const hasTodo = /TODO|FIXME|HACK|XXX/i.test(code);
-  const hasDebug = /console\.log|print\s*\(.*debug|System\.out\.println.*test/i.test(code);
-  if (!hasTodo && !hasDebug && nonEmptyLines.length > 30 && commentRatio > 0.15) {
+    // ── Baseline for code submissions ──
     score += 5;
-    signals.push({ type: 'too_clean', detail: 'No TODOs, no debug prints, perfectly clean code', weight: 5 });
+    signals.push({ type: 'baseline_analysis', detail: 'Baseline code analysis score', weight: 5 });
+
+    // ── Comment patterns ──
+    const commentLines = lines.filter(l => {
+      const t = l.trim();
+      return t.startsWith('//') || t.startsWith('#') || t.startsWith('/*') || t.startsWith('*');
+    });
+    const commentRatio = nonEmptyLines.length > 0 ? commentLines.length / nonEmptyLines.length : 0;
+
+    if (commentRatio > 0.35) {
+      score += 15;
+      signals.push({ type: 'high_comment_ratio', detail: `${(commentRatio * 100).toFixed(0)}% of lines are comments`, weight: 15 });
+    }
+
+    const stepComments = commentLines.filter(l => /step\s*\d|case\s*\d|approach|explanation|note:/i.test(l));
+    if (stepComments.length >= 3) {
+      score += 10;
+      signals.push({ type: 'structured_comments', detail: `${stepComments.length} structured/tutorial-style comments`, weight: 10 });
+    }
+
+    // ── Consistent formatting ──
+    const indents = nonEmptyLines.map(l => l.match(/^(\s*)/)[1].length).filter(n => n > 0);
+    if (indents.length > 5) {
+      const indentSet = new Set(indents);
+      const allMultiplesOf4 = [...indentSet].every(n => n % 4 === 0);
+      const allMultiplesOf2 = [...indentSet].every(n => n % 2 === 0);
+      if (allMultiplesOf4 && indentSet.size <= 4) {
+        score += 5;
+        signals.push({ type: 'perfect_indentation', detail: 'Perfectly uniform 4-space indentation throughout', weight: 5 });
+      } else if (allMultiplesOf2 && indentSet.size <= 5) {
+        score += 3;
+        signals.push({ type: 'uniform_indentation', detail: 'Very consistent 2-space indentation', weight: 3 });
+      }
+    }
+
+    // ── Verbose variable names ──
+    const identifiers = content.match(/\b[a-z][a-zA-Z]{8,}\b/g) || [];
+    const camelCaseVerbose = identifiers.filter(id => /[a-z][A-Z]/.test(id) && id.length > 12);
+    if (camelCaseVerbose.length >= 5) {
+      score += 8;
+      signals.push({ type: 'verbose_naming', detail: `${camelCaseVerbose.length} overly descriptive variable names`, weight: 8 });
+    }
+
+    // ── Error handling patterns ──
+    const tryCatchCount = (content.match(/try\s*{|try:|except|catch\s*\(/g) || []).length;
+    if (tryCatchCount >= 3 && nonEmptyLines.length < 80) {
+      score += 10;
+      signals.push({ type: 'excessive_error_handling', detail: `${tryCatchCount} try-catch blocks in ${nonEmptyLines.length} lines`, weight: 10 });
+    }
+
+    // ── Docstring/JSDoc patterns ──
+    const docstringCount = (content.match(/"""/g) || []).length / 2 +
+      (content.match(/\/\*\*/g) || []).length;
+    if (docstringCount >= 3 && nonEmptyLines.length < 60) {
+      score += 8;
+      signals.push({ type: 'excessive_docs', detail: `${Math.floor(docstringCount)} docstrings in a short file`, weight: 8 });
+    }
+
+    // ── Function-heavy structure ──
+    const funcDefs = (content.match(/\bdef\s+\w+|function\s+\w+|void\s+\w+\s*\(|int\s+\w+\s*\(|bool\s+\w+\s*\(/g) || []).length;
+    if (funcDefs >= 6 && nonEmptyLines.length < 80) {
+      score += 8;
+      signals.push({ type: 'over_modularized', detail: `${funcDefs} functions in ${nonEmptyLines.length} lines`, weight: 8 });
+    }
+
+    // ── "AI signature" phrases ──
+    const aiPhrases = [
+      'here is', 'as follows', 'implementation', 'the following',
+      'time complexity', 'space complexity', 'edge case',
+      'helper function', 'utility function', 'driver code',
+    ];
+    const foundPhrases = aiPhrases.filter(p => text.includes(p));
+    if (foundPhrases.length >= 3) {
+      score += 12;
+      signals.push({ type: 'ai_vocabulary', detail: `Found AI-typical phrases: ${foundPhrases.join(', ')}`, weight: 12 });
+    }
+
+    // ── Completeness for assignment ──
+    const hasTodo = /TODO|FIXME|HACK|XXX/i.test(content);
+    const hasDebug = /console\.log|print\s*\(.*debug|System\.out\.println.*test/i.test(content);
+    if (!hasTodo && !hasDebug && nonEmptyLines.length > 30) {
+      score += 5;
+      signals.push({ type: 'too_clean', detail: 'No TODOs, no debug prints, perfectly clean code', weight: 5 });
+    }
   }
 
   return {
     score: Math.min(score, 60), // heuristic caps at 60
     signals,
     lineCount: nonEmptyLines.length,
-    commentRatio: Math.round(commentRatio * 100),
+    commentRatio: 0,
   };
 }
 
@@ -217,12 +290,42 @@ function behavioralAnalysis(integrityReport) {
 //  3. Gemini-Powered Analysis (deep content check)
 // ───────────────────────────────────────────────────────────────
 
-async function geminiAnalysis(code, language) {
+async function geminiAnalysis(content, language) {
   if (!GEMINI_API_KEY || GEMINI_API_KEY === 'your-gemini-api-key-here') {
     return { score: 0, signals: [{ type: 'skipped', detail: 'Gemini API key not configured', weight: 0 }], rawResponse: null };
   }
 
-  const prompt = `You are an academic integrity expert analyzing student-submitted code for signs of AI generation.
+  const isTextContent = language === 'text' || language === 'report';
+  const prompt = isTextContent
+    ? `You are an academic integrity expert analyzing a student-submitted report/essay for signs of AI generation.
+
+Analyze this student report and evaluate whether it was likely written by a human student or generated by an AI tool (ChatGPT, Gemini, Claude, etc.).
+
+IMPORTANT: Respond ONLY with a JSON object, no markdown, no explanation outside the JSON:
+{
+  "aiProbability": <number 0-100>,
+  "confidence": "<low|medium|high>",
+  "reasoning": "<2-3 sentence explanation>",
+  "indicators": [
+    {"signal": "<indicator name>", "description": "<brief detail>", "weight": "<low|medium|high>"}
+  ]
+}
+
+Indicators to look for:
+- Overly formal and polished language for a student submission
+- Repetitive sentence structures and paragraph patterns
+- AI-typical transition words (furthermore, moreover, it is important to note)
+- Lack of personal voice or original examples
+- Suspiciously comprehensive coverage of topics
+- Generic explanations without personal insight
+- Perfect grammar throughout with no natural errors
+- Formulaic introduction and conclusion patterns
+
+TEXT TO ANALYZE:
+"""
+${content.slice(0, 4000)}
+"""`
+    : `You are an academic integrity expert analyzing student-submitted code for signs of AI generation.
 
 Analyze this ${language} code and evaluate whether it was likely written by a human student or generated by an AI tool (ChatGPT, GitHub Copilot, Gemini, etc.).
 
@@ -247,7 +350,7 @@ Indicators to look for:
 
 CODE TO ANALYZE:
 \`\`\`${language}
-${code.slice(0, 3000)}
+${content.slice(0, 3000)}
 \`\`\``;
 
   try {
