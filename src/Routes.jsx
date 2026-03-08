@@ -28,6 +28,7 @@ const AssignmentCreation = lazy(() => import('./pages/assignment-creation'));
 const CreateAssignment = lazy(() => import('./pages/create-assignment'));
 const TeacherReview = lazy(() => import('./pages/teacher-review'));
 const TestPage = lazy(() => import('./pages/test'));
+const ReportSubmission = lazy(() => import('./pages/report-submission'));
 
 const Routes = () => {
   return (
@@ -118,6 +119,13 @@ const Routes = () => {
           <ProtectedRoute>
             <Suspense fallback={<Loading />}>
               <TeacherReview />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/report-submission" element={
+          <ProtectedRoute>
+            <Suspense fallback={<Loading />}>
+              <ReportSubmission />
             </Suspense>
           </ProtectedRoute>
         } />

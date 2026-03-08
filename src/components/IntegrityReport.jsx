@@ -45,6 +45,8 @@ const EVENT_LABELS = {
   exam_ended: 'Exam Ended',
   exam_auto_submitted: 'Auto-Submitted',
   typing_anomaly: 'Typing Anomaly',
+  ai_detection_ran: 'AI Detection Ran',
+  ai_detection_flagged: 'AI Code Flagged',
 };
 
 const IntegrityReport = ({

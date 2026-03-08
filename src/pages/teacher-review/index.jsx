@@ -149,6 +149,14 @@ print("After deleting 30:", tree.inorder())
   },
 };
 
+// Try loading a report submission from sessionStorage (set by report-submission page)
+function loadReportSubmission(assignmentId) {
+  try {
+    const raw = sessionStorage.getItem(`report_submission_${assignmentId}`);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
 const MOCK_SUBMISSION_LIST = [
   { id: 'sub_1', studentName: 'Aditya Deore', status: 'submitted', submittedAt: new Date(Date.now() - 2 * 3600000).toISOString(), score: null },
   { id: 'sub_2', studentName: 'Priya Sharma', status: 'submitted', submittedAt: new Date(Date.now() - 4 * 3600000).toISOString(), score: null },
@@ -350,28 +358,132 @@ const TeacherReview = () => {
             {/* Documents Panel */}
             {activePanel === 'documents' && (
               <div className="flex-1 overflow-y-auto p-6">
-                {submission.documents && submission.documents.length > 0 ? (
-                  <div className="space-y-3">
-                    {submission.documents.map((doc, i) => (
-                      <div key={i} className="flex items-center gap-3 bg-[#252526] rounded-lg p-3 border border-[#3c3c3c]">
-                        <Icon name="FileText" size={20} className="text-[#888]" />
-                        <div className="flex-1">
-                          <p className="text-[13px] text-[#ccc]">{doc.name}</p>
-                          <p className="text-[11px] text-[#888]">{doc.size}</p>
+                {/* AI Detection Results from report submissions */}
+                {(() => {
+                  const reportData = loadReportSubmission(submission.assignmentId);
+                  if (reportData && reportData.aiDetection) {
+                    const ai = reportData.aiDetection;
+                    const riskColors = {
+                      low: { bg: 'bg-emerald-900/30', border: 'border-emerald-700', text: 'text-emerald-400', badge: 'bg-emerald-800 text-emerald-300' },
+                      medium: { bg: 'bg-amber-900/30', border: 'border-amber-700', text: 'text-amber-400', badge: 'bg-amber-800 text-amber-300' },
+                      high: { bg: 'bg-orange-900/30', border: 'border-orange-700', text: 'text-orange-400', badge: 'bg-orange-800 text-orange-300' },
+                      critical: { bg: 'bg-red-900/30', border: 'border-red-700', text: 'text-red-400', badge: 'bg-red-800 text-red-300' },
+                    };
+                    const rc = riskColors[ai.riskLevel] || riskColors.low;
+                    return (
+                      <div className="space-y-4">
+                        {/* File Info */}
+                        <div className="flex items-center gap-3 bg-[#252526] rounded-lg p-3 border border-[#3c3c3c]">
+                          <Icon name="FileText" size={20} className="text-[#888]" />
+                          <div className="flex-1">
+                            <p className="text-[13px] text-[#ccc]">{reportData.fileName}</p>
+                            <p className="text-[11px] text-[#888]">{(reportData.fileSize / 1024).toFixed(0)} KB • {reportData.extractedTextLength.toLocaleString()} chars extracted</p>
+                          </div>
+                          <span className="text-[10px] text-[#888]">{new Date(reportData.submittedAt).toLocaleString()}</span>
                         </div>
-                        <button className="text-[#888] hover:text-blue-400 transition-colors">
-                          <Icon name="Download" size={16} />
-                        </button>
+
+                        {/* AI Detection Card */}
+                        <div className={`rounded-lg border p-4 ${rc.bg} ${rc.border}`}>
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="text-[13px] font-semibold text-white flex items-center gap-1.5">
+                              <Icon name="Shield" size={14} className="text-indigo-400" />
+                              AI Content Detection
+                            </h4>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${rc.badge}`}>
+                              {ai.riskLevel.toUpperCase()}
+                            </span>
+                          </div>
+
+                          {/* Score Circle */}
+                          <div className="flex items-center gap-4 mb-4">
+                            <div className={`w-16 h-16 rounded-full border-4 flex items-center justify-center ${
+                              ai.score >= 50 ? 'border-red-500 bg-red-900/40' :
+                              ai.score >= 25 ? 'border-amber-500 bg-amber-900/40' : 'border-emerald-500 bg-emerald-900/40'
+                            }`}>
+                              <span className="text-[18px] font-bold text-white">{ai.score}%</span>
+                            </div>
+                            <div>
+                              <p className={`text-[14px] font-semibold ${rc.text}`}>{ai.verdict}</p>
+                              <p className="text-[11px] text-[#888]">AI Probability Score</p>
+                            </div>
+                          </div>
+
+                          {/* Breakdown */}
+                          <div className="space-y-2 mb-3">
+                            {[
+                              { label: 'Heuristic', ...ai.breakdown.heuristic },
+                              { label: 'Gemini AI', ...ai.breakdown.gemini },
+                            ].map((layer, i) => (
+                              <div key={i}>
+                                <div className="flex justify-between text-[10px] mb-1">
+                                  <span className="text-[#aaa]">{layer.label}</span>
+                                  <span className="text-[#888]">{layer.score}/{layer.maxScore}</span>
+                                </div>
+                                <div className="w-full h-1.5 bg-[#3c3c3c] rounded-full overflow-hidden">
+                                  <div className={`h-full rounded-full ${
+                                    layer.score / layer.maxScore > 0.6 ? 'bg-red-500' :
+                                    layer.score / layer.maxScore > 0.3 ? 'bg-amber-500' : 'bg-emerald-500'
+                                  }`} style={{ width: `${(layer.score / layer.maxScore) * 100}%` }} />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Gemini Reasoning */}
+                          {ai.breakdown.gemini?.reasoning && (
+                            <div className="bg-[#1e1e1e] rounded p-3 border border-[#3c3c3c] mb-3">
+                              <p className="text-[10px] text-[#888] font-semibold mb-1 flex items-center gap-1">
+                                <Icon name="Sparkles" size={11} className="text-indigo-400" /> Gemini Analysis
+                              </p>
+                              <p className="text-[11px] text-[#bbb] leading-relaxed">{ai.breakdown.gemini.reasoning}</p>
+                            </div>
+                          )}
+
+                          {/* Signals */}
+                          {ai.allSignals && ai.allSignals.filter(s => s.weight > 0).length > 0 && (
+                            <div>
+                              <p className="text-[10px] text-[#888] font-semibold mb-2">Signals ({ai.allSignals.filter(s => s.weight > 0).length})</p>
+                              <div className="space-y-1">
+                                {ai.allSignals.filter(s => s.weight > 0).slice(0, 8).map((s, i) => (
+                                  <div key={i} className="flex items-center gap-2 text-[10px] bg-[#1e1e1e] rounded px-2 py-1.5 border border-[#3c3c3c]">
+                                    <Icon name={s.weight >= 10 ? 'AlertOctagon' : 'AlertTriangle'} size={11}
+                                      className={s.weight >= 10 ? 'text-red-400' : 'text-amber-400'} />
+                                    <span className="flex-1 text-[#bbb]">{s.detail}</span>
+                                    <span className={`font-mono px-1 rounded ${s.weight >= 10 ? 'bg-red-900/40 text-red-400' : 'bg-amber-900/40 text-amber-400'}`}>+{s.weight}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <Icon name="FileText" size={32} className="text-[#555] mx-auto mb-3" />
-                    <p className="text-[#888] text-sm">No documents submitted</p>
-                    <p className="text-[#666] text-xs mt-1">This is a code-only assignment</p>
-                  </div>
-                )}
+                    );
+                  }
+
+                  // Fallback: regular documents display
+                  return submission.documents && submission.documents.length > 0 ? (
+                    <div className="space-y-3">
+                      {submission.documents.map((doc, i) => (
+                        <div key={i} className="flex items-center gap-3 bg-[#252526] rounded-lg p-3 border border-[#3c3c3c]">
+                          <Icon name="FileText" size={20} className="text-[#888]" />
+                          <div className="flex-1">
+                            <p className="text-[13px] text-[#ccc]">{doc.name}</p>
+                            <p className="text-[11px] text-[#888]">{doc.size}</p>
+                          </div>
+                          <button className="text-[#888] hover:text-blue-400 transition-colors">
+                            <Icon name="Download" size={16} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <Icon name="FileText" size={32} className="text-[#555] mx-auto mb-3" />
+                      <p className="text-[#888] text-sm">No documents submitted</p>
+                      <p className="text-[#666] text-xs mt-1">This is a code-only assignment</p>
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </div>

@@ -63,7 +63,7 @@ export async function askGemini(userMessage, context = {}, history = []) {
         generationConfig: {
           temperature: 0.7,
           topP: 0.9,
-          maxOutputTokens: 500,
+          maxOutputTokens: 2048,
         }
       }
     });

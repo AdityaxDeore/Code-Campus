@@ -12,6 +12,7 @@ const subjects = [
   { key: 'oops', label: 'OOPS', icon: 'Boxes' },
   { key: 'datascience', label: 'Data Science', icon: 'BarChart3' },
   { key: 'dbms', label: 'DBMS', icon: 'Database' },
+  { key: 'cn', label: 'CN', icon: 'Network' },
   { key: 'webdev', label: 'Web Dev', icon: 'Globe' },
 ];
 
@@ -27,6 +28,9 @@ const mockAssignments = [
   { id: 'a6', title: 'EDA on Iris Dataset', subject: 'datascience', teacher: 'Dr. Patel', deadline: new Date(Date.now() + 96 * 36e5).toISOString(), status: 'not-started', progress: 0, difficulty: 'Easy', maxMarks: 80, scored: null, language: 'python', description: 'Perform exploratory data analysis with pandas and matplotlib.' },
   // DBMS
   { id: 'a7', title: 'Normalize to 3NF', subject: 'dbms', teacher: 'Prof. Kumar', deadline: new Date(Date.now() + 48 * 36e5).toISOString(), status: 'in-progress', progress: 30, difficulty: 'Medium', maxMarks: 100, scored: null, language: 'sql', description: 'Given a denormalized schema, normalize it to Third Normal Form.' },
+  // Computer Networks
+  { id: 'a9', title: 'Computer Network FA1 Report', subject: 'cn', teacher: 'Prof. Deshmukh', deadline: new Date(Date.now() + 72 * 36e5).toISOString(), status: 'not-started', progress: 0, difficulty: 'Medium', maxMarks: 50, scored: null, language: 'report', type: 'report', description: 'Submit your FA1 report on OSI Model, TCP/IP, and Network Topologies.' },
+  { id: 'a10', title: 'CN Lab – Socket Programming', subject: 'cn', teacher: 'Prof. Deshmukh', deadline: new Date(Date.now() + 120 * 36e5).toISOString(), status: 'not-started', progress: 0, difficulty: 'Hard', maxMarks: 100, scored: null, language: 'python', description: 'Implement a simple client-server chat application using sockets.' },
   // Web Dev
   { id: 'a8', title: 'REST API with Express', subject: 'webdev', teacher: 'Prof. Singh', deadline: new Date(Date.now() + 120 * 36e5).toISOString(), status: 'not-started', progress: 0, difficulty: 'Medium', maxMarks: 100, scored: null, language: 'javascript', description: 'Build a CRUD REST API using Express.js and MongoDB.' },
 ];
@@ -197,7 +201,7 @@ const Assignments = () => {
                             <span className="flex items-center gap-1"><Icon name="User" size={11} />{a.teacher}</span>
                             <span className="flex items-center gap-1 capitalize"><Icon name="Tag" size={11} />{subjects.find(s => s.key === a.subject)?.label}</span>
                             <span className={`flex items-center gap-1 font-medium ${dl.color}`}><Icon name="Clock" size={11} />{dl.label}</span>
-                            <span className="flex items-center gap-1 uppercase text-[10px] font-semibold text-slate-400">{a.language}</span>
+                            <span className="flex items-center gap-1 uppercase text-[10px] font-semibold text-slate-400">{a.language === 'report' ? '📄 Report' : a.language}</span>
                             {a.scored !== null && <span>Score: {a.scored}/{a.maxMarks}</span>}
                           </div>
                           {a.status === 'in-progress' && (
@@ -207,7 +211,7 @@ const Assignments = () => {
                           )}
                         </div>
                         {(a.status === 'in-progress' || a.status === 'not-started') && (
-                          <Link to={`/assignment-workspace?id=${a.id}`}>
+                          <Link to={a.type === 'report' ? `/report-submission?id=${a.id}` : `/assignment-workspace?id=${a.id}`}>
                             <button className="px-3.5 py-[7px] bg-blue-600 text-white text-[12px] font-medium rounded-md hover:bg-blue-700 transition-colors flex items-center gap-1.5 whitespace-nowrap">
                               <Icon name={a.status === 'in-progress' ? 'Play' : 'ExternalLink'} size={13} />
                               {a.status === 'in-progress' ? 'Continue' : 'Start'}

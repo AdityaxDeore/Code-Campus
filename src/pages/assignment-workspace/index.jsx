@@ -64,9 +64,108 @@ const simulateSQL = (code) => {
   return { ok: true, out: o.join('\n') };
 };
 
+const simulateCpp = (code) => {
+  // Simple BST simulation — trace through the main() to produce realistic output
+  const lines = code.split('\n');
+
+  // Check if it's the BST code by looking for key patterns
+  const hasBST = lines.some(l => l.includes('class BST'));
+  const hasMain = lines.some(l => l.trim().startsWith('int main'));
+  if (!hasBST || !hasMain) {
+    // Generic cout parser for non-BST C++ code
+    const outs = [];
+    for (const l of lines) {
+      const t = l.trim();
+      if (!t.startsWith('cout')) continue;
+      // extract all << segments
+      const parts = t.replace(/^cout/, '').replace(/;\s*$/, '').split('<<').map(p => p.trim());
+      for (const p of parts) {
+        if (!p) continue;
+        const strM = p.match(/^"(.*)"$/);
+        if (strM) { outs.push(strM[1].replace(/\\n/g, '\n')); continue; }
+        if (p === 'endl') { outs.push('\n'); continue; }
+        outs.push(`[${p}]`);
+      }
+    }
+    if (!outs.length) return { ok: true, out: 'C++ simulation: (no cout output detected)\n\nCompile & run with: g++ -o program file.cpp && ./program' };
+    return { ok: true, out: outs.join('') };
+  }
+
+  // ── BST-specific simulation: actually trace insert/delete/search ──
+  class SimNode {
+    constructor(d) { this.data = d; this.left = null; this.right = null; }
+  }
+  const insert = (root, val) => {
+    if (!root) return new SimNode(val);
+    if (val < root.data) root.left = insert(root.left, val);
+    else if (val > root.data) root.right = insert(root.right, val);
+    return root;
+  };
+  const findMin = (node) => { while (node && node.left) node = node.left; return node; };
+  const deleteNode = (root, key) => {
+    if (!root) return null;
+    if (key < root.data) root.left = deleteNode(root.left, key);
+    else if (key > root.data) root.right = deleteNode(root.right, key);
+    else {
+      if (!root.left && !root.right) return null;
+      if (!root.left) return root.right;
+      if (!root.right) return root.left;
+      const t = findMin(root.right);
+      root.data = t.data;
+      root.right = deleteNode(root.right, t.data);
+    }
+    return root;
+  };
+  const search = (root, key) => {
+    if (!root) return false;
+    if (root.data === key) return true;
+    return key < root.data ? search(root.left, key) : search(root.right, key);
+  };
+  const inorder = (node, res) => { if (!node) return; inorder(node.left, res); res.push(node.data); inorder(node.right, res); };
+  const preorder = (node, res) => { if (!node) return; res.push(node.data); preorder(node.left, res); preorder(node.right, res); };
+  const postorder = (node, res) => { if (!node) return; postorder(node.left, res); postorder(node.right, res); res.push(node.data); };
+
+  // Parse main() and execute operations
+  let root = null, out = [];
+  const mainStart = lines.findIndex(l => l.trim().startsWith('int main'));
+  if (mainStart < 0) return { ok: true, out: '(could not find main function)' };
+  for (let i = mainStart; i < lines.length; i++) {
+    const t = lines[i].trim();
+    // insert calls: tree.insert(root, 50) or root = tree.insert(root, 50)
+    const ins = t.match(/insert\s*\(\s*root\s*,\s*(\d+)\s*\)/);
+    if (ins) { root = insert(root, parseInt(ins[1])); continue; }
+    // delete calls
+    const del = t.match(/deleteNode\s*\(\s*root\s*,\s*(\d+)\s*\)/);
+    if (del) { root = deleteNode(root, parseInt(del[1])); continue; }
+    // cout lines
+    if (t.startsWith('cout')) {
+      const parts = t.replace(/^cout/, '').replace(/;\s*$/, '').split('<<').map(p => p.trim());
+      for (const p of parts) {
+        if (!p) continue;
+        const strM = p.match(/^"(.*)"$/);
+        if (strM) { out.push(strM[1].replace(/\\n/g, '\n')); continue; }
+        if (p === 'endl') { out.push('\n'); continue; }
+      }
+      continue;
+    }
+    // traversal calls
+    const travIn = t.match(/tree\.inorder\s*\(\s*root\s*\)/);
+    if (travIn) { const r = []; inorder(root, r); out.push(r.join(' ')); continue; }
+    const travPre = t.match(/tree\.preorder\s*\(\s*root\s*\)/);
+    if (travPre) { const r = []; preorder(root, r); out.push(r.join(' ')); continue; }
+    const travPost = t.match(/tree\.postorder\s*\(\s*root\s*\)/);
+    if (travPost) { const r = []; postorder(root, r); out.push(r.join(' ')); continue; }
+    // search cout with ternary
+    const srch = t.match(/tree\.search\s*\(\s*root\s*,\s*(\d+)\s*\)\s*\?\s*"([^"]*)"\s*:\s*"([^"]*)"/);
+    if (srch) { out.push(search(root, parseInt(srch[1])) ? srch[2] : srch[3]); continue; }
+  }
+  return { ok: true, out: out.length ? out.join('') : '(no output produced)' };
+};
+
 const runCode = (lang, code) => {
   if (lang === 'javascript') return executeJavaScript(code);
   if (lang === 'python') return simulatePython(code);
+  if (lang === 'cpp') return simulateCpp(code);
   if (lang === 'sql') return simulateSQL(code);
   return { ok: true, out: `(${lang} execution not supported in-browser)` };
 };
@@ -76,14 +175,187 @@ const runCode = (lang, code) => {
    ════════════════════════════════════════════════════════════ */
 const assignmentBank = {
   a1: {
-    title: 'Binary Search Tree – Insert & Delete', subject: 'DSA', language: 'python',
+    title: 'Binary Search Tree – Insert & Delete', subject: 'DSA', language: 'cpp',
     deadline: new Date(Date.now() + 5 * 36e5).toISOString(), maxMarks: 100,
-    description: 'Implement insert, delete and search operations for a BST.\n\nYour implementation should support:\n1. Insert a node\n2. Delete a node\n3. Search for a value\n4. In-order traversal',
+    description: 'Implement insert, delete and search operations for a BST in C++.\n\nYour implementation should support:\n1. Insert a node\n2. Delete a node (leaf, one child, two children)\n3. Search for a value\n4. Inorder, Preorder, Postorder traversal',
     files: {
-      'src/bst.py': { lang: 'python', content: '# Binary Search Tree Implementation\n\nclass Node:\n    def __init__(self, key):\n        self.left = None\n        self.right = None\n        self.val = key\n\n\nclass BST:\n    def __init__(self):\n        self.root = None\n\n    def insert(self, key):\n        # TODO: implement\n        pass\n\n    def delete(self, key):\n        # TODO: implement\n        pass\n\n    def search(self, key):\n        # TODO: implement\n        pass\n\n    def inorder(self):\n        # TODO: implement\n        pass\n' },
-      'src/main.py': { lang: 'python', content: '# Main entry point\nfrom bst import BST\n\ntree = BST()\ntree.insert(50)\ntree.insert(30)\ntree.insert(70)\ntree.insert(20)\n\nprint("In-order traversal:")\ntree.inorder()\n\nprint("Search 30:", tree.search(30))\n' },
-      'tests/test_bst.py': { lang: 'python', content: '# Test cases for BST\nimport unittest\nfrom src.bst import BST\n\nclass TestBST(unittest.TestCase):\n    def setUp(self):\n        self.bst = BST()\n\n    def test_insert(self):\n        self.bst.insert(10)\n        self.assertIsNotNone(self.bst.root)\n\n    def test_search_found(self):\n        self.bst.insert(10)\n        self.assertTrue(self.bst.search(10))\n\n    def test_search_not_found(self):\n        self.assertFalse(self.bst.search(99))\n\nif __name__ == "__main__":\n    unittest.main()\n' },
-      'README.md': { lang: 'markdown', content: '# BST Assignment\n\n## Objective\nImplement a Binary Search Tree with insert, delete, search and traversal.\n\n## Files\n- `src/bst.py` - Main BST implementation\n- `src/main.py` - Driver code\n- `tests/test_bst.py` - Unit tests\n\n## Grading\n- Insert: 25 marks\n- Delete: 30 marks\n- Search: 20 marks\n- Traversal: 25 marks\n' },
+      'src/bst.cpp': { lang: 'cpp', content: `#include <iostream>
+using namespace std;
+
+struct Node {
+    int data;
+    Node* left;
+    Node* right;
+
+    Node(int val) {
+        data = val;
+        left = right = NULL;
+    }
+};
+
+class BST {
+public:
+
+    // Insert
+    Node* insert(Node* root, int val) {
+        if (root == NULL)
+            return new Node(val);
+
+        if (val < root->data)
+            root->left = insert(root->left, val);
+        else if (val > root->data)
+            root->right = insert(root->right, val);
+
+        return root;
+    }
+
+    // Search
+    bool search(Node* root, int key) {
+        if (root == NULL)
+            return false;
+
+        if (root->data == key)
+            return true;
+
+        if (key < root->data)
+            return search(root->left, key);
+
+        return search(root->right, key);
+    }
+
+    // Find minimum value node
+    Node* findMin(Node* root) {
+        while (root && root->left != NULL)
+            root = root->left;
+        return root;
+    }
+
+    // Delete
+    Node* deleteNode(Node* root, int key) {
+
+        if (root == NULL)
+            return root;
+
+        if (key < root->data)
+            root->left = deleteNode(root->left, key);
+
+        else if (key > root->data)
+            root->right = deleteNode(root->right, key);
+
+        else {
+
+            // Case 1: No child
+            if (root->left == NULL && root->right == NULL) {
+                delete root;
+                return NULL;
+            }
+
+            // Case 2: One child
+            else if (root->left == NULL) {
+                Node* temp = root->right;
+                delete root;
+                return temp;
+            }
+
+            else if (root->right == NULL) {
+                Node* temp = root->left;
+                delete root;
+                return temp;
+            }
+
+            // Case 3: Two children
+            Node* temp = findMin(root->right);
+            root->data = temp->data;
+            root->right = deleteNode(root->right, temp->data);
+        }
+
+        return root;
+    }
+
+    // Inorder Traversal
+    void inorder(Node* root) {
+        if (root == NULL)
+            return;
+
+        inorder(root->left);
+        cout << root->data << " ";
+        inorder(root->right);
+    }
+
+    // Preorder Traversal
+    void preorder(Node* root) {
+        if (root == NULL)
+            return;
+
+        cout << root->data << " ";
+        preorder(root->left);
+        preorder(root->right);
+    }
+
+    // Postorder Traversal
+    void postorder(Node* root) {
+        if (root == NULL)
+            return;
+
+        postorder(root->left);
+        postorder(root->right);
+        cout << root->data << " ";
+    }
+};
+
+int main() {
+
+    BST tree;
+    Node* root = NULL;
+
+    root = tree.insert(root, 50);
+    tree.insert(root, 30);
+    tree.insert(root, 70);
+    tree.insert(root, 20);
+    tree.insert(root, 40);
+    tree.insert(root, 60);
+    tree.insert(root, 80);
+
+    cout << "Inorder Traversal: ";
+    tree.inorder(root);
+
+    cout << "\\nSearching 40: ";
+    cout << (tree.search(root, 40) ? "Found" : "Not Found");
+
+    root = tree.deleteNode(root, 20);
+
+    cout << "\\nAfter deleting 20: ";
+    tree.inorder(root);
+
+    return 0;
+}
+` },
+      'README.md': { lang: 'markdown', content: `# BST Assignment (C++)
+
+## Objective
+Implement a Binary Search Tree with insert, delete, search and traversal in C++.
+
+## Files
+- \`src/bst.cpp\` - Complete BST implementation with main()
+
+## Operations
+- Insert a node
+- Delete a node (handles all 3 cases)
+- Search for a value
+- Inorder, Preorder, Postorder traversal
+
+## Compile & Run
+\`\`\`
+g++ -o bst src/bst.cpp
+./bst
+\`\`\`
+
+## Grading
+- Insert: 25 marks
+- Delete: 30 marks
+- Search: 20 marks
+- Traversal: 25 marks
+` },
     },
   },
   a2: {
@@ -173,6 +445,134 @@ const FileTreeNode = ({ node, depth = 0, activeFile, onSelect, expanded, onToggl
 };
 
 /* ════════════════════════════════════════════════════════════
+   AI Message Renderer — formats markdown-like AI responses
+   ════════════════════════════════════════════════════════════ */
+const AiMessageRenderer = ({ text }) => {
+  if (!text) return null;
+
+  // Split into blocks: code blocks vs regular text
+  const blocks = [];
+  const codeBlockRegex = /```(\w*)\n?([\s\S]*?)```/g;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = codeBlockRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      blocks.push({ type: 'text', content: text.slice(lastIndex, match.index) });
+    }
+    blocks.push({ type: 'code', lang: match[1] || '', content: match[2].trim() });
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < text.length) {
+    blocks.push({ type: 'text', content: text.slice(lastIndex) });
+  }
+
+  return (
+    <div className="space-y-3">
+      {blocks.map((block, i) => {
+        if (block.type === 'code') {
+          return (
+            <div key={i} className="rounded-lg overflow-hidden border border-[#333]">
+              {block.lang && (
+                <div className="bg-[#2d2d2d] px-3 py-1 text-[10px] text-[#888] uppercase tracking-wider font-mono border-b border-[#333]">
+                  {block.lang}
+                </div>
+              )}
+              <pre className="bg-[#1a1a2e] px-3.5 py-3 overflow-x-auto text-[12px] leading-[1.6] font-mono text-[#d4d4d4]">
+                <code>{block.content}</code>
+              </pre>
+            </div>
+          );
+        }
+
+        // Render text with inline formatting
+        return <TextBlock key={i} content={block.content} />;
+      })}
+    </div>
+  );
+};
+
+const TextBlock = ({ content }) => {
+  // Split by double newlines for paragraphs
+  const paragraphs = content.split(/\n\n+/).filter(p => p.trim());
+
+  return (
+    <>
+      {paragraphs.map((para, i) => {
+        const trimmed = para.trim();
+
+        // Numbered list (1. item)
+        if (/^\d+\.\s/.test(trimmed)) {
+          const items = trimmed.split(/\n/).filter(l => l.trim());
+          return (
+            <ol key={i} className="list-decimal list-outside ml-5 space-y-1.5">
+              {items.map((item, j) => (
+                <li key={j} className="text-[13px] leading-[1.7] text-[#d4d4d4] pl-1">
+                  <InlineFormat text={item.replace(/^\d+\.\s*/, '')} />
+                </li>
+              ))}
+            </ol>
+          );
+        }
+
+        // Bullet list (- item or * item)
+        if (/^[-*]\s/.test(trimmed)) {
+          const items = trimmed.split(/\n/).filter(l => l.trim());
+          return (
+            <ul key={i} className="list-disc list-outside ml-5 space-y-1.5">
+              {items.map((item, j) => (
+                <li key={j} className="text-[13px] leading-[1.7] text-[#d4d4d4] pl-1">
+                  <InlineFormat text={item.replace(/^[-*]\s*/, '')} />
+                </li>
+              ))}
+            </ul>
+          );
+        }
+
+        // Regular paragraph
+        return (
+          <p key={i} className="text-[13px] leading-[1.7] text-[#d4d4d4]">
+            <InlineFormat text={trimmed} />
+          </p>
+        );
+      })}
+    </>
+  );
+};
+
+const InlineFormat = ({ text }) => {
+  // Handle inline code (`code`), bold (**bold**), and italic (*italic*)
+  const parts = [];
+  const regex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/g;
+  let lastIdx = 0;
+  let m;
+
+  while ((m = regex.exec(text)) !== null) {
+    if (m.index > lastIdx) {
+      parts.push(<span key={lastIdx}>{text.slice(lastIdx, m.index)}</span>);
+    }
+    const token = m[0];
+    if (token.startsWith('`')) {
+      parts.push(
+        <code key={m.index} className="bg-[#2a2a3a] text-[#9cdcfe] px-1.5 py-0.5 rounded text-[12px] font-mono">
+          {token.slice(1, -1)}
+        </code>
+      );
+    } else if (token.startsWith('**')) {
+      parts.push(<strong key={m.index} className="text-[#e0e0e0] font-semibold">{token.slice(2, -2)}</strong>);
+    } else if (token.startsWith('*')) {
+      parts.push(<em key={m.index} className="text-[#ccc] italic">{token.slice(1, -1)}</em>);
+    }
+    lastIdx = m.index + token.length;
+  }
+  if (lastIdx < text.length) {
+    parts.push(<span key={lastIdx}>{text.slice(lastIdx)}</span>);
+  }
+
+  return <>{parts}</>;
+};
+
+/* ════════════════════════════════════════════════════════════
    Main Component
    ════════════════════════════════════════════════════════════ */
 const AssignmentWorkspace = () => {
@@ -206,6 +606,10 @@ const AssignmentWorkspace = () => {
   const [activeSidebar, setActiveSidebar] = useState('files');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
+
+  // ── AI Panel (right side) ──
+  const [aiPanelOpen, setAiPanelOpen] = useState(false);
+  const [aiTyping, setAiTyping] = useState(false);
 
   // ── Terminal state ──
   const [terminalOpen, setTerminalOpen] = useState(true);
@@ -349,6 +753,7 @@ const AssignmentWorkspace = () => {
     const userMessage = aiInput.trim();
     setAiMessages(prev => [...prev, { role: 'user', text: userMessage }]);
     setAiInput('');
+    setAiTyping(true);
     try {
       const response = await askGemini(userMessage, {
         assignmentTitle: asg.title,
@@ -358,6 +763,8 @@ const AssignmentWorkspace = () => {
       setAiMessages(prev => [...prev, { role: 'ai', text: response }]);
     } catch {
       setAiMessages(prev => [...prev, { role: 'ai', text: 'Sorry, something went wrong. Please try again.' }]);
+    } finally {
+      setAiTyping(false);
     }
   };
 
@@ -478,7 +885,6 @@ const AssignmentWorkspace = () => {
             {[
               { id: 'files', icon: 'Files', tip: 'Explorer (Ctrl+B)' },
               { id: 'search', icon: 'Search', tip: 'Search (Ctrl+Shift+F)' },
-              { id: 'ai', icon: 'Sparkles', tip: 'AI Assistant' },
             ].map(b => (
               <button key={b.id} title={b.tip}
                 onClick={() => setActiveSidebar(activeSidebar === b.id ? null : b.id)}
@@ -491,6 +897,14 @@ const AssignmentWorkspace = () => {
               </button>
             ))}
             <div className="flex-1" />
+            <button title="AI Assistant" onClick={() => setAiPanelOpen(prev => !prev)}
+              className={`w-[48px] h-[48px] flex items-center justify-center transition-colors relative ${
+                aiPanelOpen ? 'text-indigo-400' : 'text-[#858585] hover:text-white'
+              }`}
+            >
+              {aiPanelOpen && <div className="absolute left-0 top-[25%] bottom-[25%] w-[2px] bg-indigo-400 rounded-r" />}
+              <Icon name="Sparkles" size={20} />
+            </button>
             <button title="Submit Assignment" onClick={() => setShowSubmitConfirm(true)}
               className="w-[48px] h-[48px] flex items-center justify-center text-[#858585] hover:text-blue-400 transition-colors"
             >
@@ -573,55 +987,13 @@ const AssignmentWorkspace = () => {
                 </>
               )}
 
-              {/* AI Assistant */}
-              {activeSidebar === 'ai' && (
-                <>
-                  <div className="h-[35px] flex items-center px-4 text-[11px] font-semibold text-[#bbb] uppercase tracking-wider flex-shrink-0 gap-1.5">
-                    <Icon name="Sparkles" size={13} className="text-indigo-400" />
-                    AI Assistant
-                  </div>
-                  <div className="flex-1 overflow-y-auto px-3 pb-2 space-y-2">
-                    {aiMessages.map((m, i) => (
-                      <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[90%] px-3 py-2 rounded-lg text-[12px] leading-relaxed ${
-                          m.role === 'user' ? 'bg-[#264f78] text-[#e0e0e0]' : 'bg-[#333] text-[#ccc]'
-                        }`}>
-                          {m.role === 'ai' && <Icon name="Sparkles" size={11} className="text-indigo-400 inline mr-1 -mt-0.5" />}
-                          {m.text}
-                        </div>
-                      </div>
-                    ))}
-                    <div ref={aiEndRef} />
-                  </div>
-                  <div className="p-3 border-t border-[#1e1e1e]">
-                    <div className="flex gap-1.5 mb-2">
-                      {['Hint', 'Debug', 'Explain'].map(q => (
-                        <button key={q}
-                          onClick={() => { setAiInput(`Can you ${q.toLowerCase()} this?`); }}
-                          className="px-2 py-1 bg-[#333] text-[10px] text-[#ccc] rounded border border-[#555] hover:border-[#888] transition-colors"
-                        >
-                          {q}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex gap-1">
-                      <input type="text" value={aiInput} onChange={e => setAiInput(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && sendAiMessage()}
-                        placeholder="Ask about your code…"
-                        className="flex-1 bg-[#3c3c3c] border border-[#555] text-[12px] text-[#ccc] rounded px-2 py-[5px] focus:outline-none focus:border-[#007acc] placeholder:text-[#666]"
-                      />
-                      <button onClick={sendAiMessage} className="px-2 py-1 bg-[#007acc] text-white rounded hover:bg-[#1b8ad3] transition-colors">
-                        <Icon name="SendHorizontal" size={13} />
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
+
             </div>
           )}
 
           {/* ──── Editor + Terminal ──── */}
-          <div className="flex-1 flex flex-col min-w-0 min-h-0">
+          <div className="flex-1 flex min-w-0 min-h-0">
+          <div className={`flex flex-col min-h-0 ${aiPanelOpen ? 'flex-1 min-w-0' : 'flex-1 min-w-0'}`}>
 
             {/* Editor Tabs */}
             <div className="h-[35px] bg-[#252526] flex items-end overflow-x-auto flex-shrink-0 border-b border-[#1e1e1e]">
@@ -759,6 +1131,80 @@ const AssignmentWorkspace = () => {
                 </div>
               </>
             )}
+          </div>
+
+          {/* ──── AI Chat Panel (Right Side) ──── */}
+          {aiPanelOpen && (
+            <div className="w-[380px] flex-shrink-0 bg-[#1e1e1e] border-l border-[#333] flex flex-col min-h-0">
+              {/* Header */}
+              <div className="h-[35px] flex items-center justify-between px-4 bg-[#252526] border-b border-[#333] flex-shrink-0">
+                <div className="flex items-center gap-2">
+                  <Icon name="Sparkles" size={14} className="text-indigo-400" />
+                  <span className="text-[12px] font-semibold text-[#e0e0e0]">AI Assistant</span>
+                </div>
+                <button onClick={() => setAiPanelOpen(false)} className="text-[#888] hover:text-white transition-colors">
+                  <Icon name="X" size={14} />
+                </button>
+              </div>
+
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+                {aiMessages.map((m, i) => (
+                  <div key={i} className={m.role === 'user' ? 'flex justify-end' : ''}>
+                    {m.role === 'user' ? (
+                      <div className="max-w-[85%] bg-[#264f78] text-[#e8e8e8] px-3.5 py-2.5 rounded-xl rounded-br-sm text-[13px] leading-relaxed font-[system-ui]">
+                        {m.text}
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <Icon name="Sparkles" size={12} className="text-indigo-400" />
+                          <span className="text-[10px] font-medium text-indigo-400 uppercase tracking-wider">AI</span>
+                        </div>
+                        <div className="ai-message-content text-[13px] leading-[1.7] text-[#d4d4d4] font-[system-ui]">
+                          <AiMessageRenderer text={m.text} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {aiTyping && (
+                  <div className="flex items-center gap-2 text-[12px] text-[#888]">
+                    <Icon name="Sparkles" size={12} className="text-indigo-400 animate-pulse" />
+                    <span className="animate-pulse">Thinking...</span>
+                  </div>
+                )}
+                <div ref={aiEndRef} />
+              </div>
+
+              {/* Quick actions + Input */}
+              <div className="p-3 border-t border-[#333] bg-[#252526]">
+                <div className="flex gap-1.5 mb-2.5">
+                  {['Hint', 'Debug', 'Explain', 'Optimize'].map(q => (
+                    <button key={q}
+                      onClick={() => { setAiInput(`Can you ${q.toLowerCase()} this?`); }}
+                      className="px-2.5 py-1 bg-[#333] text-[11px] text-[#ccc] rounded-md border border-[#444] hover:border-indigo-500/50 hover:text-indigo-300 transition-all"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <input type="text" value={aiInput} onChange={e => setAiInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && !aiTyping && sendAiMessage()}
+                    placeholder="Ask about your code…"
+                    disabled={aiTyping}
+                    className="flex-1 bg-[#3c3c3c] border border-[#555] text-[13px] text-[#e0e0e0] rounded-lg px-3 py-2 focus:outline-none focus:border-indigo-500 placeholder:text-[#666] disabled:opacity-50 font-[system-ui]"
+                  />
+                  <button onClick={sendAiMessage} disabled={aiTyping || !aiInput.trim()}
+                    className="px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <Icon name="SendHorizontal" size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           </div>
         </div>
 

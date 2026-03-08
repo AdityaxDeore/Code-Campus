@@ -81,6 +81,10 @@ export const INTEGRITY_EVENTS = {
 
   // Typing behaviour
   TYPING_ANOMALY: 'typing_anomaly',
+
+  // AI Detection
+  AI_DETECTION_RAN: 'ai_detection_ran',
+  AI_DETECTION_FLAGGED: 'ai_detection_flagged',
 };
 
 export const SEVERITY = {
@@ -114,6 +118,8 @@ const EVENT_SEVERITY = {
   [INTEGRITY_EVENTS.EXAM_ENDED]: SEVERITY.INFO,
   [INTEGRITY_EVENTS.EXAM_AUTO_SUBMITTED]: SEVERITY.CRITICAL,
   [INTEGRITY_EVENTS.TYPING_ANOMALY]: SEVERITY.WARNING,
+  [INTEGRITY_EVENTS.AI_DETECTION_RAN]: SEVERITY.INFO,
+  [INTEGRITY_EVENTS.AI_DETECTION_FLAGGED]: SEVERITY.CRITICAL,
 };
 
 // ───────────────────────────────────────────────────────────────
