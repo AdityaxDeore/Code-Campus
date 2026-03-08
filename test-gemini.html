@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Gemini API</title>
+</head>
+<body>
+    <h1>Gemini API Test</h1>
+    <button onclick="testAPI()">Test Gemini API</button>
+    <pre id="result"></pre>
+
+    <script>
+        async function testAPI() {
+            const apiKey = 'AIzaSyBvSb_DQLebdfBtzZIvMYn9uvJ8EbItW3k';
+            const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent';
+            
+            document.getElementById('result').textContent = 'Testing...';
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-goog-api-key': apiKey,
+                    },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: 'Say hello' }] }],
+                        generationConfig: {
+                            temperature: 0.3,
+                            maxOutputTokens: 100,
+                        },
+                    }),
+                });
+                
+                const data = await response.json();
+                document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+                
+                if (response.ok) {
+                    alert('✅ Gemini API is working!');
+                } else {
+                    alert('❌ Error: ' + (data.error?.message || 'Unknown error'));
+                }
+            } catch (err) {
+                document.getElementById('result').textContent = 'Error: ' + err.message;
+                alert('❌ Network error: ' + err.message);
+            }
+        }
+    </script>
+</body>
+</html>

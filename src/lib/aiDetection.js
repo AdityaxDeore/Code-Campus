@@ -37,10 +37,10 @@ function heuristicAnalysis(content, language) {
     // ═══════════════════════════════════════════════════════
 
     // ── Baseline: any submitted text gets a small base score ──
-    score += 8;
-    signals.push({ type: 'baseline_analysis', detail: 'Baseline text analysis score', weight: 8 });
+    score += 5;
+    signals.push({ type: 'baseline_analysis', detail: 'Baseline text analysis score', weight: 5 });
 
-    // ── AI-typical transition phrases ──
+    // ── AI-typical transition phrases (ENHANCED) ──
     const aiTransitions = [
       'in conclusion', 'furthermore', 'moreover', 'additionally',
       'it is important to note', 'it is worth noting', 'it should be noted',
@@ -50,10 +50,20 @@ function heuristicAnalysis(content, language) {
       'in today\'s world', 'in the modern era', 'in recent years',
       'leveraging', 'utilizing', 'facilitating', 'encompassing',
       'multifaceted', 'noteworthy', 'pivotal', 'paramount',
+      'it\'s worth mentioning', 'serves to', 'underscores the importance',
+      'first and foremost', 'by and large', 'in light of',
+      'as such', 'that being said', 'with that in mind',
+      'it stands to reason', 'one must consider', 'it becomes evident',
+      'landscape', 'robust', 'seamless', 'optimize', 'streamline',
+      'transformative', 'paradigm', 'holistic', 'synergy', 'innovative'
     ];
     const foundTransitions = aiTransitions.filter(p => text.includes(p));
-    if (foundTransitions.length >= 2) {
-      const w = Math.min(foundTransitions.length * 4, 18);
+    if (foundTransitions.length >= 5) {
+      const w = Math.min(foundTransitions.length * 6, 30);
+      score += w;
+      signals.push({ type: 'ai_phrases_heavy', detail: `${foundTransitions.length} AI-typical phrases detected: "${foundTransitions.slice(0, 5).join('", "')}"`, weight: w });
+    } else if (foundTransitions.length >= 2) {
+      const w = Math.min(foundTransitions.length * 5, 20);
       score += w;
       signals.push({ type: 'ai_phrases', detail: `AI-typical phrases: "${foundTransitions.slice(0, 4).join('", "')}"`, weight: w });
     }
@@ -66,12 +76,15 @@ function heuristicAnalysis(content, language) {
       const variance = lengths.reduce((sum, l) => sum + Math.pow(l - avg, 2), 0) / lengths.length;
       const stdDev = Math.sqrt(variance);
       // AI text: std dev typically < 5 words; human text varies more
-      if (stdDev < 4 && avg > 8) {
-        score += 10;
-        signals.push({ type: 'uniform_sentences', detail: `Very uniform sentence lengths (avg ${avg.toFixed(0)} words, σ=${stdDev.toFixed(1)})`, weight: 10 });
-      } else if (stdDev < 6 && avg > 10) {
-        score += 5;
-        signals.push({ type: 'somewhat_uniform', detail: `Fairly uniform sentence structure (σ=${stdDev.toFixed(1)})`, weight: 5 });
+      if (stdDev < 3.5 && avg > 8) {
+        score += 18;
+        signals.push({ type: 'uniform_sentences', detail: `Extremely uniform sentence lengths (avg ${avg.toFixed(0)} words, σ=${stdDev.toFixed(1)}) — strong AI indicator`, weight: 18 });
+      } else if (stdDev < 5 && avg > 8) {
+        score += 12;
+        signals.push({ type: 'uniform_sentences', detail: `Very uniform sentence lengths (avg ${avg.toFixed(0)} words, σ=${stdDev.toFixed(1)})`, weight: 12 });
+      } else if (stdDev < 7 && avg > 10) {
+        score += 7;
+        signals.push({ type: 'somewhat_uniform', detail: `Fairly uniform sentence structure (σ=${stdDev.toFixed(1)})`, weight: 7 });
       }
     }
 
@@ -86,9 +99,13 @@ function heuristicAnalysis(content, language) {
     // ── Perfect grammar indicators (no typos, contractions, informal language) ──
     const informalMarkers = (text.match(/\b(gonna|wanna|kinda|sorta|u\b|ur\b|tbh|imo|idk|lol|btw|tho|ngl)\b/g) || []).length;
     const contractions = (text.match(/\b(don't|won't|can't|isn't|aren't|doesn't|didn't|wouldn't|shouldn't|couldn't)\b/gi) || []).length;
-    if (informalMarkers === 0 && contractions === 0 && nonEmptyLines.length > 10) {
-      score += 6;
-      signals.push({ type: 'formal_tone', detail: 'No contractions or informal language — unusually formal', weight: 6 });
+    const wordCount = content.split(/\s+/).length;
+    if (informalMarkers === 0 && contractions === 0 && wordCount > 200) {
+      score += 12;
+      signals.push({ type: 'overly_formal', detail: `${wordCount} words with zero contractions or informal language — unnaturally formal for student writing`, weight: 12 });
+    } else if (informalMarkers === 0 && contractions <= 1 && wordCount > 300) {
+      score += 8;
+      signals.push({ type: 'formal_tone', detail: 'Extremely limited informal language — unusually polished', weight: 8 });
     }
 
     // ── Repetitive structure ("X is Y. X provides Z. X enables W.") ──
@@ -97,17 +114,53 @@ function heuristicAnalysis(content, language) {
       const starterCounts = {};
       starters.forEach(s => { starterCounts[s] = (starterCounts[s] || 0) + 1; });
       const maxRepeat = Math.max(...Object.values(starterCounts));
-      if (maxRepeat >= 3) {
-        score += 6;
-        signals.push({ type: 'repetitive_structure', detail: `Same sentence opener repeated ${maxRepeat} times`, weight: 6 });
+      if (maxRepeat >= 4) {
+        score += 15;
+        signals.push({ type: 'highly_repetitive', detail: `Same sentence opener repeated ${maxRepeat} times — AI pattern`, weight: 15 });
+      } else if (maxRepeat >= 3) {
+        score += 10;
+        signals.push({ type: 'repetitive_structure', detail: `Same sentence opener repeated ${maxRepeat} times`, weight: 10 });
       }
     }
 
     // ── Length check (very long = more likely AI-padded) ──
-    const wordCount = content.split(/\s+/).length;
-    if (wordCount > 800) {
-      score += 4;
-      signals.push({ type: 'long_content', detail: `${wordCount} words — longer reports have higher AI correlation`, weight: 4 });
+    if (wordCount > 1200) {
+      score += 10;
+      signals.push({ type: 'very_long_content', detail: `${wordCount} words — unusually comprehensive for student work`, weight: 10 });
+    } else if (wordCount > 800) {
+      score += 6;
+      signals.push({ type: 'long_content', detail: `${wordCount} words — longer reports have higher AI correlation`, weight: 6 });
+    }
+
+    // ── Paragraph structure uniformity ──
+    const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim().length > 50);
+    if (paragraphs.length >= 4) {
+      const paraSizes = paragraphs.map(p => p.split(/\s+/).length);
+      const paraAvg = paraSizes.reduce((a, b) => a + b, 0) / paraSizes.length;
+      const paraVariance = paraSizes.reduce((sum, s) => sum + Math.pow(s - paraAvg, 2), 0) / paraSizes.length;
+      const paraStdDev = Math.sqrt(paraVariance);
+      if (paraStdDev < 20 && paraAvg > 40) {
+        score += 12;
+        signals.push({ type: 'uniform_paragraphs', detail: `${paragraphs.length} paragraphs with suspiciously uniform length (σ=${paraStdDev.toFixed(1)} words)`, weight: 12 });
+      }
+    }
+
+    // ── Generic/Template language patterns ──
+    const genericPatterns = [
+      /\bin conclusion,? (?:it is clear|we can see|it becomes evident)/i,
+      /\bthis (?:essay|report|paper) (?:will|aims to) (?:explore|examine|discuss)/i,
+      /\b(?:there are|there is) (?:several|many|numerous) (?:factors|reasons|aspects)/i,
+      /\bit is (?:important|crucial|essential|vital) to (?:note|understand|recognize)/i,
+      /\bon the one hand.*on the other hand/i,
+      /\b(?:first|second|third)ly,?\s+(?:it|this|the)/i,
+    ];
+    const matchedPatterns = genericPatterns.filter(p => p.test(content));
+    if (matchedPatterns.length >= 3) {
+      score += 14;
+      signals.push({ type: 'template_language', detail: `${matchedPatterns.length} generic AI template patterns detected`, weight: 14 });
+    } else if (matchedPatterns.length >= 2) {
+      score += 8;
+      signals.push({ type: 'generic_patterns', detail: `${matchedPatterns.length} formulaic writing patterns`, weight: 8 });
     }
 
   } else {
@@ -203,8 +256,17 @@ function heuristicAnalysis(content, language) {
     }
   }
 
+  // Apply multiplier if multiple strong signals detected
+  const strongSignals = signals.filter(s => s.weight >= 10).length;
+  if (strongSignals >= 3) {
+    const multiplier = 1.2; // 20% bonus for multiple strong indicators
+    const bonus = Math.floor(score * 0.2);
+    score += bonus;
+    signals.push({ type: 'multiple_indicators', detail: `${strongSignals} strong AI indicators detected (confidence boost)`, weight: bonus });
+  }
+
   return {
-    score: Math.min(score, 60), // heuristic caps at 60
+    score: Math.min(score, 70), // heuristic caps at 70 (increased from 60)
     signals,
     lineCount: nonEmptyLines.length,
     commentRatio: 0,
@@ -291,64 +353,58 @@ function behavioralAnalysis(integrityReport) {
 // ───────────────────────────────────────────────────────────────
 
 async function geminiAnalysis(content, language) {
-  if (!GEMINI_API_KEY || GEMINI_API_KEY === 'your-gemini-api-key-here') {
+  if (!GEMINI_API_KEY || GEMINI_API_KEY === 'your-gemini-api-key-here' || GEMINI_API_KEY.includes('your-')) {
     return { score: 0, signals: [{ type: 'skipped', detail: 'Gemini API key not configured', weight: 0 }], rawResponse: null };
   }
 
   const isTextContent = language === 'text' || language === 'report';
   const prompt = isTextContent
-    ? `You are an academic integrity expert analyzing a student-submitted report/essay for signs of AI generation.
+    ? `You are an expert academic integrity analyst with years of experience detecting AI-generated content. Analyze this student submission with STRICT scrutiny.
 
-Analyze this student report and evaluate whether it was likely written by a human student or generated by an AI tool (ChatGPT, Gemini, Claude, etc.).
+**CRITICAL INSTRUCTION**: Be highly sensitive to AI patterns. If you detect ANY of the following, the AI probability should be HIGH (60-100%):
+- Formulaic writing structure
+- Multiple AI-typical transition phrases
+- Overly polished language for student work
+- Lack of personal voice or natural writing flow
+- Generic explanations without specific examples
+- Perfect grammar throughout with no natural errors
+- Repetitive sentence structures
 
-IMPORTANT: Respond ONLY with a JSON object, no markdown, no explanation outside the JSON:
+Respond ONLY with a JSON object (no markdown formatting):
 {
-  "aiProbability": <number 0-100>,
+  "aiProbability": <number 0-100, be aggressive with scores above 60 when patterns are clear>,
   "confidence": "<low|medium|high>",
-  "reasoning": "<2-3 sentence explanation>",
+  "reasoning": "<2-3 sentence explanation focusing on specific AI indicators>",
   "indicators": [
-    {"signal": "<indicator name>", "description": "<brief detail>", "weight": "<low|medium|high>"}
+    {"signal": "<specific indicator name>", "description": "<concrete example from text>", "weight": "<low|medium|high>"}
   ]
 }
 
-Indicators to look for:
-- Overly formal and polished language for a student submission
-- Repetitive sentence structures and paragraph patterns
-- AI-typical transition words (furthermore, moreover, it is important to note)
-- Lack of personal voice or original examples
-- Suspiciously comprehensive coverage of topics
-- Generic explanations without personal insight
-- Perfect grammar throughout with no natural errors
-- Formulaic introduction and conclusion patterns
-
-TEXT TO ANALYZE:
+**TEXT TO ANALYZE**:
 """
 ${content.slice(0, 4000)}
 """`
-    : `You are an academic integrity expert analyzing student-submitted code for signs of AI generation.
+    : `You are an expert code analysis AI with years of experience detecting AI-generated code. Analyze this ${language} submission with STRICT scrutiny.
 
-Analyze this ${language} code and evaluate whether it was likely written by a human student or generated by an AI tool (ChatGPT, GitHub Copilot, Gemini, etc.).
+**CRITICAL INSTRUCTION**: Be highly sensitive to AI code patterns. If you detect ANY of the following, the AI probability should be HIGH (60-100%):
+- Overly polished comments and documentation
+- Perfectly consistent formatting throughout
+- Textbook-perfect code structure
+- Generic variable naming patterns (e.g., data, result, temp, items)
+- No signs of iterative development (no debug code, commented experiments)
+- Tutorial-style comments explaining obvious code
 
-IMPORTANT: Respond ONLY with a JSON object, no markdown, no explanation outside the JSON:
+Respond ONLY with a JSON object (no markdown formatting):
 {
-  "aiProbability": <number 0-100>,
+  "aiProbability": <number 0-100, be aggressive with scores above 60 when patterns are clear>,
   "confidence": "<low|medium|high>",
-  "reasoning": "<2-3 sentence explanation>",
+  "reasoning": "<2-3 sentence explanation focusing on specific AI indicators>",
   "indicators": [
-    {"signal": "<indicator name>", "description": "<brief detail>", "weight": "<low|medium|high>"}
+    {"signal": "<specific indicator name>", "description": "<concrete example from code>", "weight": "<low|medium|high>"}
   ]
 }
 
-Indicators to look for:
-- Overly polished comments and documentation for a student assignment
-- Perfectly structured code with textbook patterns
-- Consistent indentation and formatting throughout
-- Use of advanced patterns unexpected for the assignment level
-- Typical AI output phrases in comments
-- Lack of iterative development signs (no debug code, no commented-out experiments)
-- Generic variable naming patterns common in AI output
-
-CODE TO ANALYZE:
+**CODE TO ANALYZE**:
 \`\`\`${language}
 ${content.slice(0, 3000)}
 \`\`\``;
@@ -364,10 +420,11 @@ ${content.slice(0, 3000)}
       data: {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
-          temperature: 0.3,
+          temperature: 0.2, // Lower temperature for more consistent analysis
           maxOutputTokens: 1024,
         },
       },
+      timeout: 15000, // 15 second timeout
     });
 
     const text = response.data.candidates[0].content.parts[0].text;
@@ -375,6 +432,7 @@ ${content.slice(0, 3000)}
     // Extract JSON from response (handle markdown wrapping)
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
+      console.warn('Gemini response could not be parsed:', text);
       return { score: 0, signals: [{ type: 'parse_error', detail: 'Could not parse Gemini response', weight: 0 }], rawResponse: text };
     }
 
@@ -383,11 +441,14 @@ ${content.slice(0, 3000)}
     const signals = (result.indicators || []).map(ind => ({
       type: `gemini_${ind.signal?.replace(/\s+/g, '_').toLowerCase() || 'signal'}`,
       detail: ind.description,
-      weight: ind.weight === 'high' ? 10 : ind.weight === 'medium' ? 5 : 2,
+      weight: ind.weight === 'high' ? 12 : ind.weight === 'medium' ? 7 : 3,
     }));
 
+    // More aggressive scaling: use 0.5 multiplier for higher contribution
+    const geminiScore = Math.round(result.aiProbability * 0.5); // scale to 0-50 range (increased from 0.4)
+
     return {
-      score: Math.round(result.aiProbability * 0.4), // scale to 0-40 range
+      score: Math.min(geminiScore, 50), // cap at 50 instead of 40
       probability: result.aiProbability,
       confidence: result.confidence,
       reasoning: result.reasoning,
@@ -395,6 +456,7 @@ ${content.slice(0, 3000)}
       rawResponse: result,
     };
   } catch (err) {
+    console.error('Gemini API error:', err.message);
     return {
       score: 0,
       signals: [{ type: 'api_error', detail: `Gemini analysis failed: ${err.message}`, weight: 0 }],
@@ -415,12 +477,12 @@ export async function detectAiGenerated(code, language, integrityReport) {
   const rawScore = heuristic.score + behavioral.score + gemini.score;
   const totalScore = Math.min(Math.max(rawScore, 0), 100);
 
-  // Determine verdict
+  // Determine verdict with more aggressive thresholds
   let verdict, riskLevel;
-  if (totalScore >= 75) {
+  if (totalScore >= 70) {
     verdict = 'Highly likely AI-generated';
     riskLevel = 'critical';
-  } else if (totalScore >= 50) {
+  } else if (totalScore >= 45) {
     verdict = 'Likely AI-assisted';
     riskLevel = 'high';
   } else if (totalScore >= 25) {
@@ -438,7 +500,7 @@ export async function detectAiGenerated(code, language, integrityReport) {
     breakdown: {
       heuristic: {
         score: heuristic.score,
-        maxScore: 60,
+        maxScore: 70, // Updated from 60
         signals: heuristic.signals,
         meta: { lineCount: heuristic.lineCount, commentRatio: heuristic.commentRatio },
       },
@@ -449,7 +511,7 @@ export async function detectAiGenerated(code, language, integrityReport) {
       },
       gemini: {
         score: gemini.score,
-        maxScore: 40,
+        maxScore: 50, // Updated from 40
         probability: gemini.probability,
         confidence: gemini.confidence,
         reasoning: gemini.reasoning,
