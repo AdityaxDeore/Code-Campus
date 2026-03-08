@@ -1,109 +1,71 @@
 import React from 'react';
 import { useDarkMode } from '../../contexts/DarkModeContext';
-import styled from 'styled-components';
+import { motion } from 'framer-motion';
 
 const DarkModeToggle = () => {
   const { isDarkMode, toggleDarkMode } = useDarkMode();
 
   return (
-    <StyledWrapper>
-      <div className="toggle-container">
-        <input
-          type="checkbox"
-          id="darkmode-toggle"
-          checked={isDarkMode}
-          onChange={toggleDarkMode}
-          className="toggle-input"
-        />
-        <label htmlFor="darkmode-toggle" className="toggle-label">
-          <div className="toggle-slider">
-            <div className="toggle-icon sun-icon">☀️</div>
-            <div className="toggle-icon moon-icon">🌙</div>
-          </div>
-        </label>
+    <button
+      onClick={toggleDarkMode}
+      className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200 focus:outline-none"
+      aria-label="Toggle Dark Mode"
+    >
+      <div className="relative w-6 h-6 flex items-center justify-center text-gray-700 dark:text-gray-300">
+        <motion.svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          initial={false}
+          animate={{
+            scale: isDarkMode ? 0 : 1,
+            rotate: isDarkMode ? -90 : 0,
+            opacity: isDarkMode ? 0 : 1,
+          }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="absolute"
+        >
+          <circle cx="12" cy="12" r="5" />
+          <line x1="12" y1="1" x2="12" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="23" />
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+          <line x1="1" y1="12" x2="3" y2="12" />
+          <line x1="21" y1="12" x2="23" y2="12" />
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </motion.svg>
+
+        <motion.svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          initial={false}
+          animate={{
+            scale: isDarkMode ? 1 : 0,
+            rotate: isDarkMode ? 0 : 90,
+            opacity: isDarkMode ? 1 : 0,
+          }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="absolute"
+        >
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </motion.svg>
       </div>
-    </StyledWrapper>
+    </button>
   );
 };
-
-const StyledWrapper = styled.div`
-  .toggle-container {
-    position: relative;
-    display: inline-block;
-  }
-
-  .toggle-input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-
-  .toggle-label {
-    position: relative;
-    display: inline-block;
-    width: 60px;
-    height: 30px;
-    background: linear-gradient(135deg, #fbbf24, #f59e0b);
-    border-radius: 25px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-
-  .toggle-input:checked + .toggle-label {
-    background: linear-gradient(135deg, #1e293b, #0f172a);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  }
-
-  .toggle-slider {
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 26px;
-    height: 26px;
-    background: white;
-    border-radius: 50%;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  }
-
-  .toggle-input:checked + .toggle-label .toggle-slider {
-    transform: translateX(30px);
-    background: #0f172a;
-  }
-
-  .toggle-icon {
-    font-size: 14px;
-    position: absolute;
-    transition: all 0.3s ease;
-  }
-
-  .sun-icon {
-    opacity: 1;
-    transform: scale(1);
-  }
-
-  .moon-icon {
-    opacity: 0;
-    transform: scale(0);
-  }
-
-  .toggle-input:checked + .toggle-label .sun-icon {
-    opacity: 0;
-    transform: scale(0);
-  }
-
-  .toggle-input:checked + .toggle-label .moon-icon {
-    opacity: 1;
-    transform: scale(1);
-  }
-
-  .toggle-label:hover {
-    transform: scale(1.05);
-  }
-`;
 
 export default DarkModeToggle;

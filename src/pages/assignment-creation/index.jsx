@@ -152,7 +152,7 @@ const AssignmentCreation = () => {
 
   const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
 
-  // ── Handle submission (saves to MongoDB via API) ──
+  // ── Handle submission ──
   const handleCreate = async () => {
     if (!validateStep(step)) return;
     setIsSubmitting(true);

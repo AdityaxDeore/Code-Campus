@@ -62,14 +62,14 @@ const Assignments = () => {
   const [dbAssignments, setDbAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch assignments from MongoDB on mount
+  // Fetch assignments on mount
   useEffect(() => {
     const fetchAssignments = async () => {
       setLoading(true);
       try {
         const result = await getAssignments();
         if (result.success && result.assignments.length > 0) {
-          // Map MongoDB assignments to match expected format
+          // Map assignments to match expected format
           const mapped = result.assignments.map(a => ({
             id: a._id,
             title: a.title,

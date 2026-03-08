@@ -5,6 +5,7 @@ import SecureMonacoEditor from '../../components/SecureEditor/SecureMonacoEditor
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import integrityLogger, { INTEGRITY_EVENTS } from '../../lib/integrity';
+import { askGemini } from '../../lib/gemini';
 
 /* ════════════════════════════════════════════════════════════
    Execution Engines
@@ -170,20 +171,6 @@ const FileTreeNode = ({ node, depth = 0, activeFile, onSelect, expanded, onToggl
     </button>
   );
 };
-
-/* ════════════════════════════════════════════════════════════
-   AI Chat
-   ════════════════════════════════════════════════════════════ */
-const aiResponses = [
-  "Let me help you think through this. What specific part are you stuck on?",
-  "Good question! Try breaking the problem into smaller steps. What's the first operation you need?",
-  "Think about the data structure's invariants. What property must always hold after your operation?",
-  "Consider using recursion. What's your base case? What's your recursive case?",
-  "Try tracing through a small example on paper first. What happens step by step?",
-  "That's a common approach! Have you considered edge cases — empty input or single element?",
-  "Look at the time complexity. Can you do better? What data structure gives faster lookups?",
-  "I can't give the full solution, but I can help debug. What output do you get vs. expect?",
-];
 
 /* ════════════════════════════════════════════════════════════
    Main Component
@@ -357,13 +344,21 @@ const AssignmentWorkspace = () => {
   };
 
   // ── AI chat ──
-  const sendAiMessage = () => {
+  const sendAiMessage = async () => {
     if (!aiInput.trim()) return;
-    setAiMessages(prev => [...prev, { role: 'user', text: aiInput.trim() }]);
+    const userMessage = aiInput.trim();
+    setAiMessages(prev => [...prev, { role: 'user', text: userMessage }]);
     setAiInput('');
-    setTimeout(() => {
-      setAiMessages(prev => [...prev, { role: 'ai', text: aiResponses[Math.floor(Math.random() * aiResponses.length)] }]);
-    }, 600 + Math.random() * 800);
+    try {
+      const response = await askGemini(userMessage, {
+        assignmentTitle: asg.title,
+        language: currentLang,
+        code: fileContents[activeFile] || '',
+      }, aiMessages);
+      setAiMessages(prev => [...prev, { role: 'ai', text: response }]);
+    } catch {
+      setAiMessages(prev => [...prev, { role: 'ai', text: 'Sorry, something went wrong. Please try again.' }]);
+    }
   };
 
   const handleSubmit = () => {

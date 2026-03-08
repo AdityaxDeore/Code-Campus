@@ -16,7 +16,7 @@ export default defineConfig({
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom', '@reduxjs/toolkit'],
           'vendor-ui': ['@radix-ui/react-slot', 'class-variance-authority', 'clsx', 'framer-motion', 'lucide-react'],
-          'vendor-data': ['d3', 'date-fns', 'axios'],
+          'vendor-data': ['d3', 'date-fns'],
           'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/analytics', 'firebase/firestore']
         }
       }
@@ -27,12 +27,6 @@ export default defineConfig({
     port: "4028",
     host: "0.0.0.0",
     strictPort: true,
-    allowedHosts: ['.amazonaws.com', '.builtwithrocket.new'],
-    proxy: {
-      '/api': {
-        target: 'http://localhost:5001',
-        changeOrigin: true
-      }
-    }
+    allowedHosts: ['.amazonaws.com', '.builtwithrocket.new']
   }
 });
