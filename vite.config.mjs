@@ -16,7 +16,7 @@ export default defineConfig({
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom', '@reduxjs/toolkit'],
           'vendor-ui': ['@radix-ui/react-slot', 'class-variance-authority', 'clsx', 'framer-motion', 'lucide-react'],
-          'vendor-data': ['d3', 'date-fns', 'axios'],
+          'vendor-data': ['d3', 'date-fns'],
           'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/analytics', 'firebase/firestore']
         }
       }
