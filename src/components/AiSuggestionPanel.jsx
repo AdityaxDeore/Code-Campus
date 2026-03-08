@@ -14,6 +14,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Icon from './AppIcon';
 import { integrityLogger } from '../lib/integrity';
+import { askGemini } from '../lib/gemini';
 
 // ── AI Policy Levels ──
 export const AI_POLICY = {
@@ -21,41 +22,6 @@ export const AI_POLICY = {
   HINTS_ONLY: 'hints_only',   // Only conceptual hints, no code
   LIMITED: 'limited',         // Limited code suggestions, max 5 per session
   STANDARD: 'standard',       // Standard assistance, logged
-};
-
-// ── Mock AI Responses (categorized) ──
-const AI_RESPONSES = {
-  hint: [
-    "Think about what data structure would give you O(1) lookups. What comes to mind?",
-    "Consider the base case first — what happens when the input is empty or has one element?",
-    "Try tracing through a small example with 3-4 elements. What pattern do you notice?",
-    "The key insight is about maintaining an invariant. What must always be true after each operation?",
-    "This is a classic divide-and-conquer scenario. How can you split the problem in half?",
-    "Think about the relationship between adjacent elements. What constraint connects them?",
-    "Draw out the recursion tree. Where do repeated subproblems appear?",
-    "Consider what information you need to carry forward as you iterate. Could a variable track that?",
-  ],
-  debug: [
-    "Check your loop bounds — are you going one past the end? Off-by-one errors are common here.",
-    "Look at line where you're comparing values. Are you using the right operator?",
-    "Your base case might be missing a condition. What happens with an empty input?",
-    "Trace through your code with a simple input like [1, 2, 3]. Where does it diverge from expected?",
-    "Check if you're modifying the data structure while iterating over it — that can cause issues.",
-    "Are you handling the null/None case before accessing properties?",
-  ],
-  explain: [
-    "This algorithm works by repeatedly dividing the search space in half. Each step eliminates half of the remaining elements.",
-    "The time complexity comes from the nested loops: the outer runs n times, and for each iteration, the inner runs up to n times → O(n²).",
-    "This data structure maintains a specific ordering property: for any node, all values in its left subtree are smaller, and all in its right are larger.",
-    "The key idea is memoization — storing results of expensive function calls so we don't recompute them.",
-    "This pattern is called 'two pointers'. By moving pointers from both ends toward the center, we avoid checking every pair.",
-  ],
-  general: [
-    "I can help you think through this, but I won't provide the full solution. What specific part is confusing?",
-    "Let me guide you step by step. What's the first thing your function should check?",
-    "Good question! Try breaking it down: what are the inputs, what should the output be, and what are edge cases?",
-    "Rather than giving you code, let me ask: what approach have you tried so far, and where did it get stuck?",
-  ],
 };
 
 const MAX_RESPONSE_LENGTH = 500;
@@ -96,30 +62,19 @@ const AiSuggestionPanel = ({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // ── Classify user query ──
-  const classifyQuery = (text) => {
-    const lower = text.toLowerCase();
-    if (lower.includes('hint') || lower.includes('help') || lower.includes('stuck'))
-      return 'hint';
-    if (lower.includes('debug') || lower.includes('error') || lower.includes('wrong') || lower.includes('fix'))
-      return 'debug';
-    if (lower.includes('explain') || lower.includes('why') || lower.includes('how does'))
-      return 'explain';
-    return 'general';
-  };
+  // ── Get AI response via Gemini ──
+  const getResponse = useCallback(async (query) => {
+    const response = await askGemini(query, {
+      assignmentTitle,
+      language,
+      code: currentCode,
+    }, messages.filter(m => m.type !== 'system'));
 
-  // ── Get AI response ──
-  const getResponse = useCallback((query) => {
-    const category = classifyQuery(query);
-    const responses = AI_RESPONSES[category] || AI_RESPONSES.general;
-    const response = responses[Math.floor(Math.random() * responses.length)];
-
-    // Truncate to max length
     return response.slice(0, MAX_RESPONSE_LENGTH);
-  }, []);
+  }, [assignmentTitle, language, currentCode, messages]);
 
   // ── Send message ──
-  const sendMessage = useCallback(() => {
+  const sendMessage = useCallback(async () => {
     if (!input.trim() || isDisabled || isAtLimit) return;
 
     // Rate limiting: 1 request per 3 seconds
@@ -142,16 +97,13 @@ const AiSuggestionPanel = ({
       context: userMessage.slice(0, 100),
     });
 
-    // Simulate typing delay
     setIsTyping(true);
-    const delay = 600 + Math.random() * 1200;
 
-    setTimeout(() => {
-      const response = getResponse(userMessage);
+    try {
+      const response = await getResponse(userMessage);
 
       setMessages(prev => [...prev, { role: 'ai', text: response, type: 'suggestion' }]);
       setSuggestionsUsed(prev => prev + 1);
-      setIsTyping(false);
 
       // Log AI response
       integrityLogger.logAiSuggestion({
@@ -159,7 +111,11 @@ const AiSuggestionPanel = ({
         suggestionLength: response.length,
         context: userMessage.slice(0, 100),
       });
-    }, delay);
+    } catch {
+      setMessages(prev => [...prev, { role: 'ai', text: 'Sorry, something went wrong. Please try again.', type: 'suggestion' }]);
+    } finally {
+      setIsTyping(false);
+    }
   }, [input, isDisabled, isAtLimit, getResponse]);
 
   // ── Quick action buttons ──
