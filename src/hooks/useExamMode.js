@@ -71,7 +71,7 @@ export const useExamMode = ({
     setTimeout(() => setShowWarningModal(false), 4000);
   }, [maxViolations, onAutoSubmit]);
 
-  // ── Enter Fullscreen ──
+  // ── Enter Fullscreen + Keyboard Lock ──
   const enterFullscreen = useCallback(async () => {
     try {
       const el = document.documentElement;
@@ -79,14 +79,27 @@ export const useExamMode = ({
       else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
       else if (el.msRequestFullscreen) await el.msRequestFullscreen();
       setIsFullscreen(true);
+
+      // Keyboard Lock API: captures Escape, F11, Alt+Tab at OS level (Chromium)
+      if (navigator.keyboard && navigator.keyboard.lock) {
+        try {
+          await navigator.keyboard.lock(['Escape', 'F11']);
+        } catch (lockErr) {
+          console.warn('Keyboard lock not supported:', lockErr.message);
+        }
+      }
     } catch (err) {
       console.warn('Fullscreen request failed:', err.message);
     }
   }, []);
 
-  // ── Exit Fullscreen ──
+  // ── Exit Fullscreen + Keyboard Unlock ──
   const exitFullscreen = useCallback(() => {
     try {
+      // Release keyboard lock
+      if (navigator.keyboard && navigator.keyboard.unlock) {
+        navigator.keyboard.unlock();
+      }
       if (document.exitFullscreen) document.exitFullscreen();
       else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
       else if (document.msExitFullscreen) document.msExitFullscreen();
@@ -162,10 +175,15 @@ export const useExamMode = ({
     const handleFocusLoss = () => {
       setFocusLossCount(prev => prev + 1);
       integrityLogger.logFocusLoss();
+      addViolation('focus_loss', 'Window focus lost (Alt+Tab detected). Do not leave the exam window.');
     };
 
     const handleFocusReturn = () => {
       integrityLogger.logFocusReturn();
+      // Force back into fullscreen when they return
+      if (!document.fullscreenElement) {
+        setTimeout(() => enterFullscreen(), 200);
+      }
     };
 
     document.addEventListener('visibilitychange', handleVisibility);
@@ -177,7 +195,7 @@ export const useExamMode = ({
       window.removeEventListener('blur', handleFocusLoss);
       window.removeEventListener('focus', handleFocusReturn);
     };
-  }, [isActive, addViolation, remainingWarnings]);
+  }, [isActive, addViolation, remainingWarnings, enterFullscreen]);
 
   // ── Block context menu / right-click ──
   useEffect(() => {
@@ -237,11 +255,63 @@ export const useExamMode = ({
       if (e.key === 'PrintScreen') {
         e.preventDefault();
       }
+
+      // Block F11 (browser fullscreen toggle) — Keyboard Lock handles this at OS level,
+      // but we still preventDefault as a fallback for non-Chromium browsers
+      if (e.key === 'F11') {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        addViolation('f11_blocked', 'F11 is disabled during the exam. Stay in the exam window.');
+      }
+
+      // Block Escape — Keyboard Lock captures this at OS level in Chromium.
+      // Fallback: preventDefault + force re-enter fullscreen
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        addViolation('escape_blocked', 'Escape is disabled during the exam. You cannot exit fullscreen.');
+        setTimeout(() => enterFullscreen(), 100);
+      }
+
+      // Block Alt key combos (Alt+Tab, Alt+F4, etc.)
+      if (e.altKey) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        if (e.key === 'Tab') {
+          addViolation('alt_tab_blocked', 'Alt+Tab is disabled during the exam. Do not switch windows.');
+        } else if (e.key === 'F4') {
+          addViolation('alt_f4_blocked', 'Alt+F4 is disabled during the exam. You cannot close the window.');
+        }
+      }
+
+      // Block Tab alone to prevent focus escaping
+      if (e.key === 'Tab' && !e.ctrlKey && !e.altKey) {
+        // Allow Tab only inside the code editor, block elsewhere
+        const target = e.target;
+        const isEditor = target?.closest?.('.monaco-editor') || target?.tagName === 'TEXTAREA';
+        if (!isEditor) {
+          e.preventDefault();
+        }
+      }
     };
 
     document.addEventListener('keydown', blockShortcuts, true);
     return () => document.removeEventListener('keydown', blockShortcuts, true);
-  }, [isActive, allowInternalClipboard]);
+  }, [isActive, allowInternalClipboard, addViolation, enterFullscreen]);
+
+  // ── Block window close / refresh ──
+  useEffect(() => {
+    if (!isActive) return;
+
+    const blockUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = 'You are in an exam. Leaving will count as a violation.';
+      return e.returnValue;
+    };
+
+    window.addEventListener('beforeunload', blockUnload);
+    return () => window.removeEventListener('beforeunload', blockUnload);
+  }, [isActive]);
 
   // ── DevTools detection ──
   useEffect(() => {

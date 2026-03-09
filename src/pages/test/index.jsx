@@ -263,18 +263,24 @@ const ProctoredTest = ({ test }) => {
 
   const q = questions[currentQ];
 
-  // ── Fullscreen management ──
+  // ── Fullscreen management (aggressive) ──
   const enterFullscreen = useCallback(async () => {
     try {
       await document.documentElement.requestFullscreen();
       setIsFullscreen(true);
+      // Lock Escape key so OS-level fullscreen exit is blocked (Chromium)
+      if (navigator.keyboard && navigator.keyboard.lock) {
+        navigator.keyboard.lock(['Escape']).catch(() => {});
+      }
     } catch { /* user denied */ }
   }, []);
 
+  // Enter fullscreen on mount
   useEffect(() => {
     enterFullscreen();
   }, [enterFullscreen]);
 
+  // Fullscreen exit → instant warning + instant re-entry
   useEffect(() => {
     const onFsChange = () => {
       if (!document.fullscreenElement) {
@@ -284,12 +290,70 @@ const ProctoredTest = ({ test }) => {
           if (next >= MAX_TAB_WARNINGS) setSubmitted(true);
           return next;
         });
+        // Immediately re-enter
+        enterFullscreen();
       } else {
         setIsFullscreen(true);
       }
     };
     document.addEventListener('fullscreenchange', onFsChange);
     return () => document.removeEventListener('fullscreenchange', onFsChange);
+  }, [enterFullscreen]);
+
+  // ── Continuous fullscreen polling (every 500ms) ──
+  // Catches ANY scenario where fullscreen was lost
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!submitted && !document.fullscreenElement) {
+        enterFullscreen();
+      }
+    }, 500);
+    return () => clearInterval(interval);
+  }, [submitted, enterFullscreen]);
+
+  // ── Block ALL dangerous keys ──
+  useEffect(() => {
+    const blockKeys = (e) => {
+      if (
+        e.key === 'Escape' ||
+        e.key === 'F11' ||
+        (e.altKey && e.key === 'Tab') ||
+        (e.altKey && e.key === 'F4') ||
+        (e.ctrlKey && (e.key === 'w' || e.key === 'W')) ||
+        (e.ctrlKey && (e.key === 't' || e.key === 'T')) ||
+        (e.ctrlKey && (e.key === 'n' || e.key === 'N')) ||
+        (e.ctrlKey && e.shiftKey) ||
+        e.key === 'Meta' || e.key === 'OS'
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    };
+    document.addEventListener('keydown', blockKeys, true);
+    document.addEventListener('keyup', blockKeys, true);
+    return () => {
+      document.removeEventListener('keydown', blockKeys, true);
+      document.removeEventListener('keyup', blockKeys, true);
+    };
+  }, []);
+
+  // ── Block right-click context menu ──
+  useEffect(() => {
+    const block = (e) => { e.preventDefault(); return false; };
+    document.addEventListener('contextmenu', block, true);
+    return () => document.removeEventListener('contextmenu', block, true);
+  }, []);
+
+  // ── Block tab/window close ──
+  useEffect(() => {
+    const preventClose = (e) => {
+      e.preventDefault();
+      e.returnValue = 'Your test is still in progress. Leaving will count as a violation.';
+      return e.returnValue;
+    };
+    window.addEventListener('beforeunload', preventClose);
+    return () => window.removeEventListener('beforeunload', preventClose);
   }, []);
 
   // ── Tab / visibility change detection ──
@@ -301,11 +365,44 @@ const ProctoredTest = ({ test }) => {
           if (next >= MAX_TAB_WARNINGS) setSubmitted(true);
           return next;
         });
+      } else {
+        // Returning from alt-tab / 3-finger swipe — snap back immediately
+        enterFullscreen();
       }
     };
     document.addEventListener('visibilitychange', handler);
     return () => document.removeEventListener('visibilitychange', handler);
-  }, []);
+  }, [enterFullscreen]);
+
+  // ── Window blur + focus: catches alt-tab / gestures instantly ──
+  useEffect(() => {
+    const onBlur = () => {
+      setTabWarnings(prev => {
+        const next = prev + 1;
+        if (next >= MAX_TAB_WARNINGS) setSubmitted(true);
+        return next;
+      });
+    };
+    const onFocus = () => {
+      // Force fullscreen the instant window regains focus
+      if (!document.fullscreenElement) enterFullscreen();
+    };
+    window.addEventListener('blur', onBlur);
+    window.addEventListener('focus', onFocus);
+    return () => {
+      window.removeEventListener('blur', onBlur);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [enterFullscreen]);
+
+  // ── Mouse leave detection: warn if cursor tries to leave the page ──
+  useEffect(() => {
+    const onLeave = () => {
+      if (!document.fullscreenElement) enterFullscreen();
+    };
+    document.addEventListener('mouseleave', onLeave);
+    return () => document.removeEventListener('mouseleave', onLeave);
+  }, [enterFullscreen]);
 
   // ── Paste detection & blocking ──
   useEffect(() => {
