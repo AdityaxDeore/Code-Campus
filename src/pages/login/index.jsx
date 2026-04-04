@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
-// import { signInWithEmail, signUpWithEmail, onAuthStateChange } from '../../utils/auth';
+import { signInWithEmail, signUpWithEmail, onAuthStateChange } from '../../utils/auth';
 // import { trackLogin } from '../../lib/analytics';
 
 const Login = () => {
@@ -22,20 +22,20 @@ const Login = () => {
   });
 
   // Check if user is already authenticated
-  // useEffect(() => {
-  //   const unsubscribe = onAuthStateChange((user) => {
-  //     if (user) {
-  //       // User is already logged in, redirect to dashboard
-  //       navigate('/student-dashboard');
-  //     }
-  //   });
+  useEffect(() => {
+    const unsubscribe = onAuthStateChange((user) => {
+      if (user) {
+        // User is already logged in, redirect to dashboard
+        navigate('/student-dashboard');
+      }
+    });
 
-  //   return () => {
-  //     if (typeof unsubscribe === 'function') {
-  //       unsubscribe();
-  //     }
-  //   };
-  // }, [navigate]);
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
+  }, [navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -92,36 +92,19 @@ const handleSubmit = async (e) => {
   setErrors({});
 
   try {
-    const url = isSignUp
-      ? "http://localhost:5001/api/signup"
-      : "http://localhost:5001/api/login";
+    const result = isSignUp
+      ? await signUpWithEmail(formData.email, formData.password, { full_name: formData.fullName })
+      : await signInWithEmail(formData.email, formData.password);
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        name: formData.fullName,
-        email: formData.email,
-        password: formData.password
-      })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      setErrors({ general: data.message || "Authentication failed" });
+    if (result?.error) {
+      setErrors({ general: result.error || 'Authentication failed' });
       return;
     }
 
-    localStorage.setItem("isAuthenticated", "true");
-
-    navigate("/student-dashboard");
-
+    navigate('/student-dashboard');
   } catch (error) {
     console.error(error);
-    setErrors({ general: "Server error. Please try again." });
+    setErrors({ general: 'Authentication failed. Please try again.' });
   } finally {
     setIsLoading(false);
   }

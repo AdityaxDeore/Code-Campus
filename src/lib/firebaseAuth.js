@@ -9,6 +9,7 @@ import {
   updateProfile
 } from 'firebase/auth';
 import { auth } from './firebase';
+import { createUserProfile } from './firestore';
 
 // Check if Firebase is initialized
 const isFirebaseReady = () => {
@@ -36,6 +37,8 @@ export const signUpWithEmail = async (email, password, displayName) => {
         displayName: displayName
       });
     }
+
+    await createUserProfile(userCredential.user);
     
     return { user: userCredential.user, error: null };
   } catch (error) {
@@ -49,6 +52,7 @@ export const signInWithEmail = async (email, password) => {
   
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    await createUserProfile(userCredential.user);
     return { user: userCredential.user, error: null };
   } catch (error) {
     return { user: null, error: error.message };
@@ -61,6 +65,7 @@ export const signInWithGoogle = async () => {
   
   try {
     const result = await signInWithPopup(auth, googleProvider);
+    await createUserProfile(result.user);
     return { user: result.user, error: null };
   } catch (error) {
     return { user: null, error: error.message };
@@ -73,6 +78,7 @@ export const signInWithGitHub = async () => {
   
   try {
     const result = await signInWithPopup(auth, githubProvider);
+    await createUserProfile(result.user);
     return { user: result.user, error: null };
   } catch (error) {
     return { user: null, error: error.message };

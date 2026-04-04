@@ -23,10 +23,72 @@ export const COLLECTIONS = {
   PROBLEMS: 'problems',
   SUBMISSIONS: 'submissions',
   ACHIEVEMENTS: 'achievements',
-  FORUMS: 'forums'
+  FORUMS: 'forums',
+  TEST_RESULTS: 'testResults'
+};
+
+const isFirestoreReady = () => {
+  if (!db) {
+    console.warn('[Firestore] Firebase not initialized. Check your .env configuration.');
+    return false;
+  }
+  return true;
 };
 
 // User operations
+export const createUserProfile = async (user) => {
+  if (!isFirestoreReady()) return null;
+  if (!user?.uid) return { success: false, error: 'Missing user id' };
+
+  try {
+    await setDoc(doc(db, COLLECTIONS.USERS, user.uid), {
+      uid: user.uid,
+      email: user.email ?? null,
+      displayName: user.displayName ?? null,
+      photoURL: user.photoURL ?? null,
+      role: 'student',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    return { success: true, error: null };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const getUserProfile = async (uid) => {
+  if (!isFirestoreReady()) return null;
+  if (!uid) return null;
+
+  try {
+    const userDoc = await getDoc(doc(db, COLLECTIONS.USERS, uid));
+    if (userDoc.exists()) {
+      return { uid: userDoc.id, ...userDoc.data() };
+    }
+    return null;
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.error('[Firestore] getUserProfile error:', error);
+    }
+    return null;
+  }
+};
+
+export const updateUserProfile = async (uid, data) => {
+  if (!isFirestoreReady()) return null;
+  if (!uid) return { success: false, error: 'Missing user id' };
+
+  try {
+    await setDoc(doc(db, COLLECTIONS.USERS, uid), {
+      ...data,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    return { success: true, error: null };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
 export const createUser = async (userId, userData) => {
   try {
     await setDoc(doc(db, COLLECTIONS.USERS, userId), {
@@ -59,6 +121,26 @@ export const updateUser = async (userId, userData) => {
       ...userData,
       updatedAt: serverTimestamp()
     });
+    return { success: true, error: null };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+// Test results
+export const createTestResult = async (resultData) => {
+  if (!isFirestoreReady()) return null;
+  if (!resultData?.userId || !resultData?.testId) {
+    return { success: false, error: 'Missing userId or testId' };
+  }
+
+  try {
+    const docId = `${resultData.userId}_${resultData.testId}`;
+    await setDoc(doc(db, COLLECTIONS.TEST_RESULTS, docId), {
+      ...resultData,
+      updatedAt: serverTimestamp(),
+      createdAt: serverTimestamp()
+    }, { merge: true });
     return { success: true, error: null };
   } catch (error) {
     return { success: false, error: error.message };

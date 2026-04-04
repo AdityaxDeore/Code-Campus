@@ -2,6 +2,7 @@ import React from "react";
 import Routes from "./Routes";
 import { DarkModeProvider } from "./contexts/DarkModeContext";
 import SetupRequired from "./components/SetupRequired";
+import { UserProvider } from "./context/UserContext";
 
 function App() {
   // Check if Firebase configuration is missing
@@ -10,9 +11,11 @@ function App() {
   }
 
   return (
-    <DarkModeProvider>
-      <Routes />
-    </DarkModeProvider>
+    <UserProvider>
+      <DarkModeProvider>
+        <Routes />
+      </DarkModeProvider>
+    </UserProvider>
   );
 }
 

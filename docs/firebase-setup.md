@@ -196,3 +196,19 @@ The following events are automatically tracked:
 6. Deploy with proper environment variables
 
 For more information, refer to the [Firebase Documentation](https://firebase.google.com/docs).
+
+## 🔐 Firestore Rules for Users Collection (Recommended)
+
+```rules
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can read/write their own profile
+    match /users/{userId} {
+      allow read: if request.auth != null
+        && (request.auth.uid == userId || request.auth.token.admin == true);
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+```
