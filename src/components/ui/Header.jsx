@@ -4,6 +4,7 @@ import { signOut } from '../../utils/auth';
 import Icon from '../AppIcon';
 import DarkModeToggle from './DarkModeToggle';
 import { useRole } from '../../contexts/RoleContext';
+import { useUser } from '../../context/UserContext';
 
 
 const Header = () => {
@@ -11,6 +12,16 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isTeacher, setRole } = useRole();
+  const { user, profile } = useUser();
+  const { user, profile } = useUser();
+
+  const displayName = profile?.displayName
+    || user?.displayName
+    || (user?.email ? user.email.split('@')[0] : null)
+    || 'Student';
+  const roleLabel = profile?.role
+    ? `${profile.role.charAt(0).toUpperCase()}${profile.role.slice(1)}`
+    : (isTeacher ? 'Teacher' : 'Student');
 
   const switchToTeacherMode = () => {
     setRole('teacher');
@@ -188,8 +199,8 @@ const Header = () => {
                 <Icon name="User" size={16} color="white" />
               </div>
               <div className="hidden md:block text-left">
-                <p className="text-sm font-medium text-foreground">Aditya Deore</p>
-                <p className="text-xs text-muted-foreground">{isTeacher ? 'Teacher Mode' : 'Student Mode'}</p>
+                <p className="text-sm font-medium text-foreground">{displayName}</p>
+                <p className="text-xs text-muted-foreground">{roleLabel}</p>
               </div>
               <Icon name="ChevronDown" size={16} className="hidden md:block text-muted-foreground" />
             </button>

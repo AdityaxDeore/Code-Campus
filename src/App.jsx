@@ -3,6 +3,7 @@ import Routes from "./Routes";
 import { DarkModeProvider } from "./contexts/DarkModeContext";
 import { RoleProvider } from "./contexts/RoleContext";
 import SetupRequired from "./components/SetupRequired";
+import { UserProvider } from "./context/UserContext";
 
 function App() {
   // Check if Firebase configuration is missing
@@ -11,11 +12,13 @@ function App() {
   }
 
   return (
-    <DarkModeProvider>
-      <RoleProvider>
-        <Routes />
-      </RoleProvider>
-    </DarkModeProvider>
+    <UserProvider>
+      <DarkModeProvider>
+        <RoleProvider>
+          <Routes />
+        </RoleProvider>
+      </DarkModeProvider>
+    </UserProvider>
   );
 }
 

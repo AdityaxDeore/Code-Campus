@@ -4,6 +4,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
+import useAuth from '../../hooks/useAuth';
+import { createTestResult, getUserTestResults } from '../../lib/firestore';
 
 const PASTE_WORD_LIMIT = 5;
 const MAX_TAB_WARNINGS = 3;
@@ -77,7 +79,7 @@ const testQuestions = {
 const langMap = { python: 'python', java: 'java', javascript: 'javascript', sql: 'sql', cpp: 'cpp' };
 
 // ───── Test Lobby ─────
-const TestLobby = ({ onStart }) => {
+const TestLobby = ({ onStart, resultsByTest }) => {
   const [filter, setFilter] = useState('all');
   
   const filteredTests = filter === 'all' 
@@ -129,7 +131,9 @@ const TestLobby = ({ onStart }) => {
         </div>
 
         <div className="space-y-3">
-          {filteredTests.map(t => (
+          {filteredTests.map(t => {
+            const result = resultsByTest?.[t.id];
+            return (
             <div key={t.id}
               className="bg-white rounded-lg border border-slate-200/80 p-4 flex items-center justify-between gap-4"
               style={{ boxShadow: '0 1px 2px rgba(0,0,0,.03)' }}
@@ -150,6 +154,12 @@ const TestLobby = ({ onStart }) => {
                   <span className="flex items-center gap-1"><Icon name="FileText" size={11} />{t.questions} Qs</span>
                   <span className="flex items-center gap-1"><Icon name="Award" size={11} />{t.totalMarks} marks</span>
                   {t.status === 'completed' && <span className="text-emerald-600 font-medium">Score: {t.scored}/{t.totalMarks}</span>}
+                  {result && result.scorePending && (
+                    <span className="text-amber-600 font-medium">Last attempt: score pending</span>
+                  )}
+                  {result && !result.scorePending && (
+                    <span className="text-emerald-600 font-medium">Last attempt: {result.score}/{result.maxScore}</span>
+                  )}
                   {t.status === 'upcoming' && <span className="text-amber-600 font-medium">Starts: {new Date(t.startsAt).toLocaleDateString()}</span>}
                 </div>
               </div>
@@ -167,7 +177,8 @@ const TestLobby = ({ onStart }) => {
                 <span className="text-[12px] text-emerald-600 font-medium flex items-center gap-1"><Icon name="CheckCircle2" size={13} /> Done</span>
               )}
             </div>
-          ))}
+          );
+          })}
         </div>
 
         {/* Proctoring info */}
@@ -249,6 +260,7 @@ const MCQQuestion = ({ question, answer, onChange, currentQ, questions, onQuesti
 // ───── Proctored Test Environment ─────
 const ProctoredTest = ({ test }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const questions = testQuestions[test.id] || [];
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState(() => questions.map(q => q.type === 'mcq' ? null : q.starterCode));
@@ -470,8 +482,49 @@ const ProctoredTest = ({ test }) => {
     });
   };
 
-  const handleSubmit = () => {
+  const calculateScore = useCallback(() => {
+    if (test.type !== 'mcq') {
+      return { score: 0, correct: 0, total: questions.length, maxScore: test.totalMarks, scorePending: true };
+    }
+
+    let score = 0;
+    let correct = 0;
+    questions.forEach((question, idx) => {
+      if (answers[idx] === question.correct) {
+        score += question.marks;
+        correct += 1;
+      }
+    });
+
+    return { score, correct, total: questions.length, maxScore: test.totalMarks, scorePending: false };
+  }, [answers, questions, test]);
+
+  const handleSubmit = async () => {
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+
+    const { score, correct, total, maxScore, scorePending } = calculateScore();
+
+    if (user?.uid) {
+      await createTestResult({
+        userId: user.uid,
+        userName: user.displayName || null,
+        userEmail: user.email || null,
+        testId: test.id,
+        testTitle: test.title,
+        subject: test.subject,
+        type: test.type,
+        score,
+        maxScore,
+        scorePending,
+        correctCount: correct,
+        questionCount: total,
+        tabWarnings,
+        pasteFlags: pasteFlags.length
+      });
+    } else if (import.meta.env.DEV) {
+      console.warn('[Tests] No authenticated user. Test result not saved.');
+    }
+
     setSubmitted(true);
   };
 
@@ -633,6 +686,37 @@ const ProctoredTest = ({ test }) => {
 // ───── Main Component ─────
 const TestPage = () => {
   const [activeTest, setActiveTest] = useState(null);
+  const { user } = useAuth();
+  const [resultsByTest, setResultsByTest] = useState({});
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!user?.uid) {
+      setResultsByTest({});
+      return () => { isMounted = false; };
+    }
+
+    const loadResults = async () => {
+      const results = await getUserTestResults(user.uid);
+      if (!isMounted) return;
+
+      const map = results.reduce((acc, result) => {
+        acc[result.testId] = result;
+        return acc;
+      }, {});
+
+      setResultsByTest(map);
+    };
+
+    loadResults().catch((error) => {
+      if (import.meta.env.DEV) {
+        console.error('[Tests] Failed to load results:', error);
+      }
+    });
+
+    return () => { isMounted = false; };
+  }, [user?.uid]);
 
   if (activeTest) {
     return <ProctoredTest test={activeTest} />;
@@ -641,7 +725,7 @@ const TestPage = () => {
   return (
     <>
       <Helmet><title>Tests – CodeCampus</title></Helmet>
-      <TestLobby onStart={setActiveTest} />
+      <TestLobby onStart={setActiveTest} resultsByTest={resultsByTest} />
     </>
   );
 };
