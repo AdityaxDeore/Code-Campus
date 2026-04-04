@@ -3,12 +3,20 @@ import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { signOut } from '../../utils/auth';
 import Icon from '../AppIcon';
 import DarkModeToggle from './DarkModeToggle';
+import { useUser } from '../../context/UserContext';
 
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, profile } = useUser();
+
+  const displayName = profile?.displayName
+    || user?.displayName
+    || (user?.email ? user.email.split('@')[0] : null)
+    || 'Student';
+  const roleLabel = profile?.role ? `${profile.role.charAt(0).toUpperCase()}${profile.role.slice(1)}` : 'Student';
 
   const navigationItems = [
     { name: 'Dashboard', path: '/student-dashboard', icon: 'LayoutDashboard' },
@@ -139,8 +147,8 @@ const Header = () => {
                 <Icon name="User" size={16} color="white" />
               </div>
               <div className="hidden md:block text-left">
-                <p className="text-sm font-medium text-foreground">Aditya Deore</p>
-                <p className="text-xs text-muted-foreground">IT Student</p>
+                <p className="text-sm font-medium text-foreground">{displayName}</p>
+                <p className="text-xs text-muted-foreground">{roleLabel}</p>
               </div>
               <Icon name="ChevronDown" size={16} className="hidden md:block text-muted-foreground" />
             </button>

@@ -147,6 +147,25 @@ export const createTestResult = async (resultData) => {
   }
 };
 
+export const getUserTestResults = async (userId) => {
+  if (!isFirestoreReady()) return [];
+  if (!userId) return [];
+
+  try {
+    const q = query(
+      collection(db, COLLECTIONS.TEST_RESULTS),
+      where('userId', '==', userId)
+    );
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.error('[Firestore] getUserTestResults error:', error);
+    }
+    return [];
+  }
+};
+
 // Forum post operations
 export const createPost = async (postData) => {
   try {

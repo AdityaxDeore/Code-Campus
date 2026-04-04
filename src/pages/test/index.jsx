@@ -5,7 +5,7 @@ import Editor from '@monaco-editor/react';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import useAuth from '../../hooks/useAuth';
-import { createTestResult } from '../../lib/firestore';
+import { createTestResult, getUserTestResults } from '../../lib/firestore';
 
 const PASTE_WORD_LIMIT = 5;
 const MAX_TAB_WARNINGS = 3;
@@ -79,7 +79,7 @@ const testQuestions = {
 const langMap = { python: 'python', java: 'java', javascript: 'javascript', sql: 'sql', cpp: 'cpp' };
 
 // ───── Test Lobby ─────
-const TestLobby = ({ onStart }) => {
+const TestLobby = ({ onStart, resultsByTest }) => {
   const [filter, setFilter] = useState('all');
   
   const filteredTests = filter === 'all' 
@@ -131,7 +131,9 @@ const TestLobby = ({ onStart }) => {
         </div>
 
         <div className="space-y-3">
-          {filteredTests.map(t => (
+          {filteredTests.map(t => {
+            const result = resultsByTest?.[t.id];
+            return (
             <div key={t.id}
               className="bg-white rounded-lg border border-slate-200/80 p-4 flex items-center justify-between gap-4"
               style={{ boxShadow: '0 1px 2px rgba(0,0,0,.03)' }}
@@ -152,6 +154,12 @@ const TestLobby = ({ onStart }) => {
                   <span className="flex items-center gap-1"><Icon name="FileText" size={11} />{t.questions} Qs</span>
                   <span className="flex items-center gap-1"><Icon name="Award" size={11} />{t.totalMarks} marks</span>
                   {t.status === 'completed' && <span className="text-emerald-600 font-medium">Score: {t.scored}/{t.totalMarks}</span>}
+                  {result && result.scorePending && (
+                    <span className="text-amber-600 font-medium">Last attempt: score pending</span>
+                  )}
+                  {result && !result.scorePending && (
+                    <span className="text-emerald-600 font-medium">Last attempt: {result.score}/{result.maxScore}</span>
+                  )}
                   {t.status === 'upcoming' && <span className="text-amber-600 font-medium">Starts: {new Date(t.startsAt).toLocaleDateString()}</span>}
                 </div>
               </div>
@@ -169,7 +177,8 @@ const TestLobby = ({ onStart }) => {
                 <span className="text-[12px] text-emerald-600 font-medium flex items-center gap-1"><Icon name="CheckCircle2" size={13} /> Done</span>
               )}
             </div>
-          ))}
+          );
+          })}
         </div>
 
         {/* Proctoring info */}
@@ -498,6 +507,8 @@ const ProctoredTest = ({ test }) => {
     if (user?.uid) {
       await createTestResult({
         userId: user.uid,
+        userName: user.displayName || null,
+        userEmail: user.email || null,
         testId: test.id,
         testTitle: test.title,
         subject: test.subject,
@@ -675,6 +686,37 @@ const ProctoredTest = ({ test }) => {
 // ───── Main Component ─────
 const TestPage = () => {
   const [activeTest, setActiveTest] = useState(null);
+  const { user } = useAuth();
+  const [resultsByTest, setResultsByTest] = useState({});
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!user?.uid) {
+      setResultsByTest({});
+      return () => { isMounted = false; };
+    }
+
+    const loadResults = async () => {
+      const results = await getUserTestResults(user.uid);
+      if (!isMounted) return;
+
+      const map = results.reduce((acc, result) => {
+        acc[result.testId] = result;
+        return acc;
+      }, {});
+
+      setResultsByTest(map);
+    };
+
+    loadResults().catch((error) => {
+      if (import.meta.env.DEV) {
+        console.error('[Tests] Failed to load results:', error);
+      }
+    });
+
+    return () => { isMounted = false; };
+  }, [user?.uid]);
 
   if (activeTest) {
     return <ProctoredTest test={activeTest} />;
@@ -683,7 +725,7 @@ const TestPage = () => {
   return (
     <>
       <Helmet><title>Tests – CodeCampus</title></Helmet>
-      <TestLobby onStart={setActiveTest} />
+      <TestLobby onStart={setActiveTest} resultsByTest={resultsByTest} />
     </>
   );
 };
