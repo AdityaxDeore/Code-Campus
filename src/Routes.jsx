@@ -1,8 +1,10 @@
 import React, { Suspense, lazy } from "react";
-import { BrowserRouter, Routes as RouterRoutes, Route } from "react-router-dom";
+import { BrowserRouter, Routes as RouterRoutes, Route, Navigate } from "react-router-dom";
 import ScrollToTop from "components/ScrollToTop";
 import ErrorBoundary from "components/ErrorBoundary";
 import ProtectedRoute from "components/ProtectedRoute";
+import TeacherRoute from "components/TeacherRoute";
+import StudentRoute from "components/StudentRoute";
 import Loading from "components/Loading";
 
 // Eagerly loaded components
@@ -25,10 +27,16 @@ const LearningPathways = lazy(() => import('./pages/learning-pathways'));
 const Assignments = lazy(() => import('./pages/assignments'));
 const AssignmentWorkspace = lazy(() => import('./pages/assignment-workspace'));
 const AssignmentCreation = lazy(() => import('./pages/assignment-creation'));
-const CreateAssignment = lazy(() => import('./pages/create-assignment'));
 const TeacherReview = lazy(() => import('./pages/teacher-review'));
 const TestPage = lazy(() => import('./pages/test'));
 const ReportSubmission = lazy(() => import('./pages/report-submission'));
+const TeacherDashboard = lazy(() => import('./pages/teacher-dashboard'));
+const TeacherStudents = lazy(() => import('./pages/teacher-students'));
+const TeacherCourses = lazy(() => import('./pages/teacher-courses'));
+const TeacherAssignments = lazy(() => import('./pages/teacher-assignments'));
+const TeacherSubmissions = lazy(() => import('./pages/teacher-submissions'));
+const TeacherGradebook = lazy(() => import('./pages/teacher-gradebook'));
+const TeacherSettings = lazy(() => import('./pages/teacher-settings'));
 
 const Routes = () => {
   return (
@@ -53,9 +61,11 @@ const Routes = () => {
         
         {/* Protected routes */}
         <Route path="/student-dashboard" element={
-          <Suspense fallback={<Loading />}>
-            <StudentDashboard />
-          </Suspense>
+          <StudentRoute>
+            <Suspense fallback={<Loading />}>
+              <StudentDashboard />
+            </Suspense>
+          </StudentRoute>
         } />
         <Route path="/campus-forums" element={
           <ProtectedRoute>
@@ -65,93 +75,142 @@ const Routes = () => {
           </ProtectedRoute>
         } />
         <Route path="/achievement-center" element={
-          <ProtectedRoute>
+          <StudentRoute>
             <Suspense fallback={<Loading />}>
               <AchievementCenter />
             </Suspense>
-          </ProtectedRoute>
+          </StudentRoute>
         } />
         <Route path="/problems" element={
-          <ProtectedRoute>
+          <StudentRoute>
             <Suspense fallback={<Loading />}>
               <Problems />
             </Suspense>
-          </ProtectedRoute>
+          </StudentRoute>
         } />
         <Route path="/learning-pathways" element={
-          <ProtectedRoute>
+          <StudentRoute>
             <Suspense fallback={<Loading />}>
               <LearningPathways />
             </Suspense>
-          </ProtectedRoute>
+          </StudentRoute>
         } />
         <Route path="/assignments" element={
-          <ProtectedRoute>
+          <StudentRoute>
             <Suspense fallback={<Loading />}>
               <Assignments />
             </Suspense>
-          </ProtectedRoute>
+          </StudentRoute>
         } />
         <Route path="/assignment-workspace" element={
-          <ProtectedRoute>
+          <StudentRoute>
             <Suspense fallback={<Loading />}>
               <AssignmentWorkspace />
             </Suspense>
-          </ProtectedRoute>
+          </StudentRoute>
         } />
         <Route path="/assignment-creation" element={
-          <ProtectedRoute>
+          <TeacherRoute>
             <Suspense fallback={<Loading />}>
               <AssignmentCreation />
             </Suspense>
-          </ProtectedRoute>
+          </TeacherRoute>
         } />
         <Route path="/create-assignment" element={
-          <ProtectedRoute>
+          <TeacherRoute>
+            <Navigate to="/assignment-creation" replace />
+          </TeacherRoute>
+        } />
+        <Route path="/teacher-dashboard" element={
+          <TeacherRoute>
             <Suspense fallback={<Loading />}>
-              <CreateAssignment />
+              <TeacherDashboard />
             </Suspense>
-          </ProtectedRoute>
+          </TeacherRoute>
+        } />
+        <Route path="/teacher-students" element={
+          <TeacherRoute>
+            <Suspense fallback={<Loading />}>
+              <TeacherStudents />
+            </Suspense>
+          </TeacherRoute>
+        } />
+        <Route path="/teacher-courses" element={
+          <TeacherRoute>
+            <Suspense fallback={<Loading />}>
+              <TeacherCourses />
+            </Suspense>
+          </TeacherRoute>
         } />
         <Route path="/teacher-review" element={
-          <Suspense fallback={<Loading />}>
-            <TeacherReview />
-          </Suspense>
+          <TeacherRoute>
+            <Suspense fallback={<Loading />}>
+              <TeacherReview />
+            </Suspense>
+          </TeacherRoute>
+        } />
+        <Route path="/teacher-assignments" element={
+          <TeacherRoute>
+            <Suspense fallback={<Loading />}>
+              <TeacherAssignments />
+            </Suspense>
+          </TeacherRoute>
+        } />
+        <Route path="/teacher-submissions" element={
+          <TeacherRoute>
+            <Suspense fallback={<Loading />}>
+              <TeacherSubmissions />
+            </Suspense>
+          </TeacherRoute>
+        } />
+        <Route path="/teacher-gradebook" element={
+          <TeacherRoute>
+            <Suspense fallback={<Loading />}>
+              <TeacherGradebook />
+            </Suspense>
+          </TeacherRoute>
+        } />
+        <Route path="/teacher-settings" element={
+          <TeacherRoute>
+            <Suspense fallback={<Loading />}>
+              <TeacherSettings />
+            </Suspense>
+          </TeacherRoute>
         } />
         <Route path="/report-submission" element={
-          <ProtectedRoute>
+          <StudentRoute>
             <Suspense fallback={<Loading />}>
               <ReportSubmission />
             </Suspense>
-          </ProtectedRoute>
+          </StudentRoute>
         } />
         <Route path="/test" element={
-          <ProtectedRoute>
+          <StudentRoute>
             <Suspense fallback={<Loading />}>
               <TestPage />
             </Suspense>
-          </ProtectedRoute>
+          </StudentRoute>
         } />
         <Route path="/problem-workspace" element={
-          <ProtectedRoute>
+          <StudentRoute>
             <Suspense fallback={<Loading />}>
               <ProblemWorkspace />
             </Suspense>
-          </ProtectedRoute>
+          </StudentRoute>
         } />
         <Route path="/problem-history" element={
-          <ProtectedRoute>
+          <StudentRoute>
             <Suspense fallback={<Loading />}>
               <ProblemHistory />
             </Suspense>
-          </ProtectedRoute>
+          </StudentRoute>
         } />
         <Route path="/projects" element={
-          <ProtectedRoute>
+          <StudentRoute>
             <Suspense fallback={<Loading />}>
               <Projects />
             </Suspense>
-          </ProtectedRoute>
+          </StudentRoute>
         } />
         <Route path="/coming-soon" element={
           <ProtectedRoute>

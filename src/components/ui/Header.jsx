@@ -3,29 +3,67 @@ import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { signOut } from '../../utils/auth';
 import Icon from '../AppIcon';
 import DarkModeToggle from './DarkModeToggle';
+import { useRole } from '../../contexts/RoleContext';
 
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { isTeacher, setRole } = useRole();
 
-  const navigationItems = [
-    { name: 'Dashboard', path: '/student-dashboard', icon: 'LayoutDashboard' },
-    { name: 'Problems', path: '/problems', icon: 'Code' },
-    { name: 'Learning Paths', path: '/learning-pathways', icon: 'BookOpen' },
-    { name: 'Assignments', path: '/assignments', icon: 'ClipboardList' },
-    { name: 'Tests', path: '/test', icon: 'ShieldCheck' },
-    { name: 'Forums', path: '/campus-forums', icon: 'MessageSquare' },
-  ];
+  const switchToTeacherMode = () => {
+    setRole('teacher');
+    navigate('/teacher-dashboard');
+    setIsMobileMenuOpen(false);
+  };
 
-  const moreItems = [
-    { name: 'Achievements', path: '/achievement-center', icon: 'Trophy' },
-    { name: 'Teacher', path: '/teacher-review', icon: 'GraduationCap' },
-    { name: 'About', path: '/about-code-campus', icon: 'Info' },
-    { name: 'Settings', path: '/settings', icon: 'Settings' },
-    { name: 'Help', path: '/help', icon: 'HelpCircle' },
-  ];
+  const switchToStudentMode = () => {
+    setRole('student');
+    navigate('/student-dashboard');
+    setIsMobileMenuOpen(false);
+  };
+
+  const navigationItems = isTeacher
+    ? [
+        { name: 'Dashboard', path: '/teacher-dashboard', icon: 'LayoutDashboard' },
+        { name: 'Courses', path: '/teacher-courses', icon: 'BookOpen' },
+        { name: 'Students', path: '/teacher-students', icon: 'Users' },
+        { name: 'Assignments', path: '/teacher-assignments', icon: 'ClipboardList' },
+        { name: 'Submissions', path: '/teacher-submissions', icon: 'Inbox' },
+        { name: 'Gradebook', path: '/teacher-gradebook', icon: 'Table' },
+        { name: 'Create', path: '/assignment-creation', icon: 'PlusCircle' },
+        { name: 'Review', path: '/teacher-review', icon: 'CheckSquare' },
+        { name: 'Forums', path: '/campus-forums', icon: 'MessageSquare' },
+      ]
+    : [
+        { name: 'Dashboard', path: '/student-dashboard', icon: 'LayoutDashboard' },
+        { name: 'Problems', path: '/problems', icon: 'Code' },
+        { name: 'Learning Paths', path: '/learning-pathways', icon: 'BookOpen' },
+        { name: 'Assignments', path: '/assignments', icon: 'ClipboardList' },
+        { name: 'Tests', path: '/test', icon: 'ShieldCheck' },
+        { name: 'Forums', path: '/campus-forums', icon: 'MessageSquare' },
+      ];
+
+  const moreItems = isTeacher
+    ? [
+        { name: 'Teacher Home', path: '/teacher-dashboard', icon: 'GraduationCap' },
+        { name: 'Courses', path: '/teacher-courses', icon: 'BookOpen' },
+        { name: 'Assignment Queue', path: '/teacher-assignments', icon: 'ClipboardList' },
+        { name: 'Submission Queue', path: '/teacher-submissions', icon: 'Inbox' },
+        { name: 'Gradebook', path: '/teacher-gradebook', icon: 'Table' },
+        { name: 'Teacher Review', path: '/teacher-review', icon: 'ClipboardCheck' },
+        { name: 'About', path: '/about-code-campus', icon: 'Info' },
+        { name: 'Settings', path: '/teacher-settings', icon: 'Settings' },
+        { name: 'Help', path: '/help', icon: 'HelpCircle' },
+      ]
+    : [
+        { name: 'Achievements', path: '/achievement-center', icon: 'Trophy' },
+        { name: 'Teacher', path: '/teacher-dashboard', icon: 'GraduationCap' },
+        { name: 'About', path: '/about-code-campus', icon: 'Info' },
+        { name: 'Settings', path: '/settings', icon: 'Settings' },
+        { name: 'Help', path: '/help', icon: 'HelpCircle' },
+      ];
 
   const isActivePath = (path) => location?.pathname === path;
 
@@ -104,17 +142,28 @@ const Header = () => {
             <div className="absolute right-0 top-full mt-2 w-48 bg-popover border border-border rounded-lg academic-shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible academic-transition z-50">
               <div className="py-2">
                 {moreItems?.map((item) => (
-                  <Link
-                    key={item?.path}
-                    to={item?.path}
-                    className={`flex items-center space-x-3 px-4 py-2 text-sm hover:bg-muted academic-transition ${
-                      isActivePath(item?.path)
-                        ? 'text-primary font-medium' :'text-popover-foreground'
-                    }`}
-                  >
-                    <Icon name={item?.icon} size={16} />
-                    <span>{item?.name}</span>
-                  </Link>
+                  !isTeacher && item?.path === '/teacher-dashboard' ? (
+                    <button
+                      key={item?.path}
+                      onClick={switchToTeacherMode}
+                      className="flex items-center space-x-3 px-4 py-2 text-sm hover:bg-muted academic-transition text-popover-foreground w-full text-left"
+                    >
+                      <Icon name={item?.icon} size={16} />
+                      <span>{item?.name}</span>
+                    </button>
+                  ) : (
+                    <Link
+                      key={item?.path}
+                      to={item?.path}
+                      className={`flex items-center space-x-3 px-4 py-2 text-sm hover:bg-muted academic-transition ${
+                        isActivePath(item?.path)
+                          ? 'text-primary font-medium' :'text-popover-foreground'
+                      }`}
+                    >
+                      <Icon name={item?.icon} size={16} />
+                      <span>{item?.name}</span>
+                    </Link>
+                  )
                 ))}
               </div>
             </div>
@@ -140,18 +189,35 @@ const Header = () => {
               </div>
               <div className="hidden md:block text-left">
                 <p className="text-sm font-medium text-foreground">Aditya Deore</p>
-                <p className="text-xs text-muted-foreground">IT Student</p>
+                <p className="text-xs text-muted-foreground">{isTeacher ? 'Teacher Mode' : 'Student Mode'}</p>
               </div>
               <Icon name="ChevronDown" size={16} className="hidden md:block text-muted-foreground" />
             </button>
             
             <div className="absolute right-0 top-full mt-2 w-48 bg-popover border border-border rounded-lg academic-shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible academic-transition z-50">
               <div className="py-2">
+                {isTeacher ? (
+                  <button
+                    onClick={switchToStudentMode}
+                    className="flex items-center space-x-3 px-4 py-2 text-sm text-popover-foreground hover:bg-muted academic-transition w-full text-left"
+                  >
+                    <Icon name="ArrowLeftRight" size={16} />
+                    <span>Switch to Student</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={switchToTeacherMode}
+                    className="flex items-center space-x-3 px-4 py-2 text-sm text-popover-foreground hover:bg-muted academic-transition w-full text-left"
+                  >
+                    <Icon name="ArrowLeftRight" size={16} />
+                    <span>Switch to Teacher</span>
+                  </button>
+                )}
                 <Link to="/profile" className="flex items-center space-x-3 px-4 py-2 text-sm text-popover-foreground hover:bg-muted academic-transition">
                   <Icon name="User" size={16} />
                   <span>Profile</span>
                 </Link>
-                <Link to="/settings" className="flex items-center space-x-3 px-4 py-2 text-sm text-popover-foreground hover:bg-muted academic-transition">
+                <Link to={isTeacher ? '/teacher-settings' : '/settings'} className="flex items-center space-x-3 px-4 py-2 text-sm text-popover-foreground hover:bg-muted academic-transition">
                   <Icon name="Settings" size={16} />
                   <span>Settings</span>
                 </Link>
@@ -209,18 +275,29 @@ const Header = () => {
             <hr className="my-4 border-border" />
             
             {moreItems?.map((item) => (
-              <Link
-                key={item?.path}
-                to={item?.path}
-                className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm academic-transition ${
-                  isActivePath(item?.path)
-                    ? 'text-primary font-medium bg-muted' :'text-foreground hover:bg-muted'
-                }`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Icon name={item?.icon} size={18} />
-                <span>{item?.name}</span>
-              </Link>
+              !isTeacher && item?.path === '/teacher-dashboard' ? (
+                <button
+                  key={item?.path}
+                  onClick={switchToTeacherMode}
+                  className="flex items-center space-x-3 px-4 py-3 rounded-lg text-sm academic-transition text-foreground hover:bg-muted w-full text-left"
+                >
+                  <Icon name={item?.icon} size={18} />
+                  <span>{item?.name}</span>
+                </button>
+              ) : (
+                <Link
+                  key={item?.path}
+                  to={item?.path}
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm academic-transition ${
+                    isActivePath(item?.path)
+                      ? 'text-primary font-medium bg-muted' :'text-foreground hover:bg-muted'
+                  }`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Icon name={item?.icon} size={18} />
+                  <span>{item?.name}</span>
+                </Link>
+              )
             ))}
           </nav>
         </div>

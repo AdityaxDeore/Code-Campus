@@ -4,11 +4,19 @@ import { useNavigate } from 'react-router-dom';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import { useRole } from '../../contexts/RoleContext';
 // import { signInWithEmail, signUpWithEmail, onAuthStateChange } from '../../utils/auth';
 // import { trackLogin } from '../../lib/analytics';
 
+const DEMO_TEACHER = {
+  email: 'teacher.demo@codecampus.test',
+  password: 'Teacher@123',
+  name: 'Demo Teacher',
+};
+
 const Login = () => {
   const navigate = useNavigate();
+  const { setRole } = useRole();
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [isSignUp, setIsSignUp] = useState(false);
@@ -83,6 +91,22 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const loginAsDemoTeacher = () => {
+    localStorage.setItem("isAuthenticated", "true");
+    localStorage.setItem("loginMethod", "demo");
+    localStorage.setItem("userName", DEMO_TEACHER.name);
+    localStorage.setItem("userEmail", DEMO_TEACHER.email);
+    localStorage.setItem("codecampus_role", "teacher");
+    setRole('teacher');
+    navigate("/teacher-dashboard", { replace: true });
+
+    setTimeout(() => {
+      if (window.location.pathname.includes('/login')) {
+        window.location.assign('/codecampus/teacher-dashboard');
+      }
+    }, 80);
+  };
+
 const handleSubmit = async (e) => {
   e.preventDefault();
 
@@ -92,6 +116,32 @@ const handleSubmit = async (e) => {
   setErrors({});
 
   try {
+    // Built-in teacher demo account for frontend QA/testing without backend dependency.
+    if (
+      !isSignUp &&
+      formData.email.trim().toLowerCase() === DEMO_TEACHER.email &&
+      formData.password === DEMO_TEACHER.password
+    ) {
+      localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("loginMethod", "demo");
+      localStorage.setItem("userName", DEMO_TEACHER.name);
+      localStorage.setItem("userEmail", DEMO_TEACHER.email);
+      localStorage.setItem("codecampus_role", "teacher");
+      setRole('teacher');
+
+      // Primary SPA redirect.
+      navigate("/teacher-dashboard", { replace: true });
+
+      // Fallback in case router state lags behind in some environments.
+      setTimeout(() => {
+        if (window.location.pathname.includes('/login')) {
+          window.location.assign('/codecampus/teacher-dashboard');
+        }
+      }, 80);
+
+      return;
+    }
+
     const url = isSignUp
       ? "http://localhost:5001/api/signup"
       : "http://localhost:5001/api/login";
@@ -207,6 +257,21 @@ const handleSubmit = async (e) => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {!isSignUp && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-blue-700 text-xs font-medium mb-1">Demo Teacher Login</p>
+                  <p className="text-blue-600 text-xs">Email: {DEMO_TEACHER.email}</p>
+                  <p className="text-blue-600 text-xs">Password: {DEMO_TEACHER.password}</p>
+                  <button
+                    type="button"
+                    onClick={loginAsDemoTeacher}
+                    className="mt-2 text-xs font-medium text-blue-700 hover:text-blue-800 underline"
+                  >
+                    Continue as Demo Teacher
+                  </button>
+                </div>
+              )}
+
               {errors.general && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                   <p className="text-red-600 text-sm flex items-center space-x-1">

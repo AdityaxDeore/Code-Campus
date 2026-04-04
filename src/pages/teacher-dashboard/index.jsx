@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Helmet } from 'react-helmet';
 import { useNavigate, Link } from 'react-router-dom';
 import Header from '../../components/ui/Header';
@@ -6,8 +6,10 @@ import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import { useRole } from '../../contexts/RoleContext';
 import { getCurrentUser, getSession, onAuthStateChange } from '../../utils/auth';
+import { getAssignments } from '../../lib/assignmentService';
 
 /* ════════════════════════════════════════════════════════════
+                      { label: 'Manage Courses', icon: 'BookOpen', path: '/teacher-courses', color: 'text-cyan-600 bg-cyan-50 hover:bg-cyan-100' },
    Mock Data
    ════════════════════════════════════════════════════════════ */
 const mockCourses = [
@@ -18,6 +20,7 @@ const mockCourses = [
 
 const mockAssignments = [
   { id: 'a1', title: 'Binary Search Tree Implementation', course: 'CS201', due: new Date(Date.now() + 48 * 36e5).toISOString(), submissions: 38, total: 64, graded: 12, status: 'active' },
+                      { label: 'Open Gradebook', icon: 'Table', path: '/teacher-gradebook', color: 'text-teal-600 bg-teal-50 hover:bg-teal-100' },
   { id: 'a2', title: 'Graph Traversal – BFS & DFS', course: 'CS201', due: new Date(Date.now() + 120 * 36e5).toISOString(), submissions: 5, total: 64, graded: 0, status: 'active' },
   { id: 'a3', title: 'Knapsack Problem', course: 'CS301', due: new Date(Date.now() + 168 * 36e5).toISOString(), submissions: 0, total: 42, graded: 0, status: 'draft' },
   { id: 'a4', title: 'Linked List Operations', course: 'CS201', due: new Date(Date.now() - 72 * 36e5).toISOString(), submissions: 62, total: 64, graded: 62, status: 'closed' },
@@ -37,6 +40,48 @@ const mockRecentSubmissions = [
   { id: 's4', student: 'Priya Patel', assignment: 'Graph Traversal', time: '2h ago', score: null },
   { id: 's5', student: 'Vikram Singh', assignment: 'BST Implementation', time: '3h ago', score: 92 },
 ];
+
+const mapDashboardAssignment = (assignment) => {
+  const status = assignment.status === 'active' ? 'active' : assignment.status || 'draft';
+  return {
+    id: assignment._id,
+    title: assignment.title || 'Untitled Assignment',
+    course: assignment.course || 'General',
+    due: assignment.deadline || new Date().toISOString(),
+    submissions: assignment.submissions || 0,
+    total: assignment.totalStudents || 0,
+    graded: assignment.graded || 0,
+    status,
+  };
+};
+
+const REVIEW_RECORDS_STORAGE_KEY = 'codecampus_teacher_review_records_v1';
+
+const loadReviewRecords = () => {
+  try {
+    const raw = localStorage.getItem(REVIEW_RECORDS_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+};
+
+const normalizeName = (name) => (name || '').toLowerCase().replace(/\s+/g, ' ').trim();
+
+const getRecentStatusMeta = (status) => {
+  if (status === 'published') {
+    return { label: 'Final Grade Published', className: 'text-emerald-600 bg-emerald-50' };
+  }
+  if (status === 'draft') {
+    return { label: 'Draft Saved', className: 'text-blue-600 bg-blue-50' };
+  }
+  if (status === 'resubmission_requested') {
+    return { label: 'Resubmission Requested', className: 'text-red-600 bg-red-50' };
+  }
+  return { label: 'Ungraded', className: 'text-amber-500 bg-amber-50' };
+};
 
 /* ════════════════════════════════════════════════════════════
    Helpers
@@ -68,6 +113,8 @@ const TeacherDashboard = () => {
   const { role } = useRole();
   const [userName, setUserName] = useState('');
   const [userEmail, setUserEmail] = useState('');
+  const [reviewRecords, setReviewRecords] = useState(() => loadReviewRecords());
+  const [assignments, setAssignments] = useState(mockAssignments);
 
   useEffect(() => {
     if (role !== 'teacher') { navigate('/student-dashboard'); return; }
@@ -93,15 +140,85 @@ const TeacherDashboard = () => {
       if (user) {
         setUserName(user.displayName || user.email?.split('@')[0] || '');
         setUserEmail(user.email || '');
-      } else navigate('/login');
+      } else if (localStorage.getItem('isAuthenticated') === 'true') {
+        setUserName(localStorage.getItem('userName') || 'Teacher');
+        setUserEmail(localStorage.getItem('userEmail') || '');
+      } else {
+        navigate('/login');
+      }
     });
     return () => { if (typeof unsub === 'function') unsub(); };
   }, [navigate, role]);
 
+  useEffect(() => {
+    const refreshReviewRecords = () => {
+      setReviewRecords(loadReviewRecords());
+    };
+
+    window.addEventListener('focus', refreshReviewRecords);
+    window.addEventListener('storage', refreshReviewRecords);
+    return () => {
+      window.removeEventListener('focus', refreshReviewRecords);
+      window.removeEventListener('storage', refreshReviewRecords);
+    };
+  }, []);
+
+  useEffect(() => {
+    const loadAssignments = async () => {
+      const result = await getAssignments();
+      if (!result.success) return;
+      setAssignments(result.assignments.map(mapDashboardAssignment));
+    };
+    loadAssignments();
+  }, []);
+
   const totalStudents = mockCourses.reduce((s, c) => s + c.students, 0);
-  const pendingGrading = mockAssignments.reduce((s, a) => s + (a.submissions - a.graded), 0);
-  const activeAssignments = mockAssignments.filter(a => a.status === 'active');
-  const closedAssignments = mockAssignments.filter(a => a.status === 'closed');
+  const defaultPendingGrading = assignments.reduce((s, a) => s + (a.submissions - a.graded), 0);
+  const activeAssignments = assignments.filter(a => a.status === 'active' || a.status === 'published');
+  const closedAssignments = assignments.filter(a => a.status === 'closed');
+
+  const reviewLifecycle = useMemo(() => {
+    const records = Object.values(reviewRecords);
+    const totalTracked = records.length;
+    const publishedCount = records.filter((r) => r.status === 'published').length;
+    const draftCount = records.filter((r) => r.status === 'draft').length;
+    const resubmissionCount = records.filter((r) => r.status === 'resubmission_requested').length;
+    return {
+      totalTracked,
+      publishedCount,
+      draftCount,
+      resubmissionCount,
+      pendingCount: Math.max(totalTracked - publishedCount, 0),
+      hasData: totalTracked > 0,
+    };
+  }, [reviewRecords]);
+
+  const pendingGrading = reviewLifecycle.hasData ? reviewLifecycle.pendingCount : defaultPendingGrading;
+
+  const recentSubmissions = useMemo(() => {
+    const recordByStudent = new Map();
+    Object.values(reviewRecords).forEach((record) => {
+      if (record?.studentName) {
+        recordByStudent.set(normalizeName(record.studentName), record);
+      }
+    });
+
+    return mockRecentSubmissions.map((submission) => {
+      const record = recordByStudent.get(normalizeName(submission.student));
+      if (!record) {
+        return {
+          ...submission,
+          lifecycleStatus: submission.score !== null ? 'published' : 'pending',
+        };
+      }
+
+      return {
+        ...submission,
+        score: record.status === 'published' ? record.totalScore : submission.score,
+        lifecycleStatus: record.status,
+      };
+    });
+  }, [reviewRecords]);
 
   return (
     <>
@@ -143,12 +260,14 @@ const TeacherDashboard = () => {
             </div>
 
             {/* ─── Stat Cards ─── */}
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-7">
+            <div className="grid grid-cols-2 lg:grid-cols-7 gap-3 mb-7">
               {[
                 { label: 'Total Students', val: totalStudents, icon: 'Users', c: '#3b82f6' },
                 { label: 'Active Courses', val: mockCourses.length, icon: 'BookOpen', c: '#8b5cf6' },
                 { label: 'Active Assignments', val: activeAssignments.length, icon: 'ClipboardList', c: '#f59e0b' },
                 { label: 'Pending Grading', val: pendingGrading, icon: 'Clock', c: '#ef4444' },
+                { label: 'Draft Grades', val: reviewLifecycle.draftCount, icon: 'Save', c: '#2563eb' },
+                { label: 'Resub Requests', val: reviewLifecycle.resubmissionCount, icon: 'RotateCcw', c: '#dc2626' },
                 { label: 'Integrity Flags', val: mockIntegrityFlags.length, icon: 'Shield', c: '#f97316' },
               ].map((s, i) => (
                 <div key={i}
@@ -322,7 +441,9 @@ const TeacherDashboard = () => {
                     </h2>
                   </div>
                   <div className="divide-y divide-slate-50">
-                    {mockRecentSubmissions.map(s => (
+                    {recentSubmissions.map(s => {
+                      const statusMeta = getRecentStatusMeta(s.lifecycleStatus);
+                      return (
                       <div key={s.id} className="px-4 py-2.5 hover:bg-slate-50/50 transition-colors">
                         <div className="flex items-center justify-between">
                           <div className="min-w-0 flex-1">
@@ -330,16 +451,16 @@ const TeacherDashboard = () => {
                             <p className="text-[10px] text-slate-400 truncate">{s.assignment}</p>
                           </div>
                           <div className="text-right ml-3 flex-shrink-0">
-                            {s.score !== null ? (
+                            {s.lifecycleStatus === 'published' && s.score !== null ? (
                               <span className="text-[11px] font-semibold text-emerald-600">{s.score}/100</span>
                             ) : (
-                              <span className="text-[10px] font-medium text-amber-500 bg-amber-50 px-1.5 py-0.5 rounded">Ungraded</span>
+                              <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${statusMeta.className}`}>{statusMeta.label}</span>
                             )}
                             <p className="text-[9px] text-slate-400 mt-0.5">{s.time}</p>
                           </div>
                         </div>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 </div>
 
@@ -354,6 +475,7 @@ const TeacherDashboard = () => {
                   <div className="p-3 space-y-2">
                     {[
                       { label: 'Create New Assignment', icon: 'PlusCircle', path: '/assignment-creation', color: 'text-blue-600 bg-blue-50 hover:bg-blue-100' },
+                      { label: 'View Students', icon: 'Users', path: '/teacher-students', color: 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100' },
                       { label: 'Grade Submissions', icon: 'CheckSquare', path: '/teacher-review', color: 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100' },
                       { label: 'View Forums', icon: 'MessageSquare', path: '/campus-forums', color: 'text-purple-600 bg-purple-50 hover:bg-purple-100' },
                       { label: 'View Leaderboard', icon: 'Trophy', path: '/achievement-center', color: 'text-amber-600 bg-amber-50 hover:bg-amber-100' },

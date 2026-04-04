@@ -12,7 +12,7 @@
  *    - View integrity timeline
  */
 
-import React, { useState, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
@@ -301,6 +301,61 @@ const MOCK_SUBMISSION_LIST = [
   { id: 'sub_6', studentName: 'Sharvil Patil', prn: '124B1F102', status: 'submitted', submittedAt: new Date(Date.now() - 12 * 3600000).toISOString(), score: null },
 ];
 
+const REVIEW_RECORDS_STORAGE_KEY = 'codecampus_teacher_review_records_v1';
+
+const REVIEW_STATUS = {
+  PENDING: 'pending',
+  DRAFT: 'draft',
+  PUBLISHED: 'published',
+  RESUBMISSION_REQUESTED: 'resubmission_requested',
+};
+
+const REVIEW_STATUS_META = {
+  [REVIEW_STATUS.PENDING]: {
+    label: 'Pending Review',
+    badgeClass: 'bg-amber-500/15 text-amber-400',
+    dotClass: 'bg-amber-400 animate-pulse',
+  },
+  [REVIEW_STATUS.DRAFT]: {
+    label: 'Draft Saved',
+    badgeClass: 'bg-blue-500/15 text-blue-400',
+    dotClass: 'bg-blue-400',
+  },
+  [REVIEW_STATUS.PUBLISHED]: {
+    label: 'Final Grade Published',
+    badgeClass: 'bg-emerald-500/15 text-emerald-400',
+    dotClass: 'bg-emerald-400',
+  },
+  [REVIEW_STATUS.RESUBMISSION_REQUESTED]: {
+    label: 'Resubmission Requested',
+    badgeClass: 'bg-red-500/15 text-red-400',
+    dotClass: 'bg-red-400',
+  },
+};
+
+const getReviewStatusMeta = (status) => {
+  return REVIEW_STATUS_META[status] || REVIEW_STATUS_META[REVIEW_STATUS.PENDING];
+};
+
+const loadReviewRecords = () => {
+  try {
+    const raw = localStorage.getItem(REVIEW_RECORDS_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+};
+
+const persistReviewRecords = (records) => {
+  try {
+    localStorage.setItem(REVIEW_RECORDS_STORAGE_KEY, JSON.stringify(records));
+  } catch {
+    // Ignore storage failures in browser-restricted contexts.
+  }
+};
+
 /* ════════════════════════════════════════════════════════════
    C++ BST Simulator (browser-side)
    ════════════════════════════════════════════════════════════ */
@@ -384,9 +439,12 @@ const TeacherReview = () => {
   const [rubricScores, setRubricScores] = useState(MOCK_SUBMISSIONS.sub_1.rubric.map(r => ({ ...r })));
   const [lineComments, setLineComments] = useState({});
   const [overallFeedback, setOverallFeedback] = useState('');
+  const [resubmissionReason, setResubmissionReason] = useState('');
   const [codeOutput, setCodeOutput] = useState(null); // { ok, out }
   const [isRunning, setIsRunning] = useState(false);
   const [showOutput, setShowOutput] = useState(false);
+  const [reviewRecords, setReviewRecords] = useState(() => loadReviewRecords());
+  const [actionNotice, setActionNotice] = useState('');
 
   // ── Computed ──
   const totalScore = useMemo(
@@ -420,33 +478,96 @@ const TeacherReview = () => {
     }));
   }, []);
 
-  // ── Submit grade ──
-  const handleSubmitGrade = () => {
-    const grade = {
+  const getSubmissionStatus = useCallback((submissionId) => {
+    return reviewRecords[submissionId]?.status || REVIEW_STATUS.PENDING;
+  }, [reviewRecords]);
+
+  const buildGradeRecord = useCallback((status, extra = {}) => {
+    return {
       submissionId: submission.id,
+      studentName: submission.studentName,
+      assignmentTitle: submission.assignmentTitle,
+      status,
       rubricScores,
       totalScore,
       totalMax: submission.maxMarks,
       overallFeedback,
       lineComments,
-      gradedAt: new Date().toISOString(),
+      resubmissionReason: extra.resubmissionReason || '',
+      updatedAt: new Date().toISOString(),
       gradedBy: 'current_teacher',
     };
-    console.log('Grade submitted:', grade);
-    alert(`Grade submitted: ${totalScore}/${submission.maxMarks}`);
+  }, [submission.id, submission.maxMarks, rubricScores, totalScore, overallFeedback, lineComments]);
+
+  const persistReviewAction = useCallback((status, notice, extra = {}) => {
+    const nextRecord = buildGradeRecord(status, extra);
+    setReviewRecords((prev) => {
+      const next = { ...prev, [submission.id]: nextRecord };
+      persistReviewRecords(next);
+      return next;
+    });
+    setActionNotice(notice);
+  }, [buildGradeRecord, submission.id]);
+
+  const handleSaveDraft = () => {
+    persistReviewAction(
+      REVIEW_STATUS.DRAFT,
+      `Draft saved for ${submission.studentName}.`
+    );
   };
+
+  const handlePublishGrade = () => {
+    if (!allScored) {
+      alert('Please score all rubric criteria before publishing final grade.');
+      return;
+    }
+    persistReviewAction(
+      REVIEW_STATUS.PUBLISHED,
+      `Final grade published: ${totalScore}/${submission.maxMarks}.`
+    );
+  };
+
+  const handleRequestResubmission = () => {
+    const reason = resubmissionReason.trim() || overallFeedback.trim();
+    if (!reason) {
+      alert('Add a resubmission reason or include it in overall feedback.');
+      return;
+    }
+    persistReviewAction(
+      REVIEW_STATUS.RESUBMISSION_REQUESTED,
+      `Resubmission requested from ${submission.studentName}.`,
+      { resubmissionReason: reason }
+    );
+  };
+
+  const hydrateReviewState = useCallback((id) => {
+    const sub = MOCK_SUBMISSIONS[id] || MOCK_SUBMISSIONS.sub_1;
+    const persisted = reviewRecords[id];
+    setActiveFile(Object.keys(sub.files)[0]);
+    setActivePanel('code');
+    setRubricScores(
+      persisted?.rubricScores
+        ? persisted.rubricScores.map((r) => ({ ...r }))
+        : sub.rubric.map((r) => ({ ...r }))
+    );
+    setLineComments(persisted?.lineComments || {});
+    setOverallFeedback(persisted?.overallFeedback || '');
+    setResubmissionReason(persisted?.resubmissionReason || '');
+    setCodeOutput(null);
+    setShowOutput(false);
+    setActionNotice('');
+  }, [reviewRecords]);
+
+  useEffect(() => {
+    if (initialId) {
+      hydrateReviewState(initialId);
+    }
+  }, [initialId, hydrateReviewState]);
 
   // ── Open a student from the list ──
   const openStudent = (id) => {
     setSelectedId(id);
-    const sub = MOCK_SUBMISSIONS[id] || MOCK_SUBMISSIONS.sub_1;
-    setActiveFile(Object.keys(sub.files)[0]);
-    setActivePanel('code');
-    setRubricScores(sub.rubric.map(r => ({ ...r })));
-    setLineComments({});
-    setOverallFeedback('');
-    setCodeOutput(null);
-    setShowOutput(false);
+    hydrateReviewState(id);
   };
 
   // ── Run code (teacher can execute just like student) ──
@@ -474,6 +595,8 @@ const TeacherReview = () => {
   }, [submission, activeFile]);
 
   const currentLang = submission.files[activeFile]?.lang || 'python';
+  const currentReviewStatus = getSubmissionStatus(submission.id);
+  const currentStatusMeta = getReviewStatusMeta(currentReviewStatus);
 
   /* ════════════════════════════════════════════════════════════
      STUDENT LIST VIEW
@@ -511,6 +634,7 @@ const TeacherReview = () => {
             <div className="grid gap-3">
               {MOCK_SUBMISSION_LIST.map((s, idx) => {
                 const initials = s.studentName.split(' ').map(n => n[0]).join('').slice(0, 2);
+                const statusMeta = getReviewStatusMeta(getSubmissionStatus(s.id));
                 const colors = [
                   'from-indigo-500 to-blue-600',
                   'from-emerald-500 to-teal-600',
@@ -536,9 +660,9 @@ const TeacherReview = () => {
                       <p className="text-[12px] text-[#888] font-mono mt-0.5">PRN: {s.prn}</p>
                     </div>
                     <div className="text-right shrink-0">
-                      <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-full bg-amber-500/15 text-amber-400">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                        Pending Review
+                      <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-full ${statusMeta.badgeClass}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${statusMeta.dotClass}`} />
+                        {statusMeta.label}
                       </span>
                       <p className="text-[10px] text-[#666] mt-1.5">
                         {new Date(s.submittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
@@ -933,6 +1057,12 @@ const TeacherReview = () => {
                   />
                 </div>
               )}
+              <div className="mt-2 flex items-center justify-between">
+                <span className="text-[10px] text-[#888] uppercase tracking-wider">Status</span>
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${currentStatusMeta.badgeClass}`}>
+                  {currentStatusMeta.label}
+                </span>
+              </div>
             </div>
 
             {/* Rubric Scoring */}
@@ -989,6 +1119,16 @@ const TeacherReview = () => {
                   rows={4}
                   className="w-full px-3 py-2 bg-[#1e1e1e] border border-[#3c3c3c] text-[12px] text-[#ccc] rounded-lg focus:outline-none focus:border-[#007acc] placeholder:text-[#666] resize-none"
                 />
+                <p className="text-[10px] text-[#777] mt-2 mb-1 uppercase tracking-wider font-semibold">
+                  Resubmission Reason
+                </p>
+                <textarea
+                  value={resubmissionReason}
+                  onChange={e => setResubmissionReason(e.target.value)}
+                  placeholder="Optional unless requesting resubmission"
+                  rows={2}
+                  className="w-full px-3 py-2 bg-[#1e1e1e] border border-[#3c3c3c] text-[11px] text-[#ccc] rounded-lg focus:outline-none focus:border-[#007acc] placeholder:text-[#666] resize-none"
+                />
               </div>
 
               {/* Quick Marks */}
@@ -1028,11 +1168,24 @@ const TeacherReview = () => {
               </div>
             </div>
 
-            {/* Submit Grade */}
-            <div className="px-4 py-3 border-t border-[#1e1e1e] flex-shrink-0">
-              <Button onClick={handleSubmitGrade} className="w-full justify-center">
+            {/* Grading Actions */}
+            <div className="px-4 py-3 border-t border-[#1e1e1e] flex-shrink-0 space-y-2">
+              {actionNotice && (
+                <div className="text-[11px] text-emerald-300 bg-emerald-900/25 border border-emerald-800 rounded-md px-2 py-1.5">
+                  {actionNotice}
+                </div>
+              )}
+              <Button onClick={handleSaveDraft} variant="outline" className="w-full justify-center border-[#555] text-[#ddd] hover:bg-[#3a3a3a]">
+                <Icon name="Save" size={14} className="mr-1" />
+                Save Draft
+              </Button>
+              <Button onClick={handlePublishGrade} className="w-full justify-center">
                 <Icon name="Send" size={14} className="mr-1" />
-                Submit Grade ({totalScore}/{totalMax})
+                Publish Final Grade ({totalScore}/{totalMax})
+              </Button>
+              <Button onClick={handleRequestResubmission} variant="danger" className="w-full justify-center">
+                <Icon name="RotateCcw" size={14} className="mr-1" />
+                Request Resubmission
               </Button>
             </div>
           </div>
