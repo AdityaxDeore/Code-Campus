@@ -4,6 +4,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
+import useAuth from '../../hooks/useAuth';
+import { createTestResult } from '../../lib/firestore';
 
 const PASTE_WORD_LIMIT = 5;
 const MAX_TAB_WARNINGS = 3;
@@ -249,6 +251,7 @@ const MCQQuestion = ({ question, answer, onChange, currentQ, questions, onQuesti
 // ───── Proctored Test Environment ─────
 const ProctoredTest = ({ test }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const questions = testQuestions[test.id] || [];
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState(() => questions.map(q => q.type === 'mcq' ? null : q.starterCode));
@@ -470,8 +473,47 @@ const ProctoredTest = ({ test }) => {
     });
   };
 
-  const handleSubmit = () => {
+  const calculateScore = useCallback(() => {
+    if (test.type !== 'mcq') {
+      return { score: 0, correct: 0, total: questions.length, maxScore: test.totalMarks, scorePending: true };
+    }
+
+    let score = 0;
+    let correct = 0;
+    questions.forEach((question, idx) => {
+      if (answers[idx] === question.correct) {
+        score += question.marks;
+        correct += 1;
+      }
+    });
+
+    return { score, correct, total: questions.length, maxScore: test.totalMarks, scorePending: false };
+  }, [answers, questions, test]);
+
+  const handleSubmit = async () => {
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+
+    const { score, correct, total, maxScore, scorePending } = calculateScore();
+
+    if (user?.uid) {
+      await createTestResult({
+        userId: user.uid,
+        testId: test.id,
+        testTitle: test.title,
+        subject: test.subject,
+        type: test.type,
+        score,
+        maxScore,
+        scorePending,
+        correctCount: correct,
+        questionCount: total,
+        tabWarnings,
+        pasteFlags: pasteFlags.length
+      });
+    } else if (import.meta.env.DEV) {
+      console.warn('[Tests] No authenticated user. Test result not saved.');
+    }
+
     setSubmitted(true);
   };
 
