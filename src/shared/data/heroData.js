@@ -1,7 +1,7 @@
 export const stats = [
-  { label: "Active Students", value: "50,000+", icon: "Users" },
-  { label: "University Partners", value: "200+", icon: "GraduationCap" },
-  { label: "Career Placements", value: "1,456", icon: "Briefcase" }
+  { label: "Active Students", value: "100+", icon: "Users" },
+  { label: "University Partners", value: "PCCOE", icon: "GraduationCap" },
+  { label: "Career Placements", value: "10+", icon: "Briefcase" }
 ];
 
 export const codeExamples = [

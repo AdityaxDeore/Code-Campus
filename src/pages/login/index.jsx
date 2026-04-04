@@ -5,7 +5,7 @@ import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { useRole } from '../../contexts/RoleContext';
-// import { signInWithEmail, signUpWithEmail, onAuthStateChange } from '../../utils/auth';
+import { signInWithEmail, signUpWithEmail } from '../../lib/firebaseAuth';
 // import { trackLogin } from '../../lib/analytics';
 
 const DEMO_TEACHER = {
@@ -142,30 +142,23 @@ const handleSubmit = async (e) => {
       return;
     }
 
-    const url = isSignUp
-      ? "http://localhost:5001/api/signup"
-      : "http://localhost:5001/api/login";
+    const result = isSignUp
+      ? await signUpWithEmail(formData.email, formData.password, formData.fullName)
+      : await signInWithEmail(formData.email, formData.password);
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        name: formData.fullName,
-        email: formData.email,
-        password: formData.password
-      })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      setErrors({ general: data.message || "Authentication failed" });
+    if (result.error) {
+      setErrors({ general: result.error });
       return;
     }
 
     localStorage.setItem("isAuthenticated", "true");
+    if (result.user) {
+      localStorage.setItem("user", JSON.stringify({
+        uid: result.user.uid,
+        email: result.user.email,
+        displayName: result.user.displayName || formData.fullName || ''
+      }));
+    }
 
     navigate("/student-dashboard");
 

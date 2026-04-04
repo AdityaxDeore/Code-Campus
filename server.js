@@ -1,30 +1,45 @@
 import express from "express";
 import mysql from "mysql2";
 import cors from "cors";
+import dotenv from "dotenv";
 
 const app = express();
+dotenv.config();
 
 app.use(cors());
 app.use(express.json());
 
 const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "Sarang@297",
-  database: "codecampus",
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "",
+  database: process.env.DB_NAME || "codecampus",
+  port: Number(process.env.DB_PORT || 3306),
 });
+
+let isDbConnected = false;
 
 db.connect((err) => {
   if (err) {
     console.error("MySQL connection error:", err);
   } else {
+    isDbConnected = true;
     console.log("MySQL connected successfully");
   }
 });
 
+const ensureDbConnected = (req, res, next) => {
+  if (!isDbConnected) {
+    return res.status(503).json({
+      message: "Database unavailable. Verify MySQL is running and DB_* credentials in .env are correct.",
+    });
+  }
+  next();
+};
+
 
 // SIGNUP
-app.post("/api/signup", (req, res) => {
+app.post("/api/signup", ensureDbConnected, (req, res) => {
   const { name, email, password } = req.body;
 
   const sql =
@@ -45,7 +60,7 @@ app.post("/api/signup", (req, res) => {
 
 
 // LOGIN
-app.post("/api/login", (req, res) => {
+app.post("/api/login", ensureDbConnected, (req, res) => {
   const { email, password } = req.body;
 
   const sql =
@@ -72,6 +87,8 @@ app.post("/api/login", (req, res) => {
 });
 
 
-app.listen(5001, () => {
-  console.log("Server running on port 5001");
+const port = Number(process.env.SERVER_PORT || 5001);
+
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });
