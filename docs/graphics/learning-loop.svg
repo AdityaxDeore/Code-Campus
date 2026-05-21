@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320" role="img" aria-label="Learning loop">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0d1224" />
+      <stop offset="100%" stop-color="#1a2d5d" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="320" fill="url(#bg)" />
+
+  <g font-family="Segoe UI, Arial, sans-serif" fill="#e8f0ff" text-anchor="middle">
+    <text x="600" y="70" font-size="28" font-weight="700">The Learning Loop</text>
+    <text x="600" y="100" font-size="14" fill="#b9c7ff">A continuous cycle from learning to mastery, powered by CodeCampus.</text>
+  </g>
+
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600" fill="#e8f0ff" text-anchor="middle">
+    <circle cx="200" cy="200" r="44" fill="#1f3570" stroke="#5ce1ff" stroke-opacity="0.6" />
+    <text x="200" y="206">Learn</text>
+
+    <circle cx="420" cy="200" r="44" fill="#1f3570" stroke="#8a7bff" stroke-opacity="0.6" />
+    <text x="420" y="206">Practice</text>
+
+    <circle cx="640" cy="200" r="44" fill="#1f3570" stroke="#5ce1ff" stroke-opacity="0.6" />
+    <text x="640" y="206">Test</text>
+
+    <circle cx="860" cy="200" r="44" fill="#1f3570" stroke="#8a7bff" stroke-opacity="0.6" />
+    <text x="860" y="206">Review</text>
+
+    <circle cx="1080" cy="200" r="44" fill="#1f3570" stroke="#5ce1ff" stroke-opacity="0.6" />
+    <text x="1080" y="206">Achieve</text>
+  </g>
+
+  <g stroke="#5ce1ff" stroke-width="3" fill="none" opacity="0.8">
+    <path d="M244 200 H376" />
+    <path d="M464 200 H596" />
+    <path d="M684 200 H816" />
+    <path d="M904 200 H1036" />
+    <path d="M1124 200 Q1145 200 1145 220 Q1145 265 1100 265 H260 Q200 265 200 230" />
+  </g>
+</svg>

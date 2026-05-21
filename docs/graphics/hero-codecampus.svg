@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="380" viewBox="0 0 1200 380" role="img" aria-label="CodeCampus hero banner">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1020" />
+      <stop offset="55%" stop-color="#142a5c" />
+      <stop offset="100%" stop-color="#1b3b8f" />
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#5ce1ff" stop-opacity="0.7" />
+      <stop offset="100%" stop-color="#8a7bff" stop-opacity="0.2" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="380" fill="url(#bg)" />
+
+  <g opacity="0.18" stroke="#7aa5ff" stroke-width="1">
+    <path d="M0 70 H1200" />
+    <path d="M0 140 H1200" />
+    <path d="M0 210 H1200" />
+    <path d="M0 280 H1200" />
+    <path d="M120 0 V380" />
+    <path d="M240 0 V380" />
+    <path d="M360 0 V380" />
+    <path d="M480 0 V380" />
+    <path d="M600 0 V380" />
+    <path d="M720 0 V380" />
+    <path d="M840 0 V380" />
+    <path d="M960 0 V380" />
+    <path d="M1080 0 V380" />
+  </g>
+
+  <circle cx="980" cy="120" r="140" fill="url(#glow)" opacity="0.7" />
+  <circle cx="1020" cy="110" r="60" fill="#5ce1ff" opacity="0.25" />
+  <circle cx="880" cy="240" r="90" fill="#8a7bff" opacity="0.2" />
+
+  <text x="80" y="165" fill="#ffffff" font-size="64" font-family="Segoe UI, Arial, sans-serif" font-weight="700">CodeCampus</text>
+  <text x="80" y="210" fill="#d6e3ff" font-size="22" font-family="Segoe UI, Arial, sans-serif">
+    A comprehensive coding education platform with a VS Code-style IDE, proctored testing, and real-world problem solving.
+  </text>
+
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="600" fill="#e7efff">
+    <rect x="80" y="245" width="185" height="36" rx="18" fill="#1f3570" stroke="#5ce1ff" stroke-opacity="0.6" />
+    <text x="108" y="268">VS Code IDE</text>
+
+    <rect x="280" y="245" width="195" height="36" rx="18" fill="#1f3570" stroke="#8a7bff" stroke-opacity="0.6" />
+    <text x="304" y="268">Proctored Tests</text>
+
+    <rect x="490" y="245" width="180" height="36" rx="18" fill="#1f3570" stroke="#5ce1ff" stroke-opacity="0.6" />
+    <text x="514" y="268">AI Assistant</text>
+
+    <rect x="684" y="245" width="205" height="36" rx="18" fill="#1f3570" stroke="#8a7bff" stroke-opacity="0.6" />
+    <text x="708" y="268">Assignments Hub</text>
+  </g>
+</svg>

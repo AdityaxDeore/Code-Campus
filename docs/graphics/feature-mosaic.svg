@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620" role="img" aria-label="Feature mosaic">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0d1224" />
+      <stop offset="100%" stop-color="#1a2d5d" />
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#132249" />
+      <stop offset="100%" stop-color="#1d3d7a" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="620" fill="url(#bg)" />
+
+  <g font-family="Segoe UI, Arial, sans-serif" fill="#e8f0ff">
+    <text x="70" y="70" font-size="34" font-weight="700">Feature Universe</text>
+    <text x="70" y="105" font-size="16" fill="#b9c7ff">A visual snapshot of the platform pillars that make CodeCampus feel like a real campus IDE.</text>
+  </g>
+
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="18" fill="#e8f0ff" font-weight="600">
+    <rect x="70" y="140" width="330" height="180" rx="22" fill="url(#card)" stroke="#5ce1ff" stroke-opacity="0.4" />
+    <circle cx="110" cy="180" r="16" fill="#5ce1ff" opacity="0.7" />
+    <text x="140" y="187">VS Code Workspace</text>
+    <text x="110" y="220" font-size="14" font-weight="400" fill="#c6d4ff">Tabbed editing, Monaco IDE, search, terminal</text>
+
+    <rect x="435" y="140" width="330" height="180" rx="22" fill="url(#card)" stroke="#8a7bff" stroke-opacity="0.4" />
+    <circle cx="475" cy="180" r="16" fill="#8a7bff" opacity="0.7" />
+    <text x="505" y="187">Assignments System</text>
+    <text x="475" y="220" font-size="14" font-weight="400" fill="#c6d4ff">Subject filtering, deadlines, multi-file projects</text>
+
+    <rect x="800" y="140" width="330" height="180" rx="22" fill="url(#card)" stroke="#5ce1ff" stroke-opacity="0.4" />
+    <circle cx="840" cy="180" r="16" fill="#5ce1ff" opacity="0.7" />
+    <text x="870" y="187">Proctored Testing</text>
+    <text x="840" y="220" font-size="14" font-weight="400" fill="#c6d4ff">Fullscreen lock, tab switch alerts, timers</text>
+
+    <rect x="70" y="355" width="330" height="180" rx="22" fill="url(#card)" stroke="#8a7bff" stroke-opacity="0.4" />
+    <circle cx="110" cy="395" r="16" fill="#8a7bff" opacity="0.7" />
+    <text x="140" y="402">AI Assistant</text>
+    <text x="110" y="435" font-size="14" font-weight="400" fill="#c6d4ff">Hints, debugging guidance, no direct answers</text>
+
+    <rect x="435" y="355" width="330" height="180" rx="22" fill="url(#card)" stroke="#5ce1ff" stroke-opacity="0.4" />
+    <circle cx="475" cy="395" r="16" fill="#5ce1ff" opacity="0.7" />
+    <text x="505" y="402">Achievement Center</text>
+    <text x="475" y="435" font-size="14" font-weight="400" fill="#c6d4ff">Leaderboards, badges, gamified progress</text>
+
+    <rect x="800" y="355" width="330" height="180" rx="22" fill="url(#card)" stroke="#8a7bff" stroke-opacity="0.4" />
+    <circle cx="840" cy="395" r="16" fill="#8a7bff" opacity="0.7" />
+    <text x="870" y="402">Campus Forums</text>
+    <text x="840" y="435" font-size="14" font-weight="400" fill="#c6d4ff">Community learning, discussions, portfolio</text>
+  </g>
+</svg>

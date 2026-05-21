@@ -24,8 +24,6 @@ export const AI_POLICY = {
   STANDARD: 'standard',       // Standard assistance, logged
 };
 
-const MAX_RESPONSE_LENGTH = 500;
-
 const AiSuggestionPanel = ({
   aiPolicy = AI_POLICY.STANDARD,
   maxSuggestionsPerSession = 20,
@@ -70,7 +68,7 @@ const AiSuggestionPanel = ({
       code: currentCode,
     }, messages.filter(m => m.type !== 'system'));
 
-    return response.slice(0, MAX_RESPONSE_LENGTH);
+    return response;
   }, [assignmentTitle, language, currentCode, messages]);
 
   // ── Send message ──

@@ -13,7 +13,6 @@ const Header = () => {
   const navigate = useNavigate();
   const { isTeacher, setRole } = useRole();
   const { user, profile } = useUser();
-  const { user, profile } = useUser();
 
   const displayName = profile?.displayName
     || user?.displayName
@@ -90,8 +89,8 @@ const Header = () => {
           <Link to="/homepage" className="flex items-center space-x-3">
             <div className="relative">
               <svg
-                width="32"
-                height="32"
+                width="26"
+                height="26"
                 viewBox="0 0 32 32"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -120,33 +119,33 @@ const Header = () => {
               </svg>
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-xl font-bold text-primary">CodeCampus</h1>
-              <p className="text-xs text-muted-foreground -mt-1">Academic Excellence</p>
+              <h1 className="text-lg font-bold text-primary">CodeCampus</h1>
+              <p className="text-[11px] text-muted-foreground -mt-1">Academic Excellence</p>
             </div>
           </Link>
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center space-x-1">
+        <nav className="hidden lg:flex items-center space-x-0.5">
           {navigationItems?.map((item) => (
             <Link
               key={item?.path}
               to={item?.path}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium academic-transition ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-sm font-medium academic-transition ${
                 isActivePath(item?.path)
                   ? 'bg-primary text-primary-foreground'
                   : 'text-foreground hover:bg-muted hover:text-primary'
               }`}
             >
-              <Icon name={item?.icon} size={16} />
+              <Icon name={item?.icon} size={14} />
               <span>{item?.name}</span>
             </Link>
           ))}
           
           {/* More Dropdown */}
           <div className="relative group">
-            <button className="flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium text-foreground hover:bg-muted hover:text-primary academic-transition">
-              <Icon name="MoreHorizontal" size={16} />
+            <button className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-foreground hover:bg-muted hover:text-primary academic-transition">
+              <Icon name="MoreHorizontal" size={14} />
               <span>More</span>
             </button>
             
@@ -182,27 +181,27 @@ const Header = () => {
         </nav>
 
         {/* User Actions */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2">
           {/* Dark Mode Toggle */}
           <DarkModeToggle />
 
           {/* Notifications */}
-          <button onClick={() => navigate('/status')} className="relative p-2 text-muted-foreground hover:text-primary academic-transition">
-            <Icon name="Bell" size={20} />
+          <button onClick={() => navigate('/status')} className="relative p-1.5 text-muted-foreground hover:text-primary academic-transition">
+            <Icon name="Bell" size={18} />
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-accent rounded-full"></span>
           </button>
 
           {/* User Profile */}
           <div className="relative group">
-            <button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-muted academic-transition">
-              <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center">
-                <Icon name="User" size={16} color="white" />
+            <button className="flex items-center space-x-1.5 p-1.5 rounded-lg hover:bg-muted academic-transition">
+              <div className="w-7 h-7 bg-secondary rounded-full flex items-center justify-center">
+                <Icon name="User" size={14} color="white" />
               </div>
               <div className="hidden md:block text-left">
                 <p className="text-sm font-medium text-foreground">{displayName}</p>
                 <p className="text-xs text-muted-foreground">{roleLabel}</p>
               </div>
-              <Icon name="ChevronDown" size={16} className="hidden md:block text-muted-foreground" />
+              <Icon name="ChevronDown" size={14} className="hidden md:block text-muted-foreground" />
             </button>
             
             <div className="absolute right-0 top-full mt-2 w-48 bg-popover border border-border rounded-lg academic-shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible academic-transition z-50">

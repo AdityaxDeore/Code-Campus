@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-label="Tech stack">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0c1122" />
+      <stop offset="100%" stop-color="#1a2f63" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="420" fill="url(#bg)" />
+
+  <g font-family="Segoe UI, Arial, sans-serif" fill="#e8f0ff" text-anchor="middle">
+    <text x="600" y="70" font-size="30" font-weight="700">Tech Stack</text>
+    <text x="600" y="100" font-size="14" fill="#b9c7ff">Modern frontend, secure learning, and scalable infrastructure.</text>
+  </g>
+
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="600" fill="#e8f0ff" text-anchor="middle">
+    <rect x="80" y="150" width="160" height="46" rx="22" fill="#1f3570" stroke="#5ce1ff" stroke-opacity="0.6" />
+    <text x="160" y="179">React 18</text>
+
+    <rect x="260" y="150" width="160" height="46" rx="22" fill="#1f3570" stroke="#8a7bff" stroke-opacity="0.6" />
+    <text x="340" y="179">Vite 5</text>
+
+    <rect x="440" y="150" width="200" height="46" rx="22" fill="#1f3570" stroke="#5ce1ff" stroke-opacity="0.6" />
+    <text x="540" y="179">Monaco Editor</text>
+
+    <rect x="660" y="150" width="180" height="46" rx="22" fill="#1f3570" stroke="#8a7bff" stroke-opacity="0.6" />
+    <text x="750" y="179">TailwindCSS</text>
+
+    <rect x="860" y="150" width="200" height="46" rx="22" fill="#1f3570" stroke="#5ce1ff" stroke-opacity="0.6" />
+    <text x="960" y="179">Firebase Auth</text>
+
+    <rect x="120" y="230" width="190" height="46" rx="22" fill="#1f3570" stroke="#8a7bff" stroke-opacity="0.6" />
+    <text x="215" y="259">Firestore</text>
+
+    <rect x="330" y="230" width="190" height="46" rx="22" fill="#1f3570" stroke="#5ce1ff" stroke-opacity="0.6" />
+    <text x="425" y="259">Redux Toolkit</text>
+
+    <rect x="540" y="230" width="190" height="46" rx="22" fill="#1f3570" stroke="#8a7bff" stroke-opacity="0.6" />
+    <text x="635" y="259">React Router</text>
+
+    <rect x="750" y="230" width="170" height="46" rx="22" fill="#1f3570" stroke="#5ce1ff" stroke-opacity="0.6" />
+    <text x="835" y="259">Framer Motion</text>
+
+    <rect x="940" y="230" width="170" height="46" rx="22" fill="#1f3570" stroke="#8a7bff" stroke-opacity="0.6" />
+    <text x="1025" y="259">Vercel</text>
+  </g>
+</svg>

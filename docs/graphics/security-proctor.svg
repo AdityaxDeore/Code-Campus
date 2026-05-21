@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" role="img" aria-label="Security and proctoring">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b0f1f" />
+      <stop offset="100%" stop-color="#1a2d5d" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="360" fill="url(#bg)" />
+
+  <g font-family="Segoe UI, Arial, sans-serif" fill="#e8f0ff" text-anchor="middle">
+    <text x="600" y="70" font-size="28" font-weight="700">Secure Proctoring</text>
+    <text x="600" y="100" font-size="14" fill="#b9c7ff">Integrity by design: focus, awareness, and auditability.</text>
+  </g>
+
+  <g transform="translate(200,140)" fill="#1f3570" stroke="#5ce1ff" stroke-opacity="0.6" stroke-width="3">
+    <path d="M160 0 L280 40 V130 C280 190 220 230 160 250 C100 230 40 190 40 130 V40 Z" />
+  </g>
+  <g transform="translate(200,140)" fill="none" stroke="#5ce1ff" stroke-width="6">
+    <path d="M120 120 L150 150 L220 90" />
+  </g>
+
+  <g font-family="Segoe UI, Arial, sans-serif" fill="#e8f0ff">
+    <text x="520" y="170" font-size="18" font-weight="700">Monitoring Highlights</text>
+    <text x="520" y="205" font-size="14" fill="#c6d4ff">Fullscreen enforcement, tab switch alerts, timed submissions</text>
+    <text x="520" y="235" font-size="14" fill="#c6d4ff">Copy-paste detection with timestamps and thresholds</text>
+    <text x="520" y="265" font-size="14" fill="#c6d4ff">Audit-ready logs for instructors and review workflows</text>
+  </g>
+</svg>

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" role="img" aria-label="IDE preview">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b0f1f" />
+      <stop offset="100%" stop-color="#151f3f" />
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#151e3d" />
+      <stop offset="100%" stop-color="#1f3b73" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="700" fill="url(#bg)" />
+
+  <rect x="70" y="60" width="1060" height="580" rx="24" fill="#0f172d" stroke="#5ce1ff" stroke-opacity="0.3" />
+  <rect x="70" y="60" width="1060" height="48" rx="24" fill="#151f3a" />
+
+  <circle cx="105" cy="84" r="8" fill="#ff6b6b" />
+  <circle cx="130" cy="84" r="8" fill="#ffd166" />
+  <circle cx="155" cy="84" r="8" fill="#06d6a0" />
+
+  <rect x="90" y="130" width="180" height="470" rx="14" fill="url(#panel)" />
+  <rect x="290" y="130" width="600" height="360" rx="14" fill="#0b1224" stroke="#2b4b8f" stroke-opacity="0.7" />
+  <rect x="290" y="505" width="600" height="95" rx="14" fill="#0f1731" />
+  <rect x="905" y="130" width="205" height="470" rx="14" fill="url(#panel)" />
+
+  <g font-family="Segoe UI, Arial, sans-serif" fill="#d9e4ff">
+    <text x="110" y="165" font-size="14" font-weight="600">Explorer</text>
+    <text x="110" y="195" font-size="12" fill="#a9b8e8">assignments</text>
+    <text x="110" y="220" font-size="12" fill="#a9b8e8">tests</text>
+    <text x="110" y="245" font-size="12" fill="#a9b8e8">submission</text>
+
+    <text x="320" y="165" font-size="13" fill="#7aa5ff">/assignment-workspace</text>
+    <text x="320" y="200" font-size="12" fill="#8ea0d6">function solveProblem(input) {</text>
+    <text x="320" y="224" font-size="12" fill="#8ea0d6">  const data = parse(input);</text>
+    <text x="320" y="248" font-size="12" fill="#8ea0d6">  return runTests(data);</text>
+    <text x="320" y="272" font-size="12" fill="#8ea0d6">}</text>
+
+    <text x="320" y="535" font-size="12" fill="#9bb4ff">$ run</text>
+    <text x="320" y="560" font-size="12" fill="#9bb4ff">Tests: 18 passed</text>
+
+    <text x="925" y="165" font-size="14" font-weight="600">AI Coach</text>
+    <rect x="925" y="185" width="165" height="58" rx="10" fill="#111b36" />
+    <text x="935" y="210" font-size="11" fill="#b6c6ff">Hint: check edge cases</text>
+    <text x="935" y="228" font-size="11" fill="#b6c6ff">when input is empty.</text>
+  </g>
+</svg>
