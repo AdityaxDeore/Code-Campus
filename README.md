@@ -32,86 +32,86 @@
 ## Visual Journey
 
 <p align="center">
-  A guided tour through the main student and teacher experiences, using full local paths for reliable preview inside the editor.
+  A guided tour through the main student and teacher experiences, using repository-relative paths so the images render on GitHub.
 </p>
 
 <table>
   <tr>
     <td>
       <h3>01. Home</h3>
-      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/home.png" width="100%" alt="CodeCampus home screen" />
+      <img src="photos/home.png" width="100%" alt="CodeCampus home screen" />
     </td>
   </tr>
   <tr>
     <td>
       <h3>02. Practice Problems</h3>
-      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/practice%20problems.png" width="100%" alt="Practice problems screen" />
+      <img src="photos/practice%20problems.png" width="100%" alt="Practice problems screen" />
     </td>
   </tr>
   <tr>
     <td>
       <h3>03. Learning Path</h3>
-      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/learning%20path.png" width="100%" alt="Learning path screen" />
+      <img src="photos/learning%20path.png" width="100%" alt="Learning path screen" />
     </td>
   </tr>
   <tr>
     <td>
       <h3>04. Two Sum</h3>
-      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/twosum.png" width="100%" alt="Two Sum problem screen" />
+      <img src="photos/twosum.png" width="100%" alt="Two Sum problem screen" />
     </td>
   </tr>
   <tr>
     <td>
       <h3>05. VS Code</h3>
-      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/vscode.png" width="100%" alt="VS Code style workspace" />
+      <img src="photos/vscode.png" width="100%" alt="VS Code style workspace" />
     </td>
   </tr>
   <tr>
     <td>
       <h3>06. Test</h3>
-      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/test.png" width="100%" alt="Test environment screen" />
+      <img src="photos/test.png" width="100%" alt="Test environment screen" />
     </td>
   </tr>
   <tr>
     <td>
       <h3>07. Violations</h3>
-      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/violations.png" width="100%" alt="Violation tracking screen" />
+      <img src="photos/violations.png" width="100%" alt="Violation tracking screen" />
     </td>
   </tr>
   <tr>
     <td>
       <h3>08. Achievement</h3>
-      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/achivement.png" width="100%" alt="Achievement center screen" />
+      <img src="photos/achivement.png" width="100%" alt="Achievement center screen" />
     </td>
   </tr>
   <tr>
     <td>
       <h3>09. Teacher Home</h3>
-      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/teacher%20hhome.png" width="100%" alt="Teacher home screen" />
+      <img src="photos/teacher%20hhome.png" width="100%" alt="Teacher home screen" />
     </td>
   </tr>
   <tr>
     <td>
       <h3>10. Students</h3>
-      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/students%20.png" width="100%" alt="Students screen" />
+      <img src="photos/students%20.png" width="100%" alt="Students screen" />
     </td>
   </tr>
   <tr>
     <td>
       <h3>11. Teacher Views</h3>
-      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/teacher%20viewws.png" width="100%" alt="Teacher views screen" />
+      <img src="photos/teacher%20viewws.png" width="100%" alt="Teacher views screen" />
     </td>
   </tr>
   <tr>
     <td>
       <h3>12. Report</h3>
-      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/report.png" width="100%" alt="Report screen" />
+      <img src="photos/report.png" width="100%" alt="Report screen" />
     </td>
   </tr>
   <tr>
     <td>
       <h3>13. Timeline</h3>
-      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/timeline.png" width="100%" alt="Timeline screen" />
+      <img src="photos/timeline.png" width="100%" alt="Timeline screen" />
     </td>
   </tr>
 </table>
