@@ -5,11 +5,15 @@
 <h1 align="center">CodeCampus</h1>
 
 <p align="center">
-  A comprehensive coding education platform for computer science students, featuring a VS Code-style IDE, proctored testing, and real-world problem solving.
+  <strong>Your Code, Your Community, Your Career.</strong>
 </p>
 
 <p align="center">
-  <a href="#product-tour">Product Tour</a> ·
+  A polished academic coding platform for computer science students with a VS Code-style IDE, proctored exams, guided practice, teacher review flows, and community learning.
+</p>
+
+<p align="center">
+  <a href="#visual-journey">Visual Journey</a> ·
   <a href="#features">Features</a> ·
   <a href="#quick-start">Quick Start</a> ·
   <a href="#project-structure">Project Structure</a> ·
@@ -25,97 +29,170 @@
   <img src="https://img.shields.io/badge/License-MIT-34d399" alt="MIT License" />
 </p>
 
-## Product Tour
+## Visual Journey
 
 <p align="center">
-  <img src="docs/graphics/ide-preview.svg" width="100%" alt="IDE preview" />
+  A guided tour through the main student and teacher experiences, using full local paths for reliable preview inside the editor.
+</p>
+
+<table>
+  <tr>
+    <td>
+      <h3>01. Home</h3>
+      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/home.png" width="100%" alt="CodeCampus home screen" />
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <h3>02. Practice Problems</h3>
+      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/practice%20problems.png" width="100%" alt="Practice problems screen" />
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <h3>03. Learning Path</h3>
+      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/learning%20path.png" width="100%" alt="Learning path screen" />
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <h3>04. Two Sum</h3>
+      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/twosum.png" width="100%" alt="Two Sum problem screen" />
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <h3>05. VS Code</h3>
+      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/vscode.png" width="100%" alt="VS Code style workspace" />
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <h3>06. Test</h3>
+      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/test.png" width="100%" alt="Test environment screen" />
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <h3>07. Violations</h3>
+      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/violations.png" width="100%" alt="Violation tracking screen" />
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <h3>08. Achievement</h3>
+      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/achivement.png" width="100%" alt="Achievement center screen" />
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <h3>09. Teacher Home</h3>
+      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/teacher%20hhome.png" width="100%" alt="Teacher home screen" />
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <h3>10. Students</h3>
+      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/students%20.png" width="100%" alt="Students screen" />
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <h3>11. Teacher Views</h3>
+      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/teacher%20viewws.png" width="100%" alt="Teacher views screen" />
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <h3>12. Report</h3>
+      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/report.png" width="100%" alt="Report screen" />
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <h3>13. Timeline</h3>
+      <img src="file:///C:/Users/adity/OneDrive/Documents/OOO/codecampus/photos/timeline.png" width="100%" alt="Timeline screen" />
+    </td>
+  </tr>
+</table>
+
+<p align="center">
+  <strong>The sections below add the deeper technical details, setup notes, and implementation overview.</strong>
 </p>
 
 <p align="center">
-  <img src="docs/graphics/feature-mosaic.svg" width="100%" alt="Feature mosaic" />
+  <img src="docs/graphics/tech-stack.svg" width="100%" alt="CodeCampus tech stack graphic" />
 </p>
 
-<p align="center">
-  <img src="docs/graphics/learning-loop.svg" width="100%" alt="Learning loop" />
-</p>
+## Platform Highlights
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="docs/graphics/ide-preview.svg" width="100%" alt="IDE preview graphic" />
+    </td>
+    <td width="50%">
+      <img src="docs/graphics/feature-mosaic.svg" width="100%" alt="Feature mosaic graphic" />
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="docs/graphics/learning-loop.svg" width="100%" alt="Learning loop graphic" />
+    </td>
+    <td width="50%">
+      <img src="docs/graphics/security-proctor.svg" width="100%" alt="Security and proctoring graphic" />
+    </td>
+  </tr>
+</table>
 
 <p align="center">
-  <img src="docs/graphics/security-proctor.svg" width="100%" alt="Security and proctoring" />
-</p>
-
-<p align="center">
-  <img src="docs/graphics/tech-stack.svg" width="100%" alt="Tech stack" />
-</p>
-
-## IDE Walkthrough (Animated)
-
-<p align="center">
-  <img src="docs/graphics/ide-walkthrough.svg" width="100%" alt="IDE walkthrough animation" />
-</p>
-
-## Real UI Screenshots
-
-<p align="center">
-  <img src="docs/screenshots/assignments.png" width="100%" alt="Assignments hub UI" />
-  <br />
-  <em>Assignments hub</em>
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/test-environment.png" width="100%" alt="Proctored test environment UI" />
-  <br />
-  <em>Proctored test environment</em>
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/assignment-workspace.png" width="100%" alt="Assignment workspace UI" />
-  <br />
-  <em>VS Code-style assignment workspace</em>
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/student-dashboard.png" width="100%" alt="Student dashboard UI" />
-  <br />
-  <em>Student dashboard</em>
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/achievement-center.png" width="100%" alt="Achievement center UI" />
-  <br />
-  <em>Achievement center</em>
+  <img src="docs/graphics/ide-walkthrough.svg" width="100%" alt="IDE walkthrough graphic" />
 </p>
 
 ## 🚀 Features
 
-### 📝 **VS Code-Style Workspace**
-- **Activity Bar** - Quick access to file explorer, search, and AI assistant
-- **Multi-File Editing** - Tabbed interface with Monaco Editor integration
-- **File Tree Navigation** - Browse and manage assignment files (Python, SQL, Java, JavaScript)
-- **Integrated Terminal** - Execute code with real-time output and command support
-- **AI Chat Assistant** - Context-aware hints and debugging help (no direct solutions)
-- **Search Functionality** - Find text across all assignment files
-- **Breadcrumb Navigation** - Track current file location
-
-### 📚 **Assignments System**
-- **Subject-Based Organization** - Filter by DSA, DBMS, Web Dev, OOP, Algorithms, etc.
-- **Deadline Tracking** - Visual countdown with color-coded urgency
-- **Multi-File Projects** - Work with src/, tests/, and config files
-- **Code Execution** - Run JavaScript, Python (simulated), and SQL directly in browser
-- **Paste Detection** - Academic integrity monitoring (10+ word threshold)
-- **Auto-Save** - Changes saved automatically while coding
-
-### 🔒 **Proctored Test Environment**
-- **Fullscreen Enforcement** - Auto-warnings when exiting fullscreen
-- **Tab Switch Detection** - Monitors focus changes (3 warnings = auto-submit)
-- **Time Management** - Countdown timer with auto-submit on expiry
-- **Question Navigation** - Skip, mark for review, and track progress
-- **Secure Submission** - Lock-in mechanism after deadline
-
-### 🎓 **Learning Features**
-- **Problem History** - Track all attempted problems and submissions
-- **Achievement Center** - Leaderboards, badges, and gamification
-- **Campus Forums** - Discuss topics, ask questions, and share knowledge
-- **Project Showcase** - Build and display your portfolio
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>📝 VS Code-Style Workspace</h3>
+      <ul>
+        <li>Activity bar, file explorer, search, and AI assistant in a familiar IDE layout</li>
+        <li>Tabbed multi-file editing with Monaco Editor</li>
+        <li>Integrated terminal, auto-save, and breadcrumb navigation</li>
+        <li>Search across assignment files without leaving the workspace</li>
+      </ul>
+    </td>
+    <td width="50%" valign="top">
+      <h3>📚 Assignments System</h3>
+      <ul>
+        <li>Subject-based organization for DSA, DBMS, Web Dev, OOP, and more</li>
+        <li>Deadline tracking with urgency colors and visible progress</li>
+        <li>Simulated JavaScript, Python, and SQL execution in browser</li>
+        <li>Paste detection, auto-save, and multi-file project support</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>🔒 Proctored Test Environment</h3>
+      <ul>
+        <li>Fullscreen enforcement with tab switch monitoring</li>
+        <li>Auto-submit after repeated warnings or time expiry</li>
+        <li>Question navigation with secure submission flow</li>
+        <li>Built for low-distraction, high-integrity exam sessions</li>
+      </ul>
+    </td>
+    <td width="50%" valign="top">
+      <h3>🎓 Learning Features</h3>
+      <ul>
+        <li>Problem history, achievements, and gamification</li>
+        <li>Campus forums for collaborative discussion</li>
+        <li>Project showcase pages for portfolios and reviews</li>
+        <li>Guided learning paths and long-term skill progression</li>
+      </ul>
+    </td>
+  </tr>
+</table>
 
 ## Architecture At A Glance
 
@@ -135,13 +212,24 @@ flowchart LR
 
 ## 💻 Tech Stack
 
-- **React 18** - Modern hooks, Suspense, and code splitting
-- **Vite 5** - Lightning-fast dev server and optimized builds
-- **Monaco Editor** - Industry-standard code editor (VS Code engine)
-- **TailwindCSS** - Utility-first CSS with custom dark theme
-- **Firebase** - Authentication and real-time features
-- **Firestore** - Database and backend services
-- **React Router 6** - Client-side routing with protected routes
+<table>
+  <tr>
+    <td><strong>Frontend</strong></td>
+    <td>React 18, Vite 5, React Router 6, TailwindCSS, Framer Motion, Monaco Editor</td>
+  </tr>
+  <tr>
+    <td><strong>UI System</strong></td>
+    <td>Radix UI, cva button variants, styled-components, Lucide icons</td>
+  </tr>
+  <tr>
+    <td><strong>Backend</strong></td>
+    <td>Firebase Auth, Firestore, Express.js, MongoDB</td>
+  </tr>
+  <tr>
+    <td><strong>Build & Deploy</strong></td>
+    <td>Vite production builds, Docker, docker-compose, nginx, PostCSS</td>
+  </tr>
+</table>
 
 ## ⚡ Quick Start
 
@@ -402,5 +490,3 @@ MIT License - see LICENSE file for details.
 
 Project by -
 Aditya Deore
-
-cd /home/adityadeore/Documents/CODECAMPUS/codecampus && npm start
