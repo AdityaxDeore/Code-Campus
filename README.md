@@ -1,289 +1,193 @@
-# CodeCampus
+<div align="center">
 
-A comprehensive coding education platform for computer science students, featuring VS Code-style IDE, proctored testing, and real-world problem solving.
+<h1>CODECAMPUS</h1>
 
-## 🚀 Features
+<p>
+A modern coding education platform built around immersive development,
+real-world assignments, secure evaluation, and intelligent learning workflows.
+</p>
 
-### 📝 **VS Code-Style Workspace**
-- **Activity Bar** - Quick access to file explorer, search, and AI assistant
-- **Multi-File Editing** - Tabbed interface with Monaco Editor integration
-- **File Tree Navigation** - Browse and manage assignment files (Python, SQL, Java, JavaScript)
-- **Integrated Terminal** - Execute code with real-time output and command support
-- **AI Chat Assistant** - Context-aware hints and debugging help (no direct solutions)
-- **Search Functionality** - Find text across all assignment files
-- **Breadcrumb Navigation** - Track current file location
+<br>
 
-### 📚 **Assignments System**
-- **Subject-Based Organization** - Filter by DSA, DBMS, Web Dev, OOP, Algorithms, etc.
-- **Deadline Tracking** - Visual countdown with color-coded urgency
-- **Multi-File Projects** - Work with src/, tests/, and config files
-- **Code Execution** - Run JavaScript, Python (simulated), and SQL directly in browser
-- **Paste Detection** - Academic integrity monitoring (10+ word threshold)
-- **Auto-Save** - Changes saved automatically while coding
+<img width="100%" src="./docs/hero-light.png"/>
 
-### 🔒 **Proctored Test Environment**
-- **Fullscreen Enforcement** - Auto-warnings when exiting fullscreen
-- **Tab Switch Detection** - Monitors focus changes (3 warnings = auto-submit)
-- **Time Management** - Countdown timer with auto-submit on expiry
-- **Question Navigation** - Skip, mark for review, and track progress
-- **Secure Submission** - Lock-in mechanism after deadline
+<br><br>
 
-### 🎓 **Learning Features**
-- **Problem History** - Track all attempted problems and submissions
-- **Achievement Center** - Leaderboards, badges, and gamification
-- **Campus Forums** - Discuss topics, ask questions, and share knowledge
-- **Project Showcase** - Build and display your portfolio
+<a href="#overview">Overview</a>
+•
+<a href="#experience">Experience</a>
+•
+<a href="#architecture">Architecture</a>
+•
+<a href="#setup">Setup</a>
 
-## 💻 Tech Stack
+</div>
 
-- **React 18** - Modern hooks, Suspense, and code splitting
-- **Vite 5** - Lightning-fast dev server and optimized builds
-- **Monaco Editor** - Industry-standard code editor (VS Code engine)
-- **TailwindCSS** - Utility-first CSS with custom dark theme
-- **Firebase** - Authentication and real-time features
-- **Firestore** - Database and backend services
-- **React Router 6** - Client-side routing with protected routes
+---
 
-## ⚡ Quick Start
+# Overview
 
-### Prerequisites
-- Node.js 16+ and npm
-- A Firebase project (free tier works!)
+CodeCampus rethinks technical education as a continuous development environment.
 
-### Setup Instructions
+Students do not move between multiple disconnected tools.
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/AdityaxDeore/codecampus.git
-   cd codecampus
-   ```
+Assignments, execution, testing, collaboration, and guided assistance exist inside a single interface.
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+<br>
 
-3. **Configure Firebase** ⚠️ **IMPORTANT**
-   
-   Without this step, you'll see a white screen!
-   
-   ```bash
-   # Copy the environment template
-   cp .env.example .env  # Mac/Linux
-   copy .env.example .env  # Windows
-   ```
-   
-   Then edit `.env` and add your Firebase credentials:
-   ```env
-   VITE_FIREBASE_API_KEY=your-actual-api-key
-   VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-   VITE_FIREBASE_PROJECT_ID=your-project-id
-   VITE_FIREBASE_APP_ID=your-app-id
-   ```
-   
-   **Where to get these values:**
-   - Go to [Firebase Console](https://console.firebase.google.com)
-   - Create a project (or select existing)
-   - Go to **Project Settings** → **General** → **Your apps**
-   - Click **Web app** → **Config** → Copy the values
+<img width="100%" src="./docs/overview.png"/>
 
-4. **Start the development server**
-   ```bash
-   npm start
-   ```
-   
-   The app will open at `http://localhost:4028`
+---
 
-### Troubleshooting
+# Experience
 
-**White screen after cloning?**
-- Make sure you created the `.env` file with valid Firebase credentials
-- Check the browser console for specific error messages
-- Restart the dev server after adding credentials
+<table>
 
-**Build fails?**
-- Delete `node_modules` and `package-lock.json`, then run `npm install` again
-- Make sure you're using Node.js 16+
+<tr>
 
-## 🛠️ Development
+<td width="50%">
+
+### Workspace
+
+Multi-file editing  
+Integrated execution  
+Context-aware assistance  
+Terminal workflows  
+Code navigation  
+
+</td>
+
+<td width="50%">
+
+### Evaluation
+
+Timed assessments  
+Session monitoring  
+Secure submissions  
+Progress tracking  
+
+</td>
+
+</tr>
+
+</table>
+
+<br>
+
+<img width="100%" src="./docs/workspace-dark.png"/>
+
+---
+
+# System
+
+```text
+Student Interface
+│
+├── Workspace
+├── Assignments
+├── Evaluation
+├── Community
+│
+Application Layer
+│
+├── Editor Engine
+├── Execution Engine
+├── Assistant Layer
+│
+Infrastructure
+│
+├── Firebase
+├── Firestore
+└── Authentication
+```
+
+---
+
+# Interface
+
+<div align="center">
+
+<img width="32%" src="./docs/dashboard.png"/>
+<img width="32%" src="./docs/ide.png"/>
+<img width="32%" src="./docs/test.png"/>
+
+</div>
+
+---
+
+# Capabilities
+
+| | |
+|---|---|
+| IDE | VS Code inspired editing |
+| Execution | Browser-based execution |
+| Learning | Guided problem solving |
+| Assessment | Secure test environment |
+| Progress | Analytics and history |
+
+---
+
+# Architecture
+
+<img width="100%" src="./docs/architecture.png"/>
+
+---
+
+# Setup
+
+Clone project
 
 ```bash
-# Install dependencies
+git clone https://github.com/AdityaxDeore/codecampus.git
+```
+
+Install
+
+```bash
 npm install
+```
 
-# Start development server (runs on http://localhost:4028)
+Configure environment
+
+```env
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_APP_ID=
+```
+
+Run
+
+```bash
 npm start
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
 ```
 
-### Quick Navigation
+Open
 
-Once the server is running, access these routes:
-
-- `/` - Homepage
-- `/login` - Authentication
-- `/student-dashboard` - Student dashboard
-- `/assignments` - Assignment listing
-- `/assignment-workspace?id=a1` - VS Code workspace (BST assignment)
-- `/assignment-workspace?id=a2` - Graph traversal assignment
-- `/assignment-workspace?id=a7` - SQL normalization assignment
-- `/test` - Proctored test environment
-- `/achievement-center` - Leaderboards and achievements
-- `/campus-forums` - Discussion forums
-
-## 📁 Project Structure
-
-```
-codecampus/
-├── src/
-│   ├── components/            # Reusable UI components
-│   │   ├── ui/               # Button, Input, Header, etc.
-│   │   ├── AppIcon.jsx       # Icon wrapper component
-│   │   ├── ErrorBoundary.jsx # Error handling
-│   │   └── ProtectedRoute.jsx # Auth guards
-│   ├── pages/
-│   │   ├── assignment-workspace/  # VS Code-style IDE
-│   │   ├── assignments/           # Assignment listing page
-│   │   ├── test/                  # Proctored test environment
-│   │   ├── student-dashboard/     # Main student dashboard
-│   │   ├── achievement-center/    # Leaderboards & badges
-│   │   ├── campus-forums/         # Discussion forums
-│   │   ├── problem-workspace/     # Problem solving IDE
-│   │   ├── problems/              # Problem catalog
-│   │   ├── homepage/              # Landing page
-│   │   └── login/                 # Authentication
-│   ├── shared/               # Shared components and data
-│   ├── lib/                  # Firebase config & utilities
-│   ├── contexts/             # React Context (Dark mode, etc.)
-│   ├── hooks/                # Custom React hooks
-│   ├── utils/                # Helper functions
-│   └── styles/               # Global CSS & Tailwind
-├── public/                   # Static assets
-├── docs/                     # Documentation
-└── vite.config.mjs          # Vite configuration
+```text
+http://localhost:4028
 ```
 
-## � Code Execution Engines
+---
 
-The platform supports in-browser code execution for multiple languages:
+# Structure
 
-### JavaScript
-- **Sandboxed Execution** - Runs in isolated Function context
-- **Console Capture** - Intercepts log, error, warn, and info
-- **Error Handling** - Displays runtime errors with stack traces
-
-### Python (Simulated)
-- **Pattern Matching** - Analyzes print() statements
-- **TODO Detection** - Warns about unimplemented code sections
-- **Output Simulation** - Mimics Python console behavior
-
-### SQL (Simulated)
-- **Statement Parsing** - Recognizes SELECT, CREATE, INSERT, ALTER, DROP
-- **Query Feedback** - Provides execution status for each statement
-- **Multi-Statement Support** - Handles semicolon-separated queries
-
-## 🎮 Academic Integrity Features
-
-- **Copy-Paste Monitoring** - Flags pastes over 10 words
-- **Timestamp Tracking** - Records all paste events with word count
-- **Instructor Dashboard** - Review flagged submissions (planned)
-- **Tab Switch Alerts** - Monitors focus during proctored tests
-- **Fullscreen Lock** - Enforces secure testing environment
-
-## 🧠 AI Assistant
-
-- **Context-Aware** - Understands current assignment and language
-- **Hint-Based** - Guides students without giving direct solutions
-- **Debugging Help** - Analyzes errors and suggests fixes
-- **Quick Actions** - Pre-built prompts for hints, debugging, and explanations
-
-## �🔥 Performance
-
-- Route-based code splitting for optimal loading
-- Vendor chunk optimization
-- Lazy-loaded components with Suspense
-- Optimized bundle size with manual chunks
-
-## 📄 License
-
-MIT License - see LICENSE file for details
-├── index.html          # HTML template
-├── package.json        # Project dependencies and scripts
-├── tailwind.config.js  # Tailwind CSS configuration
-└── vite.config.js      # Vite configuration
+```text
+src
+├── components
+├── pages
+├── shared
+├── hooks
+├── contexts
+├── styles
+├── lib
+└── utils
 ```
 
-## 🧩 Adding Routes
+---
 
-To add new routes to the application, update the `Routes.jsx` file:
+<div align="center">
 
-```jsx
-import { useRoutes } from "react-router-dom";
-import HomePage from "pages/HomePage";
-import AboutPage from "pages/AboutPage";
+Built by Aditya Deore
 
-const ProjectRoutes = () => {
-  let element = useRoutes([
-    { path: "/", element: <HomePage /> },
-    { path: "/about", element: <AboutPage /> },
-    // Add more routes as needed
-  ]);
-
-  return element;
-};
-```
-
-## ⌨️ Keyboard Shortcuts (Workspace)
-
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl/Cmd + S` | Save current file |
-| `Ctrl/Cmd + B` | Toggle sidebar |
-| `Ctrl/Cmd + `` ` `` | Toggle terminal |
-
-## 🖥️ Terminal Commands
-
-Available in the integrated terminal:
-
-```bash
-run        # Execute current file
-clear      # Clear terminal history
-ls         # List all files in project
-cat <file> # Display file contents
-help       # Show available commands
-```
-
-## 🎨 Styling
-
-This project uses Tailwind CSS for styling. The configuration includes:
-
-- Forms plugin for form styling
-- Typography plugin for text styling
-- Aspect ratio plugin for responsive elements
-- Container queries for component-specific responsive design
-- Fluid typography for responsive text
-- Animation utilities
-
-## 📱 Responsive Design
-
-The app is built with responsive design using Tailwind CSS breakpoints.
-
-
-## 📦 Deployment
-
-Build the application for production:
-
-```bash
-npm run build
-```
-
-Project by - 
-Aditya Deore
-
-
-cd /home/adityadeore/Documents/CODECAMPUS/codecampus && npm start
+</div>
