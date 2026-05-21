@@ -5,6 +5,7 @@ import Icon from '../AppIcon';
 import DarkModeToggle from './DarkModeToggle';
 import { useRole } from '../../contexts/RoleContext';
 import { useUser } from '../../context/UserContext';
+import { isTeacherEmailAllowed } from '../../utils/roleAccess';
 
 
 const Header = () => {
@@ -21,8 +22,14 @@ const Header = () => {
   const roleLabel = profile?.role
     ? `${profile.role.charAt(0).toUpperCase()}${profile.role.slice(1)}`
     : (isTeacher ? 'Teacher' : 'Student');
+  const teacherEligible = localStorage.getItem('loginMethod') === 'demo'
+    || isTeacherEmailAllowed(profile?.email || user?.email);
 
   const switchToTeacherMode = () => {
+    if (!teacherEligible) {
+      alert('Not permitted: teacher access is limited to @pccoepune.org accounts.');
+      return;
+    }
     setRole('teacher');
     navigate('/teacher-dashboard');
     setIsMobileMenuOpen(false);
@@ -69,7 +76,7 @@ const Header = () => {
       ]
     : [
         { name: 'Achievements', path: '/achievement-center', icon: 'Trophy' },
-        { name: 'Teacher', path: '/teacher-dashboard', icon: 'GraduationCap' },
+      ...(teacherEligible ? [{ name: 'Teacher', path: '/teacher-dashboard', icon: 'GraduationCap' }] : []),
         { name: 'About', path: '/about-code-campus', icon: 'Info' },
         { name: 'Settings', path: '/settings', icon: 'Settings' },
         { name: 'Help', path: '/help', icon: 'HelpCircle' },

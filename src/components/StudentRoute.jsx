@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useRole } from '../contexts/RoleContext';
 import { getCurrentUser, onAuthStateChange } from '../utils/auth';
+import { isTeacherAccessAllowed } from '../utils/roleAccess';
 
 const StudentRoute = ({ children }) => {
   const { isTeacher } = useRole();
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [hasTeacherAccess, setHasTeacherAccess] = useState(false);
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -14,12 +16,14 @@ const StudentRoute = ({ children }) => {
 
     if (user || localAuth) {
       setIsAuthenticated(true);
+      setHasTeacherAccess(isTeacherAccessAllowed(user));
       setLoading(false);
     }
 
     const unsubscribe = onAuthStateChange((authUser) => {
       const hasLocalSession = localStorage.getItem('isAuthenticated') === 'true';
       setIsAuthenticated(!!authUser || hasLocalSession);
+      setHasTeacherAccess(isTeacherAccessAllowed(authUser));
       setLoading(false);
     });
 
@@ -49,7 +53,7 @@ const StudentRoute = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  const hasTeacherRole = isTeacher || localStorage.getItem('codecampus_role') === 'teacher';
+  const hasTeacherRole = (isTeacher || localStorage.getItem('codecampus_role') === 'teacher') && hasTeacherAccess;
 
   return hasTeacherRole ? <Navigate to="/teacher-dashboard" replace /> : children;
 };
